@@ -51,10 +51,16 @@ CANDIDATE_PORTS=(8000 8080 8888 3000)
 # A port left occupied by an earlier server makes every later curl hit the WRONG
 # server and report a bogus 404 for everyone. (This bit the manual analysis of
 # round 1.) Refuse to grade servers unless the candidate ports start out free.
+# Uses /dev/tcp, not lsof: the benchmark host is Windows/Git Bash, where lsof
+# does not exist. With lsof the check silently succeeded (command-not-found was
+# read as "port free") and the safety net was gone on the one machine that runs
+# the benchmark.
+port_in_use() { (exec 3<>"/dev/tcp/127.0.0.1/$1") 2>/dev/null && { exec 3<&- 3>&- 2>/dev/null; return 0; }; return 1; }
+
 check_ports_free() {
     local busy=""
     for p in "${CANDIDATE_PORTS[@]}"; do
-        if lsof -nP -iTCP:"$p" -sTCP:LISTEN >/dev/null 2>&1; then busy="$busy $p"; fi
+        if port_in_use "$p"; then busy="$busy $p"; fi
     done
     echo "$busy"
 }
