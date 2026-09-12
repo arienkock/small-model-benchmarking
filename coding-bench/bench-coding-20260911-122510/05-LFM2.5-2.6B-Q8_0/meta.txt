@@ -1,0 +1,13 @@
+run: 5
+model: LFM2.5-2.6B-Q8_0
+workspace: bench-coding-20260911-122510/05-LFM2.5-2.6B-Q8_0
+exit_code: 0
+duration_sec: 286
+context: 16384
+reasoning_budget: 4096
+files_created:
+  debounce.ts (900 bytes)
+  meta.txt (175 bytes)
+tool_calls: 9
+output_tokens_total: 5284
+input_tokens_total: 5168

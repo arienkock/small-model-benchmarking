@@ -1,0 +1,14 @@
+run: 1
+model: MiniCPM5-2B-Q8_0
+workspace: bench-coding-20260911-121228/01-MiniCPM5-2B-Q8_0
+exit_code: 0
+duration_sec: 71
+context: 16384
+reasoning_budget: 4096
+files_created:
+  meta.txt (174 bytes)
+  server.py (1631 bytes)
+  todos.ts (302 bytes)
+tool_calls: 6
+output_tokens_total: 1181
+input_tokens_total: 2278

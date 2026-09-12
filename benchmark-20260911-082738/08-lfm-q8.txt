@@ -1,0 +1,82 @@
+MODEL CONFIG: lfm-q8
+
+PROMPT:
+Answer using exactly three bullet points.
+Each bullet must contain exactly four words.
+Explain why regular backups are useful.
+Do not add any other text.
+
+OUTPUT:
+
+
+
+Loading model... 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b10896-fa6769818
+model      : LiquidAI/LFM2.5-2.6B-GGUF:Q8_0
+ftype      : Q8_0
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> Answer using exactly three bullet points.
+Each bullet must contain exactly four words.
+Explain why regular backups are useful.
+Do not add any other text.
+
+[Start thinking]
+
+The user wants: "Answer using exactly three bullet points. Each bullet must contain exactly four words. Explain why regular backups are useful. Do not add any other text."
+
+So we need exactly three bullet points. Each bullet point must have exactly four words. The bullet points likely start with a dash or a bullet character (like "- " or "• "). The bullet must contain exactly four words. The bullet itself includes the bullet marker? The instruction says "Each bullet must contain exactly four words." Does the bullet marker count as a word? Typically, bullet marker is not a word; it's a symbol. So we need four words after the bullet marker. So each line should be something like:
+
+- Backups protect data loss
+- They ensure quick recovery
+- Regular copies prevent corruption
+
+But count words: "Backups protect data loss" = 4 words? Let's count: Backups (1), protect (2), data (3), loss (4). Yes, that's four. Good.
+
+Second bullet: "They ensure quick recovery" = They(1) ensure(2) quick(3) recovery(4). That's four.
+
+Third bullet: "Regular copies prevent corruption" = Regular(1) copies(2) prevent(3) corruption(4). That's four.
+
+All three bullets have exactly four words. No extra text. Must not add any other text besides the three bullet points. So output exactly three lines, each starting with a bullet marker (like "- " or "• "). The bullet marker is not a word, so fine.
+
+Check that there is no trailing spaces or extra words. Also ensure no extra newline after the third bullet? Probably okay to have newline at end but not extra text. The instruction: "Do not add any other text." So only the three bullet points. That's it.
+
+Thus final answer:
+
+- Backups protect data loss
+- They ensure quick recovery
+- Regular copies prevent corruption
+
+Make sure each line has exactly four words after bullet. Yes.
+
+Potential nuance: The bullet marker might be considered a word? Usually not. But to be safe, we could use a hyphen and a space, which is not a word. That's fine.
+
+Thus final.
+[End thinking]
+
+- Backups protect data loss  
+- They ensure quick recovery  
+- Regular copies prevent corruption
+
+[ Prompt: 91.2 t/s | Generation: 26.3 t/s ]
+
+
+Exiting...

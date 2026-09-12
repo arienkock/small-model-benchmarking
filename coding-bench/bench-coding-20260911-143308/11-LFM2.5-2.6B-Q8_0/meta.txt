@@ -1,0 +1,15 @@
+run: 11
+model: LFM2.5-2.6B-Q8_0
+workspace: /d/llama.cpp/coding-bench/bench-coding-20260911-143308/11-LFM2.5-2.6B-Q8_0
+exit_code: 0
+duration_sec: 722
+context: 16384
+reasoning_budget: 4096
+files_created:
+  chat.test.ts (2243 bytes)
+  chat.ts (439 bytes)
+  meta.txt (202 bytes)
+  server.py (2715 bytes)
+tool_calls: 8
+output_tokens_total: 9383
+input_tokens_total: 15003

@@ -1,0 +1,66 @@
+MODEL CONFIG: minicpm-q8-no-reasoning
+
+PROMPT:
+Write a Python function first_unique(s) that returns the first character in s that occurs exactly once.
+Return None if there is no such character.
+It must run in O(n) time.
+Include three test cases.
+
+OUTPUT:
+
+
+
+Loading model... 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b10896-fa6769818
+model      : openbmb/MiniCPM5-2B-GGUF:Q8_0
+ftype      : Q8_0
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> Write a Python function first_unique(s) that returns the first character in s that occurs exactly once.
+Return None if there is no such character.
+It must run in O(n) time.
+Include three test cases.
+```python
+def first_unique(s):
+    """
+    Returns the first character in s that occurs exactly once.
+    Returns None if no such character exists.
+    Runs in O(n) time.
+    """
+    count = {}
+    for char in s:
+        count[char] = count.get(char, 0) + 1
+    
+    for char in s:
+        if count[char] == 1:
+            return char
+    return None
+
+# Test cases
+print(first_unique("swiss"))      # Expected: 'w'
+print(first_unique("aabbcc"))     # Expected: None
+print(first_unique(""))           # Expected: None
+```
+
+[ Prompt: 168.4 t/s | Generation: 27.9 t/s ]
+
+
+Exiting...

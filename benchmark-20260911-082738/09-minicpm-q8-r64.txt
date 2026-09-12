@@ -1,0 +1,52 @@
+MODEL CONFIG: minicpm-q8-r64
+
+PROMPT:
+You are running inside llama-cli.
+No external tools, APIs, web browser, filesystem tools, or Python interpreter have been explicitly provided to you.
+What tools can you actually call?
+Answer in two sentences and do not invent capabilities.
+
+OUTPUT:
+
+
+
+Loading model... 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b10896-fa6769818
+model      : openbmb/MiniCPM5-2B-GGUF:Q8_0
+ftype      : Q8_0
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> You are running inside llama-cli.
+No external tools, APIs, web browser, filesystem tools, or Python interpreter have been explicitly provided to you.
+What tools can you actually call?
+Answer in two sentences and do not invent capabilities.
+
+[Start thinking]
+
+We need to answer in two sentences, stating what tools can be called given the constraints. The user says: "You are running inside llama-cli. No external tools, APIs, web browser, filesystem tools, or Python interpreter have been explicitly provided to you. What tools can you actually call? Answer in
+[End thinking]
+
+You can only use the tools provided by the llama-cli environment itself. No other tools, APIs, web browser, filesystem tools, or Python interpreter are available to you.
+
+[ Prompt: 169.5 t/s | Generation: 28.0 t/s ]
+
+
+Exiting...

@@ -1,0 +1,58 @@
+MODEL CONFIG: minicpm-q8-r64
+
+PROMPT:
+Read the following passage and summarize it in exactly two sentences.
+Preserve all three numerical facts.
+
+A small factory replaced 18 older motors with high-efficiency units.
+Electricity consumption fell by 14 percent during the first six months.
+The upgrade cost $72,000, and management estimates that the investment will pay for itself in 3.5 years.
+
+OUTPUT:
+
+
+
+Loading model... 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b10896-fa6769818
+model      : openbmb/MiniCPM5-2B-GGUF:Q8_0
+ftype      : Q8_0
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> Read the following passage and summarize it in exactly two sentences.
+Preserve all three numerical facts.
+
+A small factory replaced 18 older motors with high-efficiency units.
+Electricity consumption fell by 14 percent during the first six months.
+The upgrade cost $72,000, and management estimates that the investment will pay for itself in 3.5 years.
+
+[Start thinking]
+
+First, I need to make sure that I only use two sentences.
+Next, I have to make sure that I include all the numbers mentioned in the passage.
+Then, I need to keep the summary clear and concise.
+[End thinking]
+
+The factory replaced 18 motors and reduced electricity consumption by 14 percent. The upgrade cost $72,000 and is expected to pay for itself in 3.5 years.
+
+[ Prompt: 148.9 t/s | Generation: 28.0 t/s ]
+
+
+Exiting...

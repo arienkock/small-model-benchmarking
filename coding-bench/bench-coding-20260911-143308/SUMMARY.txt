@@ -1,0 +1,28 @@
+# Coding bench summary — Fri Sep 11 22:48:13 WEDT 2026
+context: 16384  reasoning_budget: 4096  run_timeout: 1800s
+sandbox: docker (coding-bench-agent:latest), guard extension active
+
+run: 1 model: LFM2.5-2.6B-Q8_0 exit_code: 0 duration_sec: 1014 
+run: 1 model: MiniCPM5-2B-Q8_0 exit_code: 124 duration_sec: 1802 
+run: 2 model: LFM2.5-2.6B-Q8_0 exit_code: 0 duration_sec: 1262 
+run: 2 model: MiniCPM5-2B-Q8_0 exit_code: 124 duration_sec: 1803 
+run: 3 model: LFM2.5-2.6B-Q8_0 exit_code: 124 duration_sec: 1803 
+run: 3 model: MiniCPM5-2B-Q8_0 exit_code: 124 duration_sec: 1803 
+run: 4 model: LFM2.5-2.6B-Q8_0 exit_code: 0 duration_sec: 319 
+run: 4 model: MiniCPM5-2B-Q8_0 exit_code: 0 duration_sec: 698 
+run: 5 model: LFM2.5-2.6B-Q8_0 exit_code: 0 duration_sec: 718 
+run: 5 model: MiniCPM5-2B-Q8_0 exit_code: 0 duration_sec: 677 
+run: 6 model: LFM2.5-2.6B-Q8_0 exit_code: 0 duration_sec: 577 
+run: 6 model: MiniCPM5-2B-Q8_0 exit_code: 0 duration_sec: 1465 
+run: 7 model: LFM2.5-2.6B-Q8_0 exit_code: 0 duration_sec: 157 
+run: 7 model: MiniCPM5-2B-Q8_0 exit_code: 0 duration_sec: 845 
+run: 8 model: LFM2.5-2.6B-Q8_0 exit_code: 0 duration_sec: 1138 
+run: 8 model: MiniCPM5-2B-Q8_0 exit_code: 124 duration_sec: 1803 
+run: 9 model: LFM2.5-2.6B-Q8_0 exit_code: 124 duration_sec: 1803 
+run: 9 model: MiniCPM5-2B-Q8_0 exit_code: 124 duration_sec: 1803 
+run: 10 model: LFM2.5-2.6B-Q8_0 exit_code: 124 duration_sec: 1803 
+run: 10 model: MiniCPM5-2B-Q8_0 exit_code: 124 duration_sec: 1803 
+run: 11 model: LFM2.5-2.6B-Q8_0 exit_code: 0 duration_sec: 722 
+run: 11 model: MiniCPM5-2B-Q8_0 exit_code: 124 duration_sec: 1804 
+run: 12 model: LFM2.5-2.6B-Q8_0 exit_code: 124 duration_sec: 1803 
+run: 12 model: MiniCPM5-2B-Q8_0 exit_code: 0 duration_sec: 217 

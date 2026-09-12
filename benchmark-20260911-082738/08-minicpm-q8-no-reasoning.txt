@@ -1,0 +1,48 @@
+MODEL CONFIG: minicpm-q8-no-reasoning
+
+PROMPT:
+Answer using exactly three bullet points.
+Each bullet must contain exactly four words.
+Explain why regular backups are useful.
+Do not add any other text.
+
+OUTPUT:
+
+
+
+Loading model... 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b10896-fa6769818
+model      : openbmb/MiniCPM5-2B-GGUF:Q8_0
+ftype      : Q8_0
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> Answer using exactly three bullet points.
+Each bullet must contain exactly four words.
+Explain why regular backups are useful.
+Do not add any other text.
+* Data safety.
+* Prevent loss.
+* Maintain security.
+
+[ Prompt: 120.9 t/s | Generation: 28.0 t/s ]
+
+
+Exiting...

@@ -1,0 +1,14 @@
+Build a temperature conversion web service.
+
+Create two files:
+
+1. server.py — HTTP server using only the Python standard library:
+   - GET /api/convert?value=25&from=C&to=F returns JSON {"value": 77, "unit": "F"}.
+   - Support conversions between C, F, and K.
+   - Invalid input (unknown unit, non-numeric value) returns 400 with JSON {"error": "..."}.
+2. convert.ts — export function convertTemp(value: number, from: string, to: string): number
+   implementing the same conversions, and export function isSupportedUnit(unit: string): boolean.
+
+Use only the Python standard library. Do not install packages.
+Verify before finishing: start the server and curl at least three conversions (C->F, F->K, K->C) plus one 400 case.
+You can run TypeScript directly with: node convert.ts (Node 24 runs .ts files natively).

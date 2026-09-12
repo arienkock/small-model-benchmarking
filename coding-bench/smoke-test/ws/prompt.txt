@@ -1,0 +1,3 @@
+Create the file /testbed/greet.ts exporting function greet(name: string): string.
+Also create run.ts that imports greet from './greet.ts' and prints greet('bench').
+Verify with: node run.ts

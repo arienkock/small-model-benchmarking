@@ -1,0 +1,17 @@
+Build a small static file server plus a table renderer.
+
+Create three files:
+
+1. server.py — HTTP server using only the Python standard library serving files from ./public/:
+   - GET / serves public/index.html.
+   - Correct Content-Type for .html, .css, .js, and .json; 404 with a JSON body for missing files.
+   - Requests must not be able to escape ./public/ (reject paths containing "..").
+2. public/index.html — a minimal HTML page that includes public/app.js.
+3. app.ts — export interface Row { name: string; score: number } and
+   export function renderRows(rows: Row[]): string returning an HTML fragment of table rows
+   (<tr><td>name</td><td>score</td></tr>) sorted by score descending.
+
+Use only the Python standard library. Do not install packages.
+Verify before finishing: create the files under public/, start the server, curl / and a missing
+file (show the 404 JSON), and run node app.ts after adding a small self-test that prints an
+example renderRows output.

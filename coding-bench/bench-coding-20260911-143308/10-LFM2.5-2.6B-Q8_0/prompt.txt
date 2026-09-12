@@ -1,0 +1,16 @@
+Build a token-based login API.
+
+Create two files:
+
+1. server.py — HTTP server using only the Python standard library:
+   - POST /api/login with JSON {"user": str} returns {"token": "..."} where the token is a
+     base64 string encoding {"user": ..., "exp": <now + 3600 in epoch seconds>}.
+   - GET /api/me with header Authorization: Bearer <token> decodes the token and returns
+     {"user": ...}. An expired token returns 401, a missing/invalid token returns 401.
+2. parseToken.ts — export interface TokenPayload { user: string; exp: number } and
+   export function parseToken(token: string): TokenPayload | null (base64-decode, JSON-parse,
+   return null on any malformed input).
+
+Use only the Python standard library. Do not install packages.
+Verify before finishing: login, call /api/me with the token (200), call it with a tampered token (401),
+and run node parseToken.ts after adding a small self-test.

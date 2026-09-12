@@ -1,0 +1,14 @@
+run: 12
+model: LFM2.5-2.6B-Q8_0
+workspace: bench-coding-20260911-122510/12-LFM2.5-2.6B-Q8_0
+exit_code: 1
+duration_sec: 83
+context: 16384
+reasoning_budget: 4096
+files_created:
+  averageSpeed.ts (231 bytes)
+  meta.txt (175 bytes)
+  server.py (1484 bytes)
+tool_calls: 5
+output_tokens_total: 866
+input_tokens_total: 2212

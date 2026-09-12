@@ -1,0 +1,59 @@
+MODEL CONFIG: lfm-q8
+
+PROMPT:
+You are running inside llama-cli.
+No external tools, APIs, web browser, filesystem tools, or Python interpreter have been explicitly provided to you.
+What tools can you actually call?
+Answer in two sentences and do not invent capabilities.
+
+OUTPUT:
+
+
+
+Loading model... 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b10896-fa6769818
+model      : LiquidAI/LFM2.5-2.6B-GGUF:Q8_0
+ftype      : Q8_0
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> You are running inside llama-cli.
+No external tools, APIs, web browser, filesystem tools, or Python interpreter have been explicitly provided to you.
+What tools can you actually call?
+Answer in two sentences and do not invent capabilities.
+
+[Start thinking]
+
+
+The user is asking about my capabilities as a LFM (Liquid Foundation Model) running inside llama-cli. They want to know what tools I can actually call, and they've specified I should answer in two sentences and not invent capabilities. I need to be truthful about my actual capabilities. I am LFM by Liquid AI. I don't have access to external tools, APIs, web browser, filesystem tools, or Python interpreter unless explicitly provided. The system prompt says "No external tools, APIs, web browser, filesystem tools, or Python interpreter have been explicitly provided to you." So I should state that I cannot call any external tools. I should answer in exactly two sentences. Let me craft a response that is accurate and concise.
+
+First sentence: I cannot call any external tools, APIs, web browsers, filesystem operations, or Python interpreter because those are not available to me.
+Second sentence: My capabilities are limited to the LFM model itself and the context provided within this conversation.
+
+That's two sentences. It's truthful and doesn't invent capabilities.
+[End thinking]
+
+
+I cannot call any external tools, APIs, web browsers, filesystem operations, or Python interpreter because those are not available to me. My capabilities are limited to the LFM model itself and the context provided within this conversation.
+
+[ Prompt: 128.6 t/s | Generation: 26.3 t/s ]
+
+
+Exiting...

@@ -1,0 +1,59 @@
+MODEL CONFIG: minicpm-q8-r128
+
+PROMPT:
+Read the following passage and summarize it in exactly two sentences.
+Preserve all three numerical facts.
+
+A small factory replaced 18 older motors with high-efficiency units.
+Electricity consumption fell by 14 percent during the first six months.
+The upgrade cost $72,000, and management estimates that the investment will pay for itself in 3.5 years.
+
+OUTPUT:
+
+
+
+Loading model... 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b10896-fa6769818
+model      : openbmb/MiniCPM5-2B-GGUF:Q8_0
+ftype      : Q8_0
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> Read the following passage and summarize it in exactly two sentences.
+Preserve all three numerical facts.
+
+A small factory replaced 18 older motors with high-efficiency units.
+Electricity consumption fell by 14 percent during the first six months.
+The upgrade cost $72,000, and management estimates that the investment will pay for itself in 3.5 years.
+
+[Start thinking]
+
+We need to summarize the passage in exactly two sentences while preserving all three numerical facts: 18, 14 percent, $72,000, and 3.5 years. Wait, the passage mentions 18, 14 percent, $72,000, and 3.5 years. That's four numbers? Let's check: "18 older motors", "14 percent", "$72,000", "3.5 years". So we need to include all three? The instruction says "Preserve all three numerical facts." But there are four numbers. Maybe they consider 14 percent, $72,000, and
+[End thinking]
+
+We need to summarize the passage in exactly two sentences, preserving all three numerical facts. The passage mentions that 18 motors were replaced, electricity consumption fell by 14 percent, the cost was $72,000, and the payback period is 3.5 years. To ensure we have exactly two sentences, we need to make sure we don't exceed. Actually, we have three sentences? Wait, I need to output exactly two sentences. Let's try to combine. We can say: The factory replaced 18 motors, leading to a 14 percent reduction in electricity consumption. The upgrade cost $72,000 and will pay for itself in 3.5 years. That's two sentences.
+</think>
+
+The factory replaced 18 motors, leading to a 14 percent reduction in electricity consumption. The upgrade cost $72,000 and will pay for itself in 3.5 years.
+
+[ Prompt: 151.8 t/s | Generation: 27.7 t/s ]
+
+
+Exiting...

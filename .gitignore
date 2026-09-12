@@ -1,0 +1,22 @@
+# llama.cpp release binaries / runtime files (never commit)
+*.dll
+*.exe
+*.gguf
+*.exp
+*.lib
+llama-verbose.txt
+LICENSE-LLVM-OpenMP
+
+# Benchmark run junk
+**/node_modules/
+**/__pycache__/
+*.pyc
+**/.pi/
+**/stderr.log
+**/server_stderr.log
+**/server-*.log
+# only ignore lock files generated *inside* benchmark run outputs
+# (a real lock file for the coding-bench tooling itself should stay committable)
+coding-bench/bench-coding-*/**/package-lock.json
+coding-bench/smoke-test/**/package-lock.json
+benchmark*/**/package-lock.json

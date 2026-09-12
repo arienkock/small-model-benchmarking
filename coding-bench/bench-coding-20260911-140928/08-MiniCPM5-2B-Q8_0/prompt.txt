@@ -1,0 +1,16 @@
+Build a guestbook web application.
+
+Create three files:
+
+1. server.py — HTTP server using only the Python standard library:
+   - GET /api/entries returns {"entries": [...]} newest first.
+   - POST /api/entries with JSON {"name": str, "message": str} appends an entry with a timestamp.
+   - Reject entries where name is empty or longer than 40 chars, or message empty or longer
+     than 200 chars: return 400 with JSON {"error": "..."}.
+2. validate.ts — export function validateEntry(name: string, message: string):
+   { ok: boolean; error?: string } applying the same rules as the server.
+3. validate.test.ts — assertions that pass when run with: node validate.test.ts
+
+Use only the Python standard library. Do not install packages.
+Verify before finishing: POST one valid and one invalid entry (show the 400), GET the list, and
+run node validate.test.ts.

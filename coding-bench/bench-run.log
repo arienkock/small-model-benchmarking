@@ -1,0 +1,62 @@
+[bench] Found 12 prompts.
+[bench] Probing context sizes (candidates: 16384 12288 8192)...
+[bench]   context 16384 OK for LFM2.5-2.6B-Q8_0 (smoke reply: 
+OK)
+[bench]   context 16384 OK for MiniCPM5-2B-Q8_0 (smoke reply: OK)
+[bench] Benchmark context size: 16384 (equal for both models)
+[bench] Reasoning budget: 4096 tokens (server-side, equal for both models)
+[bench] === Starting server for LFM2.5-2.6B-Q8_0 (context 16384, reasoning budget 4096) ===
+[bench]   context 16384 OK for LFM2.5-2.6B-Q8_0 (smoke reply: 
+OK)
+[bench] Run 1/12 — LFM2.5-2.6B-Q8_0 (workspace: bench-coding-20260911-121228/01-LFM2.5-2.6B-Q8_0)
+[bench]   killing leftover process on port 8000 (pid 15560)
+[bench]   done in 740s
+[bench] Run 2/12 — LFM2.5-2.6B-Q8_0 (workspace: bench-coding-20260911-121228/02-LFM2.5-2.6B-Q8_0)
+[bench]   killing leftover process on port 8000 (pid 19260)
+[bench]   done in 240s
+[bench] Run 3/12 — LFM2.5-2.6B-Q8_0 (workspace: bench-coding-20260911-121228/03-LFM2.5-2.6B-Q8_0)
+[bench]   killing leftover process on port 8000 (pid 4180)
+[bench]   exit code 1 (see stderr.log)
+[bench] Run 4/12 — LFM2.5-2.6B-Q8_0 (workspace: bench-coding-20260911-121228/04-LFM2.5-2.6B-Q8_0)
+[bench]   killing leftover process on port 8000 (pid 17728)
+[bench]   done in 270s
+[bench] Run 5/12 — LFM2.5-2.6B-Q8_0 (workspace: bench-coding-20260911-121228/05-LFM2.5-2.6B-Q8_0)
+[bench]   killing leftover process on port 8000 (pid 20268)
+[bench]   done in 294s
+[bench] Run 6/12 — LFM2.5-2.6B-Q8_0 (workspace: bench-coding-20260911-121228/06-LFM2.5-2.6B-Q8_0)
+[bench]   done in 286s
+[bench] Run 7/12 — LFM2.5-2.6B-Q8_0 (workspace: bench-coding-20260911-121228/07-LFM2.5-2.6B-Q8_0)
+[bench]   done in 296s
+[bench] Run 8/12 — LFM2.5-2.6B-Q8_0 (workspace: bench-coding-20260911-121228/08-LFM2.5-2.6B-Q8_0)
+[bench]   done in 269s
+[bench] Run 9/12 — LFM2.5-2.6B-Q8_0 (workspace: bench-coding-20260911-121228/09-LFM2.5-2.6B-Q8_0)
+[bench]   done in 306s
+[bench] Run 10/12 — LFM2.5-2.6B-Q8_0 (workspace: bench-coding-20260911-121228/10-LFM2.5-2.6B-Q8_0)
+[bench]   done in 199s
+[bench] Run 11/12 — LFM2.5-2.6B-Q8_0 (workspace: bench-coding-20260911-121228/11-LFM2.5-2.6B-Q8_0)
+[bench]   done in 15s
+[bench] Run 12/12 — LFM2.5-2.6B-Q8_0 (workspace: bench-coding-20260911-121228/12-LFM2.5-2.6B-Q8_0)
+[bench]   done in 15s
+[bench] === Finished LFM2.5-2.6B-Q8_0 ===
+[bench] === Starting server for MiniCPM5-2B-Q8_0 (context 16384, reasoning budget 4096) ===
+[bench]   context 16384 OK for MiniCPM5-2B-Q8_0 (smoke reply: OK)
+[bench] Run 1/12 — MiniCPM5-2B-Q8_0 (workspace: bench-coding-20260911-121228/01-MiniCPM5-2B-Q8_0)
+[bench]   done in 71s
+[bench] Run 2/12 — MiniCPM5-2B-Q8_0 (workspace: bench-coding-20260911-121228/02-MiniCPM5-2B-Q8_0)
+[bench]   killing leftover process on port 8000 (pid 20412)
+[bench]   done in 119s
+[bench] Run 3/12 — MiniCPM5-2B-Q8_0 (workspace: bench-coding-20260911-121228/03-MiniCPM5-2B-Q8_0)
+[bench]   done in 21s
+[bench] Run 4/12 — MiniCPM5-2B-Q8_0 (workspace: bench-coding-20260911-121228/04-MiniCPM5-2B-Q8_0)
+[bench]   done in 15s
+[bench] Run 5/12 — MiniCPM5-2B-Q8_0 (workspace: bench-coding-20260911-121228/05-MiniCPM5-2B-Q8_0)
+[bench]   done in 15s
+[bench] Run 6/12 — MiniCPM5-2B-Q8_0 (workspace: bench-coding-20260911-121228/06-MiniCPM5-2B-Q8_0)
+[bench]   done in 14s
+[bench] Run 7/12 — MiniCPM5-2B-Q8_0 (workspace: bench-coding-20260911-121228/07-MiniCPM5-2B-Q8_0)
+[bench]   done in 15s
+[bench] Run 8/12 — MiniCPM5-2B-Q8_0 (workspace: bench-coding-20260911-121228/08-MiniCPM5-2B-Q8_0)
+[bench]   done in 15s
+[bench] Run 9/12 — MiniCPM5-2B-Q8_0 (workspace: bench-coding-20260911-121228/09-MiniCPM5-2B-Q8_0)
+[bench]   done in 15s
+[bench] Run 10/12 — MiniCPM5-2B-Q8_0 (workspace: bench-coding-20260911-121228/10-MiniCPM5-2B-Q8_0)

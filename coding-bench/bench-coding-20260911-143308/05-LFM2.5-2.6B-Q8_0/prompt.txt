@@ -1,0 +1,28 @@
+// debounce.ts
+export function debounce(fn: (...args: any[]) => void, waitMs: number) {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    return (...args: any[]) => {
+        if (timer !== null) {
+            clearTimeout(timer);
+        }
+        timer = setTimeout(() => fn(args), waitMs);
+        timer = null;
+    };
+}
+
+// Self-test when file is executed directly
+if (typeof module !== 'undefined' && module.main === __filename) {
+    // Simple test: debounce should delay execution
+    const debounced = debounce(() => console.log('called'), 100);
+    
+    // Call debounced multiple times quickly
+    debounced();
+    debounced();
+    debounced();
+    
+    // After 100ms, the function should have been called once
+    setTimeout(() => {
+        // If we get here, the test passed (the function was called after the delay)
+        console.log('all tests passed');
+    }, 150);
+}

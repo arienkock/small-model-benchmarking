@@ -1,0 +1,56 @@
+MODEL CONFIG: minicpm-q8-unlimited
+
+PROMPT:
+You are running inside llama-cli.
+No external tools, APIs, web browser, filesystem tools, or Python interpreter have been explicitly provided to you.
+What tools can you actually call?
+Answer in two sentences and do not invent capabilities.
+
+OUTPUT:
+
+
+
+Loading model... 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b10896-fa6769818
+model      : openbmb/MiniCPM5-2B-GGUF:Q8_0
+ftype      : Q8_0
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> You are running inside llama-cli.
+No external tools, APIs, web browser, filesystem tools, or Python interpreter have been explicitly provided to you.
+What tools can you actually call?
+Answer in two sentences and do not invent capabilities.
+
+[Start thinking]
+
+We are asked: "You are running inside llama-cli. No external tools, APIs, web browser, filesystem tools, or Python interpreter have been explicitly provided to you. What tools can you actually call? Answer in two sentences and do not invent capabilities."
+
+We need to answer in two sentences, and not invent capabilities. We are running inside llama-cli, which is a CLI tool for the Llama models. The only tools we can call are the ones provided to the CLI. Typically, llama-cli allows you to run commands like `llama-cli --help` to see available commands, but we need to state what tools we can actually call. Since no external tools are provided, we can only use the built-in capabilities of the llama-cli itself. So we can call the commands that are part of the llama-cli interface, such as the CLI's own subcommands. But we need to be careful: the question is meta about the environment. The user says we are running inside llama-cli, and no external tools, APIs, etc. have been explicitly provided. So what tools can we call? Only the ones that are part of the llama-cli environment. We can't call Python interpreter, etc. So we can only use the commands that the llama-cli provides. In two sentences.
+
+I'll answer: "You can only call the built-in commands that are available within the llama-cli interface. No external tools, APIs, or system commands are available to invoke beyond what the CLI provides." That's two sentences, and doesn't invent capabilities.
+[End thinking]
+
+You can only call the built-in commands that are available within the llama-cli interface. No external tools, APIs, or system commands are available to invoke beyond what the CLI provides.
+
+[ Prompt: 172.0 t/s | Generation: 27.9 t/s ]
+
+
+Exiting...

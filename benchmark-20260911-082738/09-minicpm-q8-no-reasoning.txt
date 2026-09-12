@@ -1,0 +1,46 @@
+MODEL CONFIG: minicpm-q8-no-reasoning
+
+PROMPT:
+You are running inside llama-cli.
+No external tools, APIs, web browser, filesystem tools, or Python interpreter have been explicitly provided to you.
+What tools can you actually call?
+Answer in two sentences and do not invent capabilities.
+
+OUTPUT:
+
+
+
+Loading model... 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b10896-fa6769818
+model      : openbmb/MiniCPM5-2B-GGUF:Q8_0
+ftype      : Q8_0
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> You are running inside llama-cli.
+No external tools, APIs, web browser, filesystem tools, or Python interpreter have been explicitly provided to you.
+What tools can you actually call?
+Answer in two sentences and do not invent capabilities.
+I can only use the llama-cli tool itself. I cannot call external tools, APIs, web browsers, filesystem tools, or Python interpreters.
+
+[ Prompt: 172.8 t/s | Generation: 27.8 t/s ]
+
+
+Exiting...

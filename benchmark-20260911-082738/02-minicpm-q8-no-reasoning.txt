@@ -1,0 +1,94 @@
+MODEL CONFIG: minicpm-q8-no-reasoning
+
+PROMPT:
+You have three boxes labeled Apples, Oranges, and Mixed.
+Every label is wrong.
+You may take one fruit from one box.
+Explain how to correctly label all three boxes.
+
+OUTPUT:
+
+
+
+Loading model... 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b10896-fa6769818
+model      : openbmb/MiniCPM5-2B-GGUF:Q8_0
+ftype      : Q8_0
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> You have three boxes labeled Apples, Oranges, and Mixed.
+Every label is wrong.
+You may take one fruit from one box.
+Explain how to correctly label all three boxes.
+This is a classic logic puzzle. The trick is realizing that because **every** label is currently wrong, you can use the fruit you pick to determine the correct label for the box you took it from, and then deduce the other two.
+
+Here is the step-by-step reasoning:
+
+1.  **Take a fruit from the "Apples" box.**
+2.  **Observe the fruit:**
+    *   **Case A: You picked an Orange.**
+        *   Since the "Apples" box is wrong, it must contain Oranges or Mixed.
+        *   Since you picked an Orange, this box contains Oranges. Therefore, the **"Oranges"** label is actually correct for this box.
+        *   Now, look at the "Mixed" box. Since both "Apples" and "Oranges" are now correctly identified, the "Mixed" box must be the remaining one. Therefore, the **"Mixed"** label is wrong, and this box actually contains Apples.
+        *   Finally, the **"Apples"** box is wrong (as we started), and since it contains Oranges, it must actually contain Apples and Mixed? Wait, let's re-evaluate the standard solution.
+    
+    *Let's restart the logic with the standard puzzle rules:*
+    
+    **Correct Logic Flow:**
+    
+    *   **Step 1:** Take a fruit from the box labeled **"Apples"**.
+    *   **Scenario 1: You take an **Orange**.**
+        *   The "Apples" box is wrong. It contains an Orange. So this box is actually **Oranges** (or Mixed). 
+        *   The box labeled "Mixed" must contain either Apples or Oranges.
+        *   The box labeled "Apples" (which we are in) contains an Orange.
+        *   Let's look at the other boxes. The box labeled "Apples" contains an Orange. The box labeled "Oranges" must contain something else (since that label is also wrong).
+        *   Actually, the simplest deduction is: If the "Apples" box contains an Orange, then the "Apples" box is actually the "Oranges" box? No.
+        *   Let's use the property: **Every label is wrong.**
+        *   If we pick from "Apples" and get an **Orange**: 
+            *   The "Apples" box is wrong.
+            *   The "Oranges" box is wrong.
+            *   The "Mixed" box is wrong.
+            *   We found an Orange in the "Apples" box.
+            *   This box cannot be "Apples" (label wrong) and cannot be "Oranges" (because the box labeled "Oranges" is also wrong, but could it be Mixed?).
+            *   Actually, if the "Apples" box has an Orange, and the "Oranges" box has a different fruit (say Apple), and "Mixed" has the rest...
+            *   Let's try the specific deduction:
+                *   Box A (Label: Apples) -> Contains Orange.
+                *   Box B (Label: Oranges) -> Must contain Apple (since Label B is wrong and Orange is in A).
+                *   Box C (Label: Mixed) -> Must contain Mixed? No, if A has Orange and B has Apple, then C must have Mixed. But Label C is wrong. So C contains something else? Wait, if A=Orange, B=Apple, then C=Mixed. But Label C is "Mixed". Is Label C wrong? If C actually contains Mixed, then the label "Mixed" is correct. But the premise says **Every label is wrong**. Therefore, C cannot contain Mixed. This implies my assumption that A=Orange, B=Apple, C=Mixed leads to a contradiction with the "Every label wrong" rule.
+        
+    *   **Let's try the reverse: What if we pick an Apple?**
+        *   Take fruit from "Apples" box.
+        *   **Scenario 2: You pick an **Apple**.**
+            *   The "Apples" box is wrong (Label mismatch). So it contains something else.
+            *   The box labeled "Oranges" is also wrong.
+            *   The box labeled "Mixed" is also wrong.
+            *   Since we found an Apple in the "Apples" box, the box labeled "Oranges" (which is wrong) must contain the Apples we just found? No, that doesn't work directly.
+            
+    *   **Let's use the definitive standard solution for this riddle:**
+        1.  Pick a fruit from the box labeled **"Apples"**.
+        2.  **If the fruit is an Orange:**
+            *   The "Apples" box is actually the **Oranges** box (since it has an orange).
+            *   The box labeled "Oranges" must
+
+[ Prompt: 137.0 t/s | Generation: 27.7 t/s ]
+
+
+Exiting...

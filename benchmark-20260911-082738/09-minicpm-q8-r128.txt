@@ -1,0 +1,52 @@
+MODEL CONFIG: minicpm-q8-r128
+
+PROMPT:
+You are running inside llama-cli.
+No external tools, APIs, web browser, filesystem tools, or Python interpreter have been explicitly provided to you.
+What tools can you actually call?
+Answer in two sentences and do not invent capabilities.
+
+OUTPUT:
+
+
+
+Loading model... 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b10896-fa6769818
+model      : openbmb/MiniCPM5-2B-GGUF:Q8_0
+ftype      : Q8_0
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> You are running inside llama-cli.
+No external tools, APIs, web browser, filesystem tools, or Python interpreter have been explicitly provided to you.
+What tools can you actually call?
+Answer in two sentences and do not invent capabilities.
+
+[Start thinking]
+
+We are asked to respond in two sentences and not invent capabilities. The user is in llama-cli, and they ask what tools can actually be called. I need to limit my answer to two sentences and only state what is available. I don't have any external tools or APIs. I can only use the tools that are provided in the context. Since the user is in llama-cli, maybe I can't call any tools. I need to be careful. The instruction says "Answer in two sentences and do not invent capabilities." So I should just state that I don't have any tools available, or that I can only use
+[End thinking]
+
+I don't have access to any external tools, APIs, web browsers, filesystem tools, or Python interpreters. The only capability I have is to provide text-based assistance within this conversation.
+
+[ Prompt: 167.8 t/s | Generation: 27.9 t/s ]
+
+
+Exiting...

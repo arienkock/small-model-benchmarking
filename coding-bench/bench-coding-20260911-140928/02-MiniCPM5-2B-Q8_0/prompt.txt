@@ -1,0 +1,15 @@
+Build a URL shortener web application.
+
+Create two files:
+
+1. server.py — HTTP server using only the Python standard library with in-memory storage:
+   - POST /shorten with JSON {"url": "https://example.com"} returns {"code": "<6-char-code>", "url": "..."}.
+   - The code must be exactly 6 characters from [a-zA-Z0-9].
+   - GET /<code> responds with 302 and a Location header pointing to the stored URL.
+   - GET /<unknown-code> responds with 404.
+2. shortener.ts — export function makeCode(length: number): string that returns a random
+   alphanumeric code of exactly that length, and export function isValidCode(code: string): boolean.
+
+Use only the Python standard library. Do not install packages.
+Verify before finishing: run the server, POST /shorten, then GET the returned code with curl -i and confirm the 302.
+You can run TypeScript directly with: node shortener.ts (Node 24 runs .ts files natively).

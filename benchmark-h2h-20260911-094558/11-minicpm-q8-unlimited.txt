@@ -1,0 +1,67 @@
+MODEL CONFIG: minicpm-q8-unlimited
+
+PROMPT:
+Read the following passage and summarize it in exactly two sentences.
+Preserve all three numerical facts.
+
+A small factory replaced 18 older motors with high-efficiency units.
+Electricity consumption fell by 14 percent during the first six months.
+The upgrade cost $72,000, and management estimates that the investment will pay for itself in 3.5 years.
+
+OUTPUT:
+
+
+
+Loading model... 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b10896-fa6769818
+model      : openbmb/MiniCPM5-2B-GGUF:Q8_0
+ftype      : Q8_0
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> Read the following passage and summarize it in exactly two sentences.
+Preserve all three numerical facts.
+
+A small factory replaced 18 older motors with high-efficiency units.
+Electricity consumption fell by 14 percent during the first six months.
+The upgrade cost $72,000, and management estimates that the investment will pay for itself in 3.5 years.
+
+[Start thinking]
+
+We need to summarize the passage in exactly two sentences while preserving all three numerical facts: 18, 14, and 72,000.
+The passage says: 
+- A small factory replaced 18 older motors with high-efficiency units.
+- Electricity consumption fell by 14 percent during the first six months.
+- The upgrade cost $72,000, and management estimates that the investment will pay for itself in 3.5 years.
+We need to include 18, 14, and 72,000 in the summary.
+We must ensure that the summary is exactly two sentences.
+We need to make sure that we don't add or omit any of the numbers.
+Let's craft two sentences that include these numbers.
+We can combine some ideas.
+We need to make sure that the summary is concise and only includes the necessary information.
+We need to make sure that the numbers are preserved.
+[End thinking]
+
+The factory replaced 18 motors and saw a 14 percent drop in electricity usage. The upgrade cost $72,000, with management estimating a payback period of 3.5 years.
+
+[ Prompt: 146.0 t/s | Generation: 28.0 t/s ]
+
+
+Exiting...

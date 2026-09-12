@@ -1,0 +1,61 @@
+MODEL CONFIG: minicpm-q8-no-reasoning
+
+PROMPT:
+Alice is older than Bob.
+Bob is older than Carol.
+David is younger than Alice but older than Bob.
+Order all four people from oldest to youngest.
+
+OUTPUT:
+
+
+
+Loading model... 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b10896-fa6769818
+model      : openbmb/MiniCPM5-2B-GGUF:Q8_0
+ftype      : Q8_0
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> Alice is older than Bob.
+Bob is older than Carol.
+David is younger than Alice but older than Bob.
+Order all four people from oldest to youngest.
+Let's break down the relationships step by step to order Alice, Bob, Carol, and David from oldest to youngest.
+
+1.  **"Alice is older than Bob."**
+    *   Current order: Alice > Bob
+2.  **"Bob is older than Carol."**
+    *   Adding Carol: Alice > Bob > Carol
+3.  **"David is younger than Alice but older than Bob."**
+    *   We know David is younger than Alice (so Alice > David).
+    *   We also know David is older than Bob (so David > Bob).
+    *   Combining these with the previous order: Alice > David > Bob > Carol.
+
+**Final Order (Oldest to Youngest):**
+1.  Alice
+2.  David
+3.  Bob
+4.  Carol
+
+[ Prompt: 128.2 t/s | Generation: 27.8 t/s ]
+
+
+Exiting...

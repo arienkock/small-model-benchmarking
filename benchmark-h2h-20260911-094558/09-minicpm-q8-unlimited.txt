@@ -1,0 +1,52 @@
+MODEL CONFIG: minicpm-q8-unlimited
+
+PROMPT:
+You are running inside llama-cli.
+No external tools, APIs, web browser, filesystem tools, or Python interpreter have been explicitly provided to you.
+What tools can you actually call?
+Answer in two sentences and do not invent capabilities.
+
+OUTPUT:
+
+
+
+Loading model... 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b10896-fa6769818
+model      : openbmb/MiniCPM5-2B-GGUF:Q8_0
+ftype      : Q8_0
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> You are running inside llama-cli.
+No external tools, APIs, web browser, filesystem tools, or Python interpreter have been explicitly provided to you.
+What tools can you actually call?
+Answer in two sentences and do not invent capabilities.
+
+[Start thinking]
+
+We need to respond in two sentences, not inventing capabilities. The user is asking what tools can actually be called in llama-cli, given constraints. We must answer in two sentences, no invented capabilities. The answer should be based on what we know about llama-cli. We are an AI, no actual tools. The user says we are running inside llama-cli, no external tools, APIs, web browser, filesystem tools, or Python interpreter provided. What tools can we actually call? We must answer in two sentences and not invent capabilities. So we need to say something like: "You can only use the built-in functions of the llama-cli environment, such as the command line interface and any preloaded tools. You cannot call external systems, APIs, or other tools beyond what's defined in the llama-cli documentation." But we must be careful not to invent capabilities. The user asks "What tools can you actually call?" So we need to state that we can only call tools that are provided within the llama-cli environment, like the CLI commands and any built-in utilities. But we don't know what those are. The safest answer is to say we cannot call external tools, and we must only use what's provided. However, the instruction says "Answer in two sentences and do not invent capabilities." So we must give a general answer. We can say: "Within llama-cli, you can only interact via the command line and any tools explicitly installed in that environment. You cannot call external programs, APIs, or other systems beyond those defined in the llama-cli documentation." That's two sentences. That should be fine.
+[End thinking]
+
+Within llama-cli, you can only interact via the command line and any tools explicitly installed in that environment. You cannot call external programs, APIs, or other systems beyond those defined in the llama-cli documentation.
+
+[ Prompt: 171.1 t/s | Generation: 27.9 t/s ]
+
+
+Exiting...

@@ -1,0 +1,17 @@
+Build a chat application backend with polling.
+
+Create three files:
+
+1. server.py — HTTP server using only the Python standard library:
+   - POST /api/messages with JSON {"user": str, "text": str} stores a message with a monotonically
+     increasing integer id.
+   - GET /api/messages?since=N returns {"messages": [...]} with id > N only, oldest first.
+2. chat.ts — export interface ChatMessage { id: number; user: string; text: string } and
+   export function mergeMessages(existing: ChatMessage[], incoming: ChatMessage[]): ChatMessage[]
+   that merges two lists, removing duplicates by id and keeping ascending id order.
+3. chat.test.ts — assertions for mergeMessages (including duplicate ids) that pass when run with:
+   node chat.test.ts
+
+Use only the Python standard library. Do not install packages.
+Verify before finishing: POST two messages, GET with since=0 and since=1 (show the filtering works),
+and run node chat.test.ts.

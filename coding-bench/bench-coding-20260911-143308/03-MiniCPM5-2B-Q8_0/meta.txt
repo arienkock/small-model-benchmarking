@@ -1,0 +1,18 @@
+run: 3
+model: MiniCPM5-2B-Q8_0
+workspace: /d/llama.cpp/coding-bench/bench-coding-20260911-143308/03-MiniCPM5-2B-Q8_0
+exit_code: 124
+duration_sec: 1803
+context: 16384
+reasoning_budget: 4096
+files_created:
+  convert.ts (801 bytes)
+  meta.txt (204 bytes)
+  server.py (2555 bytes)
+  server_stderr.log (0 bytes)
+  test_client.py (305 bytes)
+  test_url.txt (55 bytes)
+  url.txt (56 bytes)
+tool_calls: 124
+output_tokens_total: 16959
+input_tokens_total: 62663

@@ -1,0 +1,14 @@
+run: 3
+model: LFM2.5-2.6B-Q8_0
+workspace: /d/llama.cpp/coding-bench/bench-coding-20260911-143308/03-LFM2.5-2.6B-Q8_0
+exit_code: 124
+duration_sec: 1803
+context: 16384
+reasoning_budget: 4096
+files_created:
+  convert.ts (1365 bytes)
+  meta.txt (204 bytes)
+  server.py (3047 bytes)
+tool_calls: 49
+output_tokens_total: 26861
+input_tokens_total: 31451

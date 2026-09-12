@@ -1,0 +1,101 @@
+MODEL CONFIG: lfm-q8
+
+PROMPT:
+Alice is older than Bob.
+Bob is older than Carol.
+David is younger than Alice but older than Bob.
+Order all four people from oldest to youngest.
+
+OUTPUT:
+
+
+
+Loading model... 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b10896-fa6769818
+model      : LiquidAI/LFM2.5-2.6B-GGUF:Q8_0
+ftype      : Q8_0
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> Alice is older than Bob.
+Bob is older than Carol.
+David is younger than Alice but older than Bob.
+Order all four people from oldest to youngest.
+
+[Start thinking]
+
+1.  **Analyze the Request:** The user wants me to order four people (Alice, Bob, Carol, David) from oldest to youngest based on a set of given relationships.
+
+2.  **Extract the Relationships:**
+    *   Statement 1: "Alice is older than Bob." -> Alice > Bob
+    *   Statement 2: "Bob is older than Carol." -> Bob > Carol
+    *   Statement 3: "David is younger than Alice but older than Bob." -> Alice > David > Bob
+
+3.  **Synthesize the Order:**
+    *   From Statement 1: Alice is at the top.
+    *   From Statement 2: Bob is below Alice.
+    *   From Statement 3: David is between Alice and Bob (Alice > David > Bob).
+    *   Let's combine these:
+        *   Alice is the oldest.
+        *   Bob is younger than Alice.
+        *   David is younger than Alice but older than Bob.
+        *   Carol is younger than Bob.
+
+    *   Current chain: Alice > David > Bob > Carol.
+
+4.  **Verify the Chain:**
+    *   Alice > Bob? Yes (Alice > David > Bob).
+    *   Bob > Carol? Yes (Bob > Carol).
+    *   David > Bob? Yes (David > Bob).
+    *   David < Alice? Yes (Alice > David).
+
+5.  **Final Order:**
+    1.  Alice
+    2.  David
+    3.  Bob
+    4.  Carol
+
+6.  **Format the Output:** Present the ordered list clearly.
+
+    *   Oldest: Alice
+    *   Next: David
+    *   Next: Bob
+    *   Youngest: Carol
+
+    Order: Alice, David, Bob, Carol.
+[End thinking]
+
+Here is the order from oldest to youngest:
+
+1.  **Alice**
+2.  **David**
+3.  **Bob**
+4.  **Carol**
+
+**Reasoning:**
+*   Alice is older than Bob.
+*   Bob is older than Carol.
+*   David is older than Bob but younger than Alice.
+*   Combining these facts: Alice > David > Bob > Carol.
+
+[ Prompt: 93.7 t/s | Generation: 26.2 t/s ]
+
+
+Exiting...

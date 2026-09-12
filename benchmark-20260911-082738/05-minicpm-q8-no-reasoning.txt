@@ -1,0 +1,69 @@
+MODEL CONFIG: minicpm-q8-no-reasoning
+
+PROMPT:
+A bag contains 3 red balls and 2 blue balls.
+Two balls are drawn without replacement.
+What is the probability that both are red?
+Give the exact fraction and explain briefly.
+
+OUTPUT:
+
+
+
+Loading model... 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b10896-fa6769818
+model      : openbmb/MiniCPM5-2B-GGUF:Q8_0
+ftype      : Q8_0
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> A bag contains 3 red balls and 2 blue balls.
+Two balls are drawn without replacement.
+What is the probability that both are red?
+Give the exact fraction and explain briefly.
+The probability of drawing two red balls without replacement is **2/5**.
+
+**Explanation:**
+- There are 3 red balls out of a total of 5 balls.
+- The probability that the first ball drawn is red is 3/5.
+- After drawing one red ball, there are 2 red balls left out of 4 remaining balls.
+- The probability that the second ball is red, given the first was red, is 2/4 = 1/2.
+- Multiplying these probabilities: (3/5) × (1/2) = 3/10. Wait, let me recheck.
+
+Actually, let me recompute carefully:
+- Total ways to choose 2 balls from 5: C(5,2) = 10.
+- Ways to choose 2 red balls from 3: C(3,2) = 3.
+- Probability = 3/10.
+
+Let me verify once more:
+- P(first red) = 3/5
+- P(second red | first red) = 2/4 = 1/2
+- (3/5) × (1/2) = 3/10.
+
+So the correct answer is **3/10**.
+
+The probability is **3/10**. 
+
+**Explanation:** There are C(5,2)=10 equally likely pairs of balls, and C(3,2)=3 of those pairs consist of two red balls, so 3/10.
+
+[ Prompt: 145.2 t/s | Generation: 27.7 t/s ]
+
+
+Exiting...

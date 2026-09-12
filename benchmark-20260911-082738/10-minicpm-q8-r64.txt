@@ -1,0 +1,52 @@
+MODEL CONFIG: minicpm-q8-r64
+
+PROMPT:
+The country of Valoria launched its first satellite in 2024.
+Who designed the satellite's propulsion system?
+If the information cannot be determined from the question, say so rather than inventing an answer.
+
+OUTPUT:
+
+
+
+Loading model... 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b10896-fa6769818
+model      : openbmb/MiniCPM5-2B-GGUF:Q8_0
+ftype      : Q8_0
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> The country of Valoria launched its first satellite in 2024.
+Who designed the satellite's propulsion system?
+If the information cannot be determined from the question, say so rather than inventing an answer.
+
+[Start thinking]
+
+We are asked: "The country of Valoria launched its first satellite in 2024. Who designed the satellite's propulsion system? If the information cannot be determined from the question, say so rather than inventing an answer."
+
+We need to answer based on the given information. The question provides only that Valoria
+[End thinking]
+
+The information cannot be determined from the question.
+
+[ Prompt: 146.1 t/s | Generation: 27.9 t/s ]
+
+
+Exiting...

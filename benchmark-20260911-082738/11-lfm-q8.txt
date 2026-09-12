@@ -1,0 +1,64 @@
+MODEL CONFIG: lfm-q8
+
+PROMPT:
+Read the following passage and summarize it in exactly two sentences.
+Preserve all three numerical facts.
+
+A small factory replaced 18 older motors with high-efficiency units.
+Electricity consumption fell by 14 percent during the first six months.
+The upgrade cost $72,000, and management estimates that the investment will pay for itself in 3.5 years.
+
+OUTPUT:
+
+
+
+Loading model... 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b10896-fa6769818
+model      : LiquidAI/LFM2.5-2.6B-GGUF:Q8_0
+ftype      : Q8_0
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> Read the following passage and summarize it in exactly two sentences.
+Preserve all three numerical facts.
+
+A small factory replaced 18 older motors with high-efficiency units.
+Electricity consumption fell by 14 percent during the first six months.
+The upgrade cost $72,000, and management estimates that the investment will pay for itself in 3.5 years.
+
+[Start thinking]
+
+We need to read the passage and summarize it in exactly two sentences. Must preserve all three numerical facts: 18 older motors replaced, electricity consumption fell by 14 percent, upgrade cost $72,000, and management estimates that the investment will pay for itself in 3.5 years. That's four numbers? Actually three numerical facts: "18", "14 percent", "$72,000", "3.5 years". That's four numbers. The instruction says "Preserve all three numerical facts." Wait, the passage contains four numbers: 18, 14 percent, $72,000, 3.5 years. But the instruction says preserve all three numerical facts. Possibly they consider "18 older motors", "14 percent", and "$72,000" as the three facts, and "3.5 years" is not considered a fact? Or maybe they think "the upgrade cost $72,000, and management estimates that the investment will pay for itself in 3.5 years" is one fact? But that's two numbers. The phrase "Preserve all three numerical facts" suggests we must include exactly three numbers in the summary. Which three? Likely the three distinct numbers: 18, 14 percent, $72,000. The 3.5 years might be considered a time, not a numeric fact? But it's numeric. However, the instruction says preserve all three numerical facts, so we must include exactly three numbers. So we need to embed 18, 14 percent, $72,000 in the two-sentence summary. We must not include 3.5 years. But the passage includes that fact; maybe we can omit it because it's not required to preserve? The instruction is explicit: preserve all three numerical facts. So we must include exactly those three numbers. The summary must be exactly two sentences. So we need to craft two sentences that convey the key points: replacement of 18 older motors, electricity consumption fell by 14%, upgrade cost $72,000. We must not mention the payback period. That's okay.
+
+Now ensure we have exactly two sentences. Count periods. Use proper punctuation. Sentence 1: "The factory replaced 18 older motors with high‑efficiency units, cutting electricity consumption by 14 percent." That's one sentence. Sentence 2: "The upgrade cost $72,000, and management expects the investment to recoup its cost in 3.5 years." Wait that includes 3.5 years, which is a fourth number. That would violate the three-number rule. So we must avoid mentioning 3.5 years. But we need to convey the payback period? The instruction didn't require it; it only says preserve all three numerical facts. It doesn't forbid other numbers, but "preserve all three numerical facts" could be interpreted as you must include those three numbers, but you could also include others. However, typical tasks like this want exactly those three numbers and no extra numbers. Usually they'd want exactly three numbers in the summary. So we should avoid 3.5 years. But then the summary loses the payback info. That's okay because not required. The instruction didn't say we must include all facts, just preserve the three numerical facts. So we can omit the payback period. That yields exactly two sentences, each containing one of the three numbers. Let's craft:
+
+Sentence 1: "The factory replaced 18 older motors with high‑efficiency units, reducing electricity consumption by 14 percent." That's one sentence, includes 18 and 14 percent.
+
+Sentence 2: "The upgrade cost $72,000." That's second sentence, includes $72,000. That's three numbers total. Two sentences. Good.
+
+Check: Are there any other numbers? No. The phrase "high‑efficiency" is not numeric. "14 percent" includes percent sign but that's okay. "$72,000" includes comma but still numeric. So we have exactly three numbers. Two sentences. Done.
+[End thinking]
+
+The factory replaced 18 older motors with high‑efficiency units, reducing electricity consumption by 14 percent. The upgrade cost $72,000.
+
+[ Prompt: 116.2 t/s | Generation: 26.3 t/s ]
+
+
+Exiting...

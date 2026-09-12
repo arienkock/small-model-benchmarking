@@ -1,0 +1,17 @@
+Build a notes web application with persistent storage.
+
+Create three files:
+
+1. server.py — HTTP server using only the Python standard library:
+   - Store notes in notes.json (create it if missing; it starts empty).
+   - GET /api/notes returns all notes as {"notes": [...]}.
+   - POST /api/notes with {"title": str, "body": str} appends a note with a new unique id and saves to disk.
+   - Notes must survive a server restart.
+2. notes.ts — export interface Note { id: number; title: string; body: string } and
+   export function searchNotes(notes: Note[], query: string): Note[] returning notes whose title
+   or body contains the query (case-insensitive).
+3. search.test.ts — a few assertions for searchNotes that pass when run with: node search.test.ts
+
+Use only the Python standard library. Do not install packages.
+Verify before finishing: start the server, POST two notes, restart the server, GET and confirm both
+notes are still there, then run node search.test.ts.

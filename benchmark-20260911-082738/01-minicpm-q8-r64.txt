@@ -1,0 +1,52 @@
+MODEL CONFIG: minicpm-q8-r64
+
+PROMPT:
+A farmer has 17 sheep. All but 9 run away. How many remain? Explain briefly.
+
+OUTPUT:
+
+
+
+Loading model... 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b10896-fa6769818
+model      : openbmb/MiniCPM5-2B-GGUF:Q8_0
+ftype      : Q8_0
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> A farmer has 17 sheep. All but 9 run away. How many remain? Explain briefly.
+
+[Start thinking]
+
+We need to parse the problem: "A farmer has 17 sheep. All but 9 run away. How many remain? Explain briefly."
+
+We have 17 sheep initially. "All but 9 run away." Typically "all but 9" means everything except 9. So out of the 
+[End thinking]
+
+We have 17 sheep initially. The phrase “all but 9” means that the farmer lets 9 of the sheep stay (i.e., the other 17 − 9 = 8 run away). So the number of sheep that remain is 9.
+
+\[
+\boxed{9}
+\]
+
+[ Prompt: 104.9 t/s | Generation: 28.1 t/s ]
+
+
+Exiting...

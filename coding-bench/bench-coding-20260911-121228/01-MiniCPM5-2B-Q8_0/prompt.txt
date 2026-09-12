@@ -1,0 +1,14 @@
+Build a todo list web application with a Python backend and a TypeScript client module.
+
+Create two files:
+
+1. server.py — HTTP server using only the Python standard library (http.server).
+   - GET /api/todos returns JSON {"todos": [...]} where each todo is {"id": int, "title": str, "done": bool}.
+   - POST /api/todos with JSON body {"title": "..."} creates a todo and returns it with a new unique id.
+   - Unknown routes return 404.
+2. todos.ts — export interface Todo { id: number; title: string; done: boolean } and
+   export async function fetchTodos(baseUrl: string): Promise<Todo[]> that GETs /api/todos and returns the parsed list.
+
+Use only the Python standard library. Do not install packages.
+Verify before finishing: start the server on port 8000, POST one todo with curl, GET the list, then stop the server.
+You can run TypeScript directly with: node todos.ts (Node 24 runs .ts files natively).

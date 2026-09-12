@@ -1,0 +1,18 @@
+run: 11
+model: MiniCPM5-2B-Q8_0
+workspace: /d/llama.cpp/coding-bench/bench-coding-20260911-143308/11-MiniCPM5-2B-Q8_0
+exit_code: 124
+duration_sec: 1804
+context: 16384
+reasoning_budget: 4096
+files_created:
+  chat.js (559 bytes)
+  chat.test.js (2589 bytes)
+  chat.ts (545 bytes)
+  meta.txt (205 bytes)
+  package-lock.json (12016 bytes)
+  package.json (55 bytes)
+  server.py (2159 bytes)
+tool_calls: 58
+output_tokens_total: 21494
+input_tokens_total: 54499

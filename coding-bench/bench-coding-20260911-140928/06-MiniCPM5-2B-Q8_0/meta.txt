@@ -1,0 +1,13 @@
+run: 6
+model: MiniCPM5-2B-Q8_0
+workspace: bench-coding-20260911-140928/06-MiniCPM5-2B-Q8_0
+exit_code: 125
+duration_sec: 1
+context: 16384
+reasoning_budget: 4096
+files_created:
+  meta.txt (175 bytes)
+tool_calls: 0
+0
+output_tokens_total: 0
+input_tokens_total: 0

@@ -1,0 +1,13 @@
+run: 12
+model: LFM2.5-2.6B-Q8_0
+workspace: bench-coding-20260911-121228/12-LFM2.5-2.6B-Q8_0
+exit_code: 0
+duration_sec: 15
+context: 16384
+reasoning_budget: 4096
+files_created:
+  meta.txt (175 bytes)
+tool_calls: 0
+0
+output_tokens_total: 0
+input_tokens_total: 0

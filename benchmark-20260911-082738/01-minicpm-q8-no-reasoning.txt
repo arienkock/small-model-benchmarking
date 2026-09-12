@@ -1,0 +1,44 @@
+MODEL CONFIG: minicpm-q8-no-reasoning
+
+PROMPT:
+A farmer has 17 sheep. All but 9 run away. How many remain? Explain briefly.
+
+OUTPUT:
+
+
+
+Loading model... 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b10896-fa6769818
+model      : openbmb/MiniCPM5-2B-GGUF:Q8_0
+ftype      : Q8_0
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> A farmer has 17 sheep. All but 9 run away. How many remain? Explain briefly.
+The farmer starts with 17 sheep. "All but 9" means the number remaining is 9. 
+
+**9 sheep remain.**
+
+(Note: This is a classic riddle where the answer is the number stated in the phrase, not the subtraction 17 - 9 = 8.)
+
+[ Prompt: 81.7 t/s | Generation: 27.6 t/s ]
+
+
+Exiting...
