@@ -1,0 +1,19 @@
+run: 1
+model: Spark-X2.5-4B-Q6_K
+workspace: /d/llama.cpp/coding-bench/bench-filter-20260912-142607/01-Spark-X2.5-4B-Q6_K
+exit_code: 0
+duration_sec: 422
+context: 16384
+reasoning_budget: 4096
+run_budget_sec: 1474
+decode_tok_s: 13.56
+files_created:
+  debounce.ts (1798 bytes)
+  meta.txt (246 bytes)
+tool_calls: 3
+output_tokens_total: 4996
+input_tokens_total: 2421
+signal_node_invocations: 1
+signal_curl_invocations: 0
+signal_tests_passed_strings: 1
+signal_guard_blocks: 0

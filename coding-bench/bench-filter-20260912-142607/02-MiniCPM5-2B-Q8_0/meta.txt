@@ -1,0 +1,20 @@
+run: 2
+model: MiniCPM5-2B-Q8_0
+workspace: /d/llama.cpp/coding-bench/bench-filter-20260912-142607/02-MiniCPM5-2B-Q8_0
+exit_code: 124
+duration_sec: 903
+context: 16384
+reasoning_budget: 4096
+run_budget_sec: 900
+decode_tok_s: 26.96
+files_created:
+  meta.txt (243 bytes)
+  server.py (1504 bytes)
+  throttle.ts (671 bytes)
+tool_calls: 34
+output_tokens_total: 10118
+input_tokens_total: 32535
+signal_node_invocations: 2
+signal_curl_invocations: 20
+signal_tests_passed_strings: 0
+signal_guard_blocks: 0

@@ -1,0 +1,6 @@
+VibeThinker-3B-Q8_0: preflight failure — transcripts would not be gradable
+    turn_boundary: OK|finish_reason=stop
+    tool_calls:    FAIL|model tried to call a tool in an unparseable format (no tool_calls field). Sample: <think>We need to parse the problem. The user wants us to create a file named hello.txt containing the word hi, using th
+Apertus-4B-Instruct-v1.1-Q8_0: preflight failure — transcripts would not be gradable
+    turn_boundary: FAIL|generation never reached a stop token (finish_reason=length on a 3-word reply); EOS is probably not in the model's EOG set
+    tool_calls:    FAIL|model tried to call a tool in an unparseable format (no tool_calls field). Sample: I can help you with that. Let's get started. Open a terminal or command prompt and navigate to the directory where you w
