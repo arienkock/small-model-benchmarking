@@ -1,0 +1,16 @@
+run: 1
+model: Apertus-4B-Instruct-v1.1-Q8_0
+workspace: /d/llama.cpp/coding-bench/bench-filter-20260912-083544/01-Apertus-4B-Instruct-v1.1-Q8_0
+exit_code: 0
+duration_sec: 170
+context: 16384
+reasoning_budget: 4096
+files_created:
+  meta.txt (227 bytes)
+tool_calls: 0
+output_tokens_total: 2938
+input_tokens_total: 1158
+signal_node_invocations: 0
+signal_curl_invocations: 0
+signal_tests_passed_strings: 6
+signal_guard_blocks: 0

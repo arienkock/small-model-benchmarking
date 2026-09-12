@@ -1,0 +1,27 @@
+MODEL                            TASK  EXIT DURATION  TOOLS   NODE   CURL   PASS  BLOCK
+Apertus-4B-Instruct-v1.1-Q8_0       1     0      170      0      0      0      6      0
+Apertus-4B-Instruct-v1.1-Q8_0       2     0      168      0      0      0      0      0
+Apertus-4B-Instruct-v1.1-Q8_0       3     0      168      0      0      0      0      0
+Granite-4.2-3B-Q8_0                 1   124      902      6      6      0     26      0
+Granite-4.2-3B-Q8_0                 2   124      903     13      0     18      0      0
+Granite-4.2-3B-Q8_0                 3   124      902     10      7      5      0      0
+LFM2.5-2.6B-Q8_0                    1   124      903     13     18      0     42      5
+LFM2.5-2.6B-Q8_0                    2   124      903     37     24     17      0      4
+LFM2.5-2.6B-Q8_0                    3   124      903     22      0     29      0      5
+MiniCPM5-2B-Q8_0                    1   124      903     24     66      0     57      0
+MiniCPM5-2B-Q8_0                    2   124      903     33    104     14      0      0
+MiniCPM5-2B-Q8_0                    3     0      161     13      0     33      0      0
+Nanbeige4.2-3B-Q6_K                 1   124      904      7     11      0     20      0
+Nanbeige4.2-3B-Q6_K                 2   124      905     12     26      0      0      0
+Nanbeige4.2-3B-Q6_K                 3     0      897     13     13     25      0      0
+Spark-X2.5-4B-Q6_K                  1   124      902      5      6      0     14      0
+Spark-X2.5-4B-Q6_K                  2   124      903      4      7      0      0      0
+Spark-X2.5-4B-Q6_K                  3   124      903      3      0      0      0      0
+VibeThinker-3B-Q8_0                 1     0      194      0      0      0      6      0
+VibeThinker-3B-Q8_0                 2     0      415      0      0      0      0      0
+VibeThinker-3B-Q8_0                 3     0       38      0      0      0      0      0
+
+EXIT 0=finished on its own  124=hit the 900s cap
+NODE/CURL = bash calls invoking them   PASS = 'all tests passed'-style strings
+BLOCK = guard refusals (absolute paths, package installs, prompt.txt writes)
+These are triage signals, not grades. Grade from the transcripts.

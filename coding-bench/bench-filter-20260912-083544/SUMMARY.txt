@@ -1,0 +1,34 @@
+# Filter-round summary — Sat Sep 12 13:21:44 WEDT 2026
+tasks: 3 (full-suite 5, 7, 12)  reasoning_budget: 4096  run_timeout: 900s
+sandbox: docker (coding-bench-agent:latest), guard extension active (URL-safe)
+context: probed PER MODEL (highest of 16384 12288 8192 4096)
+
+LFM2.5-2.6B-Q8_0: context 16384
+MiniCPM5-2B-Q8_0: context 16384
+VibeThinker-3B-Q8_0: context 16384
+Granite-4.2-3B-Q8_0: context 16384
+Spark-X2.5-4B-Q6_K: context 16384
+Nanbeige4.2-3B-Q6_K: context 16384
+Apertus-4B-Instruct-v1.1-Q8_0: context 16384
+
+run: 1 model: Apertus-4B-Instruct-v1.1-Q8_0 exit_code: 0 duration_sec: 170 
+run: 1 model: Granite-4.2-3B-Q8_0 exit_code: 124 duration_sec: 902 
+run: 1 model: LFM2.5-2.6B-Q8_0 exit_code: 124 duration_sec: 903 
+run: 1 model: MiniCPM5-2B-Q8_0 exit_code: 124 duration_sec: 903 
+run: 1 model: Nanbeige4.2-3B-Q6_K exit_code: 124 duration_sec: 904 
+run: 1 model: Spark-X2.5-4B-Q6_K exit_code: 124 duration_sec: 902 
+run: 1 model: VibeThinker-3B-Q8_0 exit_code: 0 duration_sec: 194 
+run: 2 model: Apertus-4B-Instruct-v1.1-Q8_0 exit_code: 0 duration_sec: 168 
+run: 2 model: Granite-4.2-3B-Q8_0 exit_code: 124 duration_sec: 903 
+run: 2 model: LFM2.5-2.6B-Q8_0 exit_code: 124 duration_sec: 903 
+run: 2 model: MiniCPM5-2B-Q8_0 exit_code: 124 duration_sec: 903 
+run: 2 model: Nanbeige4.2-3B-Q6_K exit_code: 124 duration_sec: 905 
+run: 2 model: Spark-X2.5-4B-Q6_K exit_code: 124 duration_sec: 903 
+run: 2 model: VibeThinker-3B-Q8_0 exit_code: 0 duration_sec: 415 
+run: 3 model: Apertus-4B-Instruct-v1.1-Q8_0 exit_code: 0 duration_sec: 168 
+run: 3 model: Granite-4.2-3B-Q8_0 exit_code: 124 duration_sec: 902 
+run: 3 model: LFM2.5-2.6B-Q8_0 exit_code: 124 duration_sec: 903 
+run: 3 model: MiniCPM5-2B-Q8_0 exit_code: 0 duration_sec: 161 
+run: 3 model: Nanbeige4.2-3B-Q6_K exit_code: 0 duration_sec: 897 
+run: 3 model: Spark-X2.5-4B-Q6_K exit_code: 124 duration_sec: 903 
+run: 3 model: VibeThinker-3B-Q8_0 exit_code: 0 duration_sec: 38 
