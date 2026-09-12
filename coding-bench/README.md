@@ -41,6 +41,14 @@ cd coding-bench
 full run refuses to start unless all models resolve, so a wrong repo id costs
 two minutes rather than a night.
 
+Model files are located across `$HF_HUB_CACHE`, `$HF_HOME/hub`, `$HF_CACHE`,
+the machine default, and `~/.cache/huggingface/hub`, in that order. Note that
+in the HF cache `snapshots/<rev>/*.gguf` are **symlinks** into `blobs/<sha>`,
+so the lookup uses `find -L ... -type f`: without `-L`, a size filter measures
+the link rather than its target and matches nothing, and `-type f` also skips
+the broken links an interrupted download leaves behind. A FAIL line says which
+of those cases applied.
+
 All repo ids and GGUF filenames in `models.conf` were verified against the
 Hugging Face API on 2026-09-12. Two of the new models have no official GGUF
 (Spark-X2.5-4B has no official Q6_K; Nanbeige publish none at all), so those

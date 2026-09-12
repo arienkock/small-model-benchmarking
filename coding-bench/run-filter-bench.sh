@@ -82,7 +82,15 @@ THINK_BUDGET=4096           # server-side --reasoning-budget, equal for all mode
 CTX_CANDIDATES=(16384 12288 8192 4096)  # probe order, PER MODEL, highest wins
 SERVER_START_TIMEOUT=600    # seconds to wait for model load + /health
 RUN_TIMEOUT=900             # per-run wall clock limit (seconds)
-HF_CACHE="${HF_CACHE:-/c/Users/zenfi/.cache/huggingface/hub}"
+# Cache roots tried in order. HF's own env vars win when set, so this follows
+# the same resolution the `hf` CLI uses; the last entry is the machine default.
+HF_CACHE_ROOTS=(
+    ${HF_HUB_CACHE:-}
+    ${HF_HOME:+$HF_HOME/hub}
+    ${HF_CACHE:-}
+    "/c/Users/zenfi/.cache/huggingface/hub"
+    "$HOME/.cache/huggingface/hub"
+)
 EXPECTED_PROMPTS=3
 
 CHECK_ONLY=0
@@ -114,41 +122,93 @@ done < "$MODELS_FILE"
 
 (( ${#ALIASES[@]} > 0 )) || die "no models enabled in $MODELS_FILE"
 
-# Resolve one model's GGUF: cache hit, else download. Echoes the path on success.
+# Which CLI can fetch models, if any.
+HF_BIN=""
+command -v hf              >/dev/null 2>&1 && HF_BIN="hf"
+[[ -z "$HF_BIN" ]] && command -v huggingface-cli >/dev/null 2>&1 && HF_BIN="huggingface-cli"
+
+# Search every plausible cache root for one repo's GGUF.
+#
+# NOTE: in the HF cache, snapshots/<rev>/<file>.gguf is a SYMLINK into
+# blobs/<sha>. `find -name X -size +100M` therefore matches NOTHING, because
+# -size measures the link (a few bytes), not its target. `-L` makes find follow
+# symlinks, so -type f both resolves the real file and skips broken links
+# (a pointer left by an interrupted download).
+find_cached() {
+    local repo="$1" pattern="$2" root dir hit
+    for root in "${HF_CACHE_ROOTS[@]}"; do
+        [[ -n "$root" && -d "$root" ]] || continue
+        dir="$root/models--${repo//\//--}"
+        [[ -d "$dir" ]] || continue
+        hit="$(find -L "$dir" -type f -name "$pattern" 2>/dev/null | head -1)"
+        [[ -n "$hit" ]] && { echo "$hit"; return 0; }
+    done
+    return 1
+}
+
+# Resolve one model's GGUF: cache hit, else download.
+#
+# Prints exactly one line:  "OK<TAB><path>"  or  "ERR<TAB><reason>"
+# It is always called in a command substitution, i.e. a SUBSHELL, so a status
+# variable set in here would not survive the return — the reason has to travel
+# out on stdout with the result.
 resolve_gguf() {
-    local repo="$1" glob="$2"
-    local cache_dir="$HF_CACHE/models--${repo//\//--}"
-    local found
-    found="$(find "$cache_dir" -name "$glob" -size +100M 2>/dev/null | head -1)"
-    if [[ -n "$found" ]]; then
-        echo "$found"; return 0
+    local repo="$1" pattern="$2" found
+
+    if found="$(find_cached "$repo" "$pattern")"; then
+        printf 'OK\t%s\n' "$found"; return 0
     fi
-    # Not cached — try to fetch it. `hf` is the current CLI; huggingface-cli is
-    # the older name. Either is fine.
-    local hf_bin=""
-    command -v hf             >/dev/null 2>&1 && hf_bin="hf"
-    [[ -z "$hf_bin" ]] && command -v huggingface-cli >/dev/null 2>&1 && hf_bin="huggingface-cli"
-    [[ -n "$hf_bin" ]] || return 1
-    "$hf_bin" download "$repo" --include "$glob" >/dev/null 2>&1 || return 1
-    found="$(find "$cache_dir" -name "$glob" -size +100M 2>/dev/null | head -1)"
-    [[ -n "$found" ]] && { echo "$found"; return 0; }
+
+    # Distinguish "never downloaded" from "downloaded but incomplete": a repo
+    # directory with no resolvable file means broken symlinks left by an
+    # interrupted fetch, which needs a re-download, not a corrected repo id.
+    local why="not in any cache root"
+    local root
+    for root in "${HF_CACHE_ROOTS[@]}"; do
+        [[ -n "$root" && -d "$root/models--${repo//\//--}" ]] || continue
+        why="repo IS cached but no readable file matches '$pattern' (incomplete download, or wrong filename)"
+        break
+    done
+
+    if [[ -z "$HF_BIN" ]]; then
+        printf 'ERR\t%s; and neither '"'"'hf'"'"' nor '"'"'huggingface-cli'"'"' is installed to fetch it\n' "$why"
+        return 1
+    fi
+
+    # Download, keeping the output so a failure can be explained.
+    local dl_log; dl_log="$(mktemp 2>/dev/null || echo "/tmp/hf-dl-$$.log")"
+    if ! "$HF_BIN" download "$repo" --include "$pattern" > "$dl_log" 2>&1; then
+        printf 'ERR\tdownload failed: %s\n' "$(tr '\n' ' ' < "$dl_log" | tail -c 200)"
+        rm -f "$dl_log"; return 1
+    fi
+    rm -f "$dl_log"
+
+    if found="$(find_cached "$repo" "$pattern")"; then
+        printf 'OK\t%s\n' "$found"; return 0
+    fi
+    printf 'ERR\t%s\n' "download succeeded but no file matching '$pattern' appeared in the cache"
     return 1
 }
 
 log "Resolving ${#ALIASES[@]} models from $MODELS_FILE ..."
+log "  cache roots: ${HF_CACHE_ROOTS[*]:-<none set>}"
+log "  downloader:  ${HF_BIN:-<none found>}"
 declare -a GGUFS
 RESOLVE_FAILED=0
 for i in "${!ALIASES[@]}"; do
-    path="$(resolve_gguf "${REPOS[$i]}" "${GLOBS[$i]}")"
-    if [[ -n "$path" ]]; then
-        GGUFS[$i]="$path"
-        printf '  PASS  %-32s %s\n' "${ALIASES[$i]}" "$(basename "$path")"
+    RESULT="$(resolve_gguf "${REPOS[$i]}" "${GLOBS[$i]}")"
+    STATUS="${RESULT%%$'\t'*}"
+    PAYLOAD="${RESULT#*$'\t'}"
+    if [[ "$STATUS" == "OK" ]]; then
+        GGUFS[$i]="$PAYLOAD"
+        printf '  PASS  %-32s %s\n' "${ALIASES[$i]}" "$(basename "$PAYLOAD")"
     else
         GGUFS[$i]=""
         RESOLVE_FAILED=1
-        printf '  FAIL  %-32s repo=%s glob=%s\n' "${ALIASES[$i]}" "${REPOS[$i]}" "${GLOBS[$i]}"
-        printf '        not in cache and download failed. Fix the repo id in models.conf, or run:\n'
-        printf '          hf download %s --include "%s"\n' "${REPOS[$i]}" "${GLOBS[$i]}"
+        printf '  FAIL  %-32s %s\n' "${ALIASES[$i]}" "$PAYLOAD"
+        printf '        repo=%s  file=%s\n' "${REPOS[$i]}" "${GLOBS[$i]}"
+        printf '        fetch manually with:  %s download %s --include "%s"\n' \
+            "${HF_BIN:-hf}" "${REPOS[$i]}" "${GLOBS[$i]}"
     fi
 done
 
