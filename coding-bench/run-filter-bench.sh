@@ -84,7 +84,20 @@ CTX_CANDIDATES=(16384 12288 8192 4096)  # probe order, PER MODEL, highest wins
 # load, so this ceiling has to cover fetching the weights. Subsequent starts
 # hit the llama.cpp cache and take seconds.
 SERVER_START_TIMEOUT=1800   # seconds to wait for download + model load + /health
-RUN_TIMEOUT=900             # per-run wall clock limit (seconds)
+# PER-RUN BUDGET. Filter round 1 used a flat 900s wall clock for every model,
+# which is not an equal budget: decode speed across the roster spanned
+# 8 tok/s (Nanbeige) to 27 tok/s (MiniCPM5), so a fixed 900s handed MiniCPM5
+# ~3.4x the thinking Nanbeige got. Nanbeige still won, and its task-2 run was
+# cut off ONE message after a successful 429 verification. Spark burned ~340s
+# per turn at 12 tok/s and got 3-5 tool calls total.
+#
+# So budget TOKENS, not seconds: every model gets the same number of generated
+# tokens, converted to a wall-clock cap using its own measured decode speed and
+# clamped so one pathologically slow model cannot eat the night.
+TOKEN_BUDGET=20000          # generated tokens allowed per run (the real budget)
+RUN_TIMEOUT_MIN=900         # never give less than round 1 gave
+RUN_TIMEOUT_MAX=2100        # never give more than this, however slow the model
+RUN_TIMEOUT=$RUN_TIMEOUT_MIN  # per-run cap; recomputed per model from measured tok/s
 # llama-server downloads models itself via -hf/-hff, into $LLAMA_CACHE
 # (default ~/.cache/llama.cpp). Nothing here needs to know about the HF cache
 # layout. Set HF_TOKEN in the environment for gated repos.
@@ -92,6 +105,10 @@ EXPECTED_PROMPTS=3
 
 CHECK_ONLY=0
 [[ "${1:-}" == "--check-models" ]] && CHECK_ONLY=1
+# A model that fails the turn-boundary or tool-call probe cannot produce a
+# gradable transcript; by default it is skipped with a diagnosis instead of
+# burning ~45 minutes. Set BENCH_FORCE_ALL=1 to run it anyway.
+FORCE_ALL="${BENCH_FORCE_ALL:-0}"
 
 # --------------------------------------------------------------- helpers ---
 log()  { echo "[bench] $*"; }
@@ -103,16 +120,39 @@ die()  { echo "ERROR: $*" >&2; exit 1; }
 count()   { local n; n="$(grep -c    "$1" "$2" 2>/dev/null || true)"; echo "${n:-0}"; }
 count_i() { local n; n="$(grep -ciE  "$1" "$2" 2>/dev/null || true)"; echo "${n:-0}"; }
 
+# ---------------------------------------------------- transcript signals ---
+# Round 1's signals were grepped over the WHOLE transcript, which counts every
+# event type. One guard block appears in tool_execution_end AND message_start
+# AND message_end AND turn_end AND the agent_end history replay, so LFM2.5's
+# "5/4/5 blocks" were really 1/1/1. signal_node_invocations was inflated the
+# same way (MiniCPM5 task 2: reported 104 node runs out of 33 total tool calls
+# -- impossible; the true figure is 15) and, because the pattern also required
+# `node` to follow the opening quote, it UNDER-counted elsewhere (MiniCPM5
+# task 3 reported 0 while node really ran 5 times). And PASS matched the phrase
+# anywhere at all, including the prompt text echoed back, which is how Apertus
+# scored PASS=6 with zero tool calls and zero files.
+#
+# Count from the specific event that actually represents the thing:
+#   commands  -> tool_execution_start, toolName=="bash", .args.command
+#   output    -> tool_execution_end, .result.content[].text
+#   blocks    -> tool_execution_end with isError, text containing "Blocked:"
+jq_cmds()   { jq -r 'select(.type=="tool_execution_start" and .toolName=="bash") | .args.command // empty' "$1" 2>/dev/null; }
+jq_output() { jq -r 'select(.type=="tool_execution_end") | .result.content[]?.text // empty' "$1" 2>/dev/null; }
+jq_errors() { jq -r 'select(.type=="tool_execution_end" and .isError==true) | .result.content[]?.text // empty' "$1" 2>/dev/null; }
+
+# count_matches <ERE> <producer-fn> <file>
+count_matches() { local n; n="$("$2" "$3" | grep -cE "$1" 2>/dev/null || true)"; echo "${n:-0}"; }
+
 # --------------------------------------------------------- model roster ----
 # Parsed before anything else so --check-models needs no server or docker.
 [[ -f "$MODELS_FILE" ]] || die "models file missing: $MODELS_FILE"
 
-ALIASES=(); REPOS=(); GLOBS=()   # GLOBS holds exact filenames (passed to -hff)
+ALIASES=(); REPOS=(); GLOBS=(); SRVARGS=()  # GLOBS holds exact filenames (-hff)
 while IFS= read -r LINE || [[ -n "$LINE" ]]; do
     LINE="${LINE%$'\r'}"
     [[ -z "${LINE// }" ]] && continue
     [[ "$LINE" == \#* ]] && continue
-    IFS='|' read -r A R G _NOTES <<< "$LINE"
+    IFS='|' read -r A R G _NOTES SARGS <<< "$LINE"
     [[ -n "$A" && -n "$R" && -n "$G" ]] || die "malformed models.conf line: $LINE"
     # repo field "local" => field 3 is a path on this machine, loaded with -m
     # instead of downloaded. Use it for GGUFs you already have, so llama.cpp
@@ -131,7 +171,7 @@ while IFS= read -r LINE || [[ -n "$LINE" ]]; do
             || die "models.conf: no readable file matches local path for $A: $G"
         G="$local_expanded"
     fi
-    ALIASES+=("$A"); REPOS+=("$R"); GLOBS+=("$G")
+    ALIASES+=("$A"); REPOS+=("$R"); GLOBS+=("$G"); SRVARGS+=("${SARGS:-}")
 done < "$MODELS_FILE"
 
 (( ${#ALIASES[@]} > 0 )) || die "no models enabled in $MODELS_FILE"
@@ -245,10 +285,94 @@ chat_smoke_test() {
         | jq -r '.choices[0].message.content' 2>/dev/null
 }
 
+# --------------------------------------------------------------- probes ---
+# Filter round 1 spent ~45 minutes per model on two models that never made a
+# single tool call in nine runs, for reasons that were visible in the first
+# five seconds:
+#
+#   Apertus     "special_eos_id is not in special_eog_ids": the turn never
+#               ends, so the model role-plays BOTH sides of the conversation
+#               in raw <|im_start|> text until it hits the token cap.
+#   VibeThinker its template exposes no tool-call channel, so it invents one
+#               (<script type="text/json">{"name":...}</script>) that pi
+#               cannot parse. Every tool call is silently dropped.
+#
+# Both are template/tokenizer misconfigurations, NOT model ability, and both
+# are detectable with one cheap request each. Probe first; do not spend hours
+# collecting transcripts that cannot be graded.
+
+# Does generation actually stop at a turn boundary, and does the model keep
+# control tokens out of its visible text?
+probe_turn_boundary() {
+    local body
+    body="$(curl -s --max-time 120 "http://127.0.0.1:$PORT/v1/chat/completions" \
+        -H "Authorization: Bearer $API_KEY" -H "Content-Type: application/json" \
+        -d '{"messages":[{"role":"user","content":"Reply with exactly: OK"}],"max_tokens":256}')"
+    local finish content
+    finish="$(jq -r '.choices[0].finish_reason // "none"' <<< "$body" 2>/dev/null)"
+    content="$(jq -r '.choices[0].message.content // ""' <<< "$body" 2>/dev/null)"
+    if [[ "$finish" == "length" ]]; then
+        echo "FAIL|generation never reached a stop token (finish_reason=length on a 3-word reply); EOS is probably not in the model's EOG set"
+        return 1
+    fi
+    if grep -qE '<\|im_start\|>|<\|im_end\|>|<\|endoftext\|>|<start_of_turn>|<\|assistant\|>' <<< "$content"; then
+        echo "FAIL|chat control tokens leaked into visible text: $(head -c 60 <<< "$content" | tr '\n' ' ')"
+        return 1
+    fi
+    echo "OK|finish_reason=$finish"
+    return 0
+}
+
+# Does the model emit a REAL tool call through the OpenAI tool_calls channel?
+probe_tool_calls() {
+    local body
+    body="$(curl -s --max-time 180 "http://127.0.0.1:$PORT/v1/chat/completions" \
+        -H "Authorization: Bearer $API_KEY" -H "Content-Type: application/json" \
+        -d '{"messages":[{"role":"user","content":"Create a file named hello.txt containing the word hi. Use the write_file tool."}],
+             "tools":[{"type":"function","function":{"name":"write_file","description":"Write a file to disk",
+               "parameters":{"type":"object","properties":{"path":{"type":"string"},"content":{"type":"string"}},"required":["path","content"]}}}],
+             "tool_choice":"auto","max_tokens":1024}')"
+    local n name content
+    n="$(jq -r '(.choices[0].message.tool_calls // []) | length' <<< "$body" 2>/dev/null)"
+    if [[ "$n" =~ ^[0-9]+$ ]] && (( n > 0 )); then
+        name="$(jq -r '.choices[0].message.tool_calls[0].function.name // "?"' <<< "$body")"
+        echo "OK|emitted $n tool_call(s), first=$name"
+        return 0
+    fi
+    content="$(jq -r '.choices[0].message.content // ""' <<< "$body" 2>/dev/null)"
+    # Distinguish "tried and could not be parsed" from "did not try at all" —
+    # the former is a template problem worth fixing, the latter may be the model.
+    if grep -qiE '"?name"?\s*[:=]|write_file|<tool|<function|<script' <<< "$content"; then
+        echo "FAIL|model tried to call a tool in an unparseable format (no tool_calls field). Sample: $(head -c 120 <<< "$content" | tr '\n' ' ')"
+    else
+        echo "FAIL|model returned prose and no tool_calls field at all. Sample: $(head -c 120 <<< "$content" | tr '\n' ' ')"
+    fi
+    return 1
+}
+
+# Measured decode speed, from the last timing line llama-server logged.
+# Used to size the per-run budget so slow models are not simply starved.
+measure_tok_s() {
+    local alias="$1" v
+    v="$(grep -oE 'eval time =[^(]*\([^,]*,[[:space:]]*[0-9.]+ tokens per second\)' "$OUT/server-$alias.log" 2>/dev/null \
+         | grep -oE '[0-9.]+ tokens per second' | grep -oE '^[0-9.]+' | tail -3 | sort -n | head -1)"
+    [[ -n "$v" ]] && echo "$v" || echo ""
+}
+
 # Start server at a given context size; verify health + smoke test.
 # The first call per model also downloads the weights.
+# Set by try_start on success: the context the server ACTUALLY serves, which
+# is not always the one we asked for. llama-server caps -c at the model's
+# training context ("the slot context (16384) exceeds the training context of
+# the model (4096) - capping"). In filter round 1 Apertus was recorded as
+# context 16384 while every slot was really 4096, so BENCH_CTX lied to pi:
+# maxTokens became 8192 in a 4096 window and all three prompts came back
+# `truncated = 1`. Always read it back from /props and believe that number.
+ACTUAL_CTX=0
+
 try_start() {
-    local repo="$1" file="$2" alias="$3" ctx="$4"
+    local repo="$1" file="$2" alias="$3" ctx="$4" extra="${5:-}"
+    ACTUAL_CTX=0
     kill_server
     # Either load a file already on this machine, or let llama-server fetch it:
     # -hf downloads on first use and caches in $LLAMA_CACHE, and -hff pins the
@@ -259,13 +383,21 @@ try_start() {
     else
         SRC_ARGS=(-hf "$repo" -hff "$file")
     fi
+    # Per-model extra flags from models.conf field 5 (word-split on purpose:
+    # they are CLI flags, e.g. --override-kv ... or --chat-template-file ...).
+    local -a EXTRA_ARGS=()
+    [[ -n "$extra" ]] && read -r -a EXTRA_ARGS <<< "$extra"
+    # A reasoning budget as large as the whole window leaves no room for the
+    # prompt or the answer. Cap it at a quarter of the context.
+    local think=$(( ctx / 4 )); (( think > THINK_BUDGET )) && think=$THINK_BUDGET
     "$LLAMA_SERVER" \
         "${SRC_ARGS[@]}" \
         --alias "$alias" \
         --jinja \
         -c "$ctx" \
         -ngl 999 \
-        --reasoning-budget "$THINK_BUDGET" \
+        --reasoning-budget "$think" \
+        ${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"} \
         --api-key "$API_KEY" \
         --host "$HOST" --port "$PORT" \
         > "$OUT/server-$alias.log" 2>&1 &
@@ -282,7 +414,15 @@ try_start() {
         kill_server
         return 1
     fi
-    log "  context $ctx OK for $alias (smoke reply: $(echo "$reply" | head -c 40))"
+    # Believe the server, not the request.
+    ACTUAL_CTX="$(curl -s -H "Authorization: Bearer $API_KEY" \
+        "http://127.0.0.1:$PORT/props" \
+        | jq -r '.default_generation_settings.n_ctx // empty' 2>/dev/null)"
+    [[ "$ACTUAL_CTX" =~ ^[0-9]+$ ]] || ACTUAL_CTX="$ctx"
+    if (( ACTUAL_CTX != ctx )); then
+        log "  NOTE: asked for context $ctx, server actually serves $ACTUAL_CTX (capped to the model's training context)"
+    fi
+    log "  context $ACTUAL_CTX OK for $alias (smoke reply: $(echo "$reply" | head -c 40))"
     return 0
 }
 
@@ -334,13 +474,29 @@ log "Found ${#PROMPTS[@]} prompts."
 
 TOTAL_RUNS=$(( ${#ALIASES[@]} * ${#PROMPTS[@]} ))
 log "Plan: ${#ALIASES[@]} models x ${#PROMPTS[@]} tasks = $TOTAL_RUNS runs"
-log "Worst case: $(( TOTAL_RUNS * RUN_TIMEOUT / 3600 ))h $(( (TOTAL_RUNS * RUN_TIMEOUT % 3600) / 60 ))m"
+log "Per-run budget: $TOKEN_BUDGET generated tokens, clamped to [${RUN_TIMEOUT_MIN}s, ${RUN_TIMEOUT_MAX}s] by each model's measured speed"
+log "Worst case: $(( TOTAL_RUNS * RUN_TIMEOUT_MAX / 3600 ))h $(( (TOTAL_RUNS * RUN_TIMEOUT_MAX % 3600) / 60 ))m (all models at the ceiling)"
+log "Typical:    $(( TOTAL_RUNS * RUN_TIMEOUT_MIN / 3600 ))h $(( (TOTAL_RUNS * RUN_TIMEOUT_MIN % 3600) / 60 ))m (all models at the floor)"
 
 # ------------------------------------------------------------------ runs ---
 # Levelled system prompt. Identical for every model. The Node/ESM rules and the
 # background-server pattern are environment facts, not task hints: without them
 # both incumbents burned most of their budget on the same three ESM errors and
 # on foreground-server hangs, which masked the coding ability being measured.
+#
+# 2026-09-12 (filter round 1 post-mortem): NONE of the 5 models that produced a
+# debounce.ts could actually run it. Every failure was an ESM/Node-24 idiom, not
+# a debugging failure -- the one model that fixed all three seeded bugs (Granite)
+# scored BELOW models that fixed two, purely because `process.main === module`
+# throws in ESM. Observed, each of these killed at least one deliverable:
+#   require.main === module        -> ReferenceError: require is not defined
+#   process.main === module        -> ReferenceError: module is not defined
+#   __filename                     -> ReferenceError: __filename is not defined
+#   process.argv[0] === <script>   -> silently false; self-test never runs
+#   import { assert } from 'node:assert'  -> SyntaxError, no such named export
+# The exact main-detection snippet and the correct assert import are therefore
+# spelled out below. They are environment facts about how this harness executes
+# TypeScript, identical for every model, and they advantage none of them.
 APPEND_SYSTEM="You are being benchmarked. Work only inside the current working directory. \
 Use relative paths for all file operations and commands (e.g. write server.py, run node todos.ts). Never use absolute paths. \
 Python code must use only the Python standard library. Package installation is disabled: npm, npx and pip install will be refused. \
@@ -351,13 +507,27 @@ use ESM only — export/import, never require() or module.exports; \
 do not use enums, namespaces, or constructor parameter properties; \
 there is no test framework — do not use describe/it/expect; use 'node:assert' and console.log. \
 \
+The file is an ES module, so require, module, exports, __filename and __dirname DO NOT EXIST. \
+To run a self-test when the file is executed directly, use exactly this: \
+import { pathToFileURL } from 'node:url'; \
+if (import.meta.url === pathToFileURL(process.argv[1]).href) { /* self-test here */ } \
+Or simply run the self-test unconditionally at the end of the file — that is acceptable and simpler. \
+Import assert as a DEFAULT import: import assert from 'node:assert'; \
+(there is no named 'assert' export, so import { assert } from 'node:assert' is a SyntaxError). \
+\
 To verify a server, start it in the background with output captured, then read the log if something fails: \
 python3 server.py > server.log 2>&1 & \
 then note the pid from \$!, curl the endpoints, and kill that pid when done. \
+If a curl against your server fails, read server.log BEFORE changing any code — the traceback is in there. \
 If you get 'Address already in use', set allow_reuse_address = True on your HTTPServer subclass. \
+In http.server, self.path INCLUDES the query string, so self.path == '/api/x' is false for '/api/x?a=1'; \
+split it with urllib.parse.urlparse(self.path).path before comparing. \
+HTTPServer takes an (host, port) TUPLE, not a 'host:port' string. \
 Every bash command is limited to 120 seconds, so never run a server in the foreground. \
 \
 Always verify your work by running it (as each task instructs) before finishing. \
+Only print a success string such as 'all tests passed' AFTER the assertions have actually executed and passed; \
+never print it unconditionally, and remember that code inside setTimeout has not run yet when the surrounding function returns. \
 If you started a server or background process to verify, stop it before you finish. \
 When the task is done, stop; do not start unrelated work."
 
@@ -393,7 +563,13 @@ EOF
     # stdin /dev/null gives pi instant EOF (it blocks on piped stdin otherwise).
     (
         cd "$ws"
-        MSYS_NO_PATHCONV=1 timeout "$RUN_TIMEOUT" docker run --rm --name "$cname" \
+        # -k 15 -s TERM: ask the agent to stop and give it 15s to flush its
+        # last events before SIGKILL. Round 1 hard-killed at the cap and several
+        # transcripts end mid-token; Nanbeige task 2 died one message after a
+        # successful 429 verification. This does not add a real "wrap up" turn
+        # (pi is invoked one-shot with -a -- @prompt.txt, so there is no way to
+        # inject another user message); it only guarantees a clean tail.
+        MSYS_NO_PATHCONV=1 timeout -k 15 -s TERM "$RUN_TIMEOUT" docker run --rm --name "$cname" \
             -v "$(cygpath -w "$ws"):/workspace" \
             -w /workspace \
             -v "$EXT_WIN:/opt/bench/provider-extension.ts:ro" \
@@ -423,11 +599,13 @@ EOF
     # NOTE: `grep -c` prints 0 AND exits 1 when there is no match, so the
     # idiom `$(grep -c ... || echo 0)` yields the two-line value "0\n0" and
     # corrupts meta.txt. count() handles no-match and missing-file alike.
-    local node_ok node_run curl_run blocked
-    node_run=$(count '"command":"[^"]*node ' "$ws/transcript.jsonl")
-    curl_run=$(count '"command":"[^"]*curl ' "$ws/transcript.jsonl")
-    blocked=$(count 'Blocked:' "$ws/transcript.jsonl")
-    node_ok=$(count_i 'all tests passed|passed":true' "$ws/transcript.jsonl")
+    local node_ok node_run curl_run blocked t="$ws/transcript.jsonl"
+    node_run=$(count_matches '(^|[;&|[:space:]])node ' jq_cmds   "$t")
+    curl_run=$(count_matches '(^|[;&|[:space:]])curl ' jq_cmds   "$t")
+    blocked=$( count_matches 'Blocked:'                jq_errors "$t")
+    # Only count a pass string that a COMMAND actually printed, never one the
+    # model wrote in prose or echoed from the prompt.
+    node_ok=$(  count_matches 'all tests passed'       jq_output "$t")
 
     {
         echo "run: $num"
@@ -436,7 +614,9 @@ EOF
         echo "exit_code: $rc"
         echo "duration_sec: $((t1 - t0))"
         echo "context: $ctx"
-        echo "reasoning_budget: $THINK_BUDGET"
+        echo "reasoning_budget: ${THINK_EFF:-$THINK_BUDGET}"
+        echo "run_budget_sec: $RUN_TIMEOUT"
+        echo "decode_tok_s: ${MODEL_TOKS[$alias]:-?}"
         echo "files_created:"
         find "$ws" -maxdepth 1 -type f ! -name 'prompt.txt' ! -name 'transcript.jsonl' ! -name 'stderr.log' -printf '  %f (%s bytes)\n'
         echo "tool_calls: $(count tool_execution_start "$ws/transcript.jsonl")"
@@ -460,7 +640,7 @@ EOF
     fi
 }
 
-declare -A MODEL_CTX
+declare -A MODEL_CTX MODEL_TOKS MODEL_BUDGET
 RUN_INDEX=0
 
 for i in "${!ALIASES[@]}"; do
@@ -474,8 +654,9 @@ for i in "${!ALIASES[@]}"; do
     log "  probing context (${CTX_CANDIDATES[*]}) — first start also downloads the weights"
     MODEL_CTX[$ALIAS]=0
     for CTX in "${CTX_CANDIDATES[@]}"; do
-        if try_start "$REPO" "$FILE" "$ALIAS" "$CTX"; then
-            MODEL_CTX[$ALIAS]=$CTX
+        if try_start "$REPO" "$FILE" "$ALIAS" "$CTX" "${SRVARGS[$i]}"; then
+            # ACTUAL_CTX, not CTX: the server caps -c at the training context.
+            MODEL_CTX[$ALIAS]=$ACTUAL_CTX
             break
         fi
     done
@@ -490,11 +671,43 @@ for i in "${!ALIASES[@]}"; do
     fi
 
     CTX=${MODEL_CTX[$ALIAS]}
-    log "  context $CTX, reasoning budget $THINK_BUDGET"
+    THINK_EFF=$(( CTX / 4 )); (( THINK_EFF > THINK_BUDGET )) && THINK_EFF=$THINK_BUDGET
+    log "  context $CTX, reasoning budget $THINK_EFF"
 
     curl -s -H "Authorization: Bearer $API_KEY" "http://127.0.0.1:$PORT/props" \
         | jq '{n_ctx: .default_generation_settings.n_ctx, n_ctx_train: (.default_generation_settings.n_ctx_train // null)}' \
         > "$OUT/server-$ALIAS-props.json"
+
+    # ---- preflight probes: is this model gradable at all? ----------------
+    TB="$(probe_turn_boundary)"; TB_OK=$?
+    TC="$(probe_tool_calls)";    TC_OK=$?
+    printf '%-32s turn_boundary=%s\n%-32s tool_calls=%s\n' \
+        "$ALIAS" "$TB" "$ALIAS" "$TC" >> "$OUT/PREFLIGHT.txt"
+    log "  probe turn_boundary: $TB"
+    log "  probe tool_calls:    $TC"
+    if (( TB_OK != 0 || TC_OK != 0 )) && [[ "$FORCE_ALL" != "1" ]]; then
+        log "  !! $ALIAS fails a preflight probe — SKIPPING (set BENCH_FORCE_ALL=1 to run anyway)"
+        {
+            echo "$ALIAS: preflight failure — transcripts would not be gradable"
+            echo "    turn_boundary: $TB"
+            echo "    tool_calls:    $TC"
+        } >> "$OUT/SKIPPED.txt"
+        kill_server
+        continue
+    fi
+
+    # ---- per-model wall-clock budget from measured decode speed ----------
+    TOKS="$(measure_tok_s "$ALIAS")"
+    if [[ -n "$TOKS" ]]; then
+        RUN_TIMEOUT=$(awk -v b="$TOKEN_BUDGET" -v t="$TOKS" -v lo="$RUN_TIMEOUT_MIN" -v hi="$RUN_TIMEOUT_MAX" \
+            'BEGIN{ s=(t>0)? b/t : lo; if(s<lo)s=lo; if(s>hi)s=hi; printf "%d", s }')
+        log "  decode ~${TOKS} tok/s -> per-run budget ${RUN_TIMEOUT}s (for $TOKEN_BUDGET generated tokens)"
+    else
+        RUN_TIMEOUT=$RUN_TIMEOUT_MIN
+        log "  decode speed unknown -> per-run budget ${RUN_TIMEOUT}s (floor)"
+    fi
+    MODEL_TOKS[$ALIAS]="${TOKS:-?}"
+    MODEL_BUDGET[$ALIAS]=$RUN_TIMEOUT
 
     NUM=0
     for PROMPT in "${PROMPTS[@]}"; do
@@ -511,7 +724,8 @@ kill_server
 # ---------------------------------------------------------------- summary --
 {
     echo "# Filter-round summary — $(date)"
-    echo "tasks: 3 (full-suite 5, 7, 12)  reasoning_budget: $THINK_BUDGET  run_timeout: ${RUN_TIMEOUT}s"
+    echo "tasks: 3 (full-suite 5, 7, 12)  reasoning_budget: <=$THINK_BUDGET (capped at ctx/4)"
+    echo "budget: $TOKEN_BUDGET generated tokens per run, wall clock clamped to [${RUN_TIMEOUT_MIN}s, ${RUN_TIMEOUT_MAX}s]"
     echo "sandbox: docker ($PI_IMAGE), guard extension active (URL-safe)"
     echo "context: probed PER MODEL (highest of ${CTX_CANDIDATES[*]})"
     echo
@@ -520,7 +734,7 @@ kill_server
         if [[ "$c" == "0" ]]; then
             echo "$a: DID-NOT-LOAD (skipped)"
         else
-            echo "$a: context $c"
+            echo "$a: context $c  decode ${MODEL_TOKS[$a]:-?} tok/s  budget ${MODEL_BUDGET[$a]:-?}s"
         fi
     done
     echo
@@ -549,13 +763,32 @@ kill_server
         done
     } | sort -k1,1 -k2,2n
     echo
-    echo "EXIT 0=finished on its own  124=hit the ${RUN_TIMEOUT}s cap"
-    echo "NODE/CURL = bash calls invoking them   PASS = 'all tests passed'-style strings"
-    echo "BLOCK = guard refusals (absolute paths, package installs, prompt.txt writes)"
-    echo "These are triage signals, not grades. Grade from the transcripts."
+    echo "EXIT 0=finished on its own  124=hit this model's wall-clock budget (see SUMMARY.txt)"
+    echo "NODE/CURL = bash commands invoking them, counted from tool_execution_start"
+    echo "PASS = 'all tests passed' printed by a COMMAND (tool output only, never model prose)"
+    echo "BLOCK = distinct guard refusals, counted from tool_execution_end errors"
+    echo
+    echo "These are triage signals, NOT grades, and round 1 proved they cannot be"
+    echo "used as grades: a model can print a pass string without running a test."
+    echo "The grades are in GRADES.txt, produced by executing every deliverable."
 } > "$OUT/FILTER-REPORT.txt"
+
+# ------------------------------------------------------------- grading ----
+# Execute every deliverable and record what actually works. This is the grade;
+# FILTER-REPORT.txt above is only triage. Never let a run finish without it --
+# round 1's string-matched signals ranked the field backwards.
+if [[ -x "$SCRIPT_DIR/grade-run.sh" ]]; then
+    log "Grading deliverables by executing them ..."
+    "$SCRIPT_DIR/grade-run.sh" "$OUT" >/dev/null 2>&1 \
+        && log "  wrote $OUT/GRADES.txt" \
+        || log "  !! grading failed (are ports 8000/8080/8888/3000 free?); run ./grade-run.sh '$OUT' by hand"
+else
+    log "grade-run.sh not found or not executable — skipping objective grading"
+fi
 
 cat "$OUT/SUMMARY.txt"
 echo
 cat "$OUT/FILTER-REPORT.txt"
+[[ -f "$OUT/PREFLIGHT.txt" ]] && { echo; echo "--- preflight probes ---"; cat "$OUT/PREFLIGHT.txt"; }
+[[ -f "$OUT/GRADES.txt"    ]] && { echo; cat "$OUT/GRADES.txt"; }
 log "Done. Results: $OUT"

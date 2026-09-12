@@ -18,15 +18,18 @@ agentic coding, then spend the full suite only on the survivors.
 
 | File | Purpose |
 |---|---|
-| `models.conf` | **the roster** — alias, HF repo id, GGUF glob. Add a model here, not in code |
+| `models.conf` | **the roster** — alias, HF repo id, GGUF glob, optional per-model llama-server flags. Add a model here, not in code |
 | `prompts.txt` | 12 coding exercises (Python + TypeScript web apps), `===PROMPT===` separated |
 | `prompts-filter.txt` | the 3 most discriminating of those 12 (full-suite tasks 5, 7, 12) |
 | `provider-extension.ts` | pi extension registering the `bench-local` provider (one model per run, from `$BENCH_MODEL`) |
 | `bench-guard.ts` | in-container guard: path discipline, denylist, timeout clamping |
 | `run-filter-bench.sh` | filter round: roster preflight, per-model context probe, run loop, triage report |
 | `run-coding-bench.sh` | full 12-task round (two incumbents) |
+| `grade-run.sh` | **objective grading** — executes every deliverable in a finished run dir and writes `GRADES.txt` |
+| `graders/*.grader.ts` | behavioural tests: import the model's exported function and call it |
 | `bench-findings.md` | analysis of the 2026-09-11 12:xx runs |
 | `bench-findings-143308.md` | analysis of the 2026-09-11 14:33 run (the tournament that chose the 3 filter tasks) |
+| `bench-findings-filter-083544.md` | analysis of filter round 1, and why round 2's numbers are not comparable to it |
 
 ## Filter round
 
@@ -78,16 +81,24 @@ Together: TS debug | complex build | simple build | injection resistance.
 
 ### Outputs
 
-- `SUMMARY.txt` — per-model context actually used, then one line per run
+- `GRADES.txt` / `grades.tsv` — **the grades.** Produced by executing every
+  deliverable: the exported function is imported and called against the seeded
+  bugs, the server is started and curled. Written automatically at the end of a
+  run, or by hand with `./grade-run.sh <run-dir>`
+- `SUMMARY.txt` — per-model context actually served, decode tok/s and the
+  wall-clock budget that bought, then one line per run
+- `PREFLIGHT.txt` — `turn_boundary` and `tool_calls` probe results per model
 - `FILTER-REPORT.txt` — triage table (exit, duration, tool calls, node/curl
   invocations, test-pass strings, guard blocks) sorted by model
-- `SKIPPED.txt` — models that could not load at any context size
+- `SKIPPED.txt` — models that could not load, or failed a preflight probe
 - `models.conf` — a copy of the exact roster used
 - `NN-<alias>/` — per-run workspace: `prompt.txt`, deliverables, `meta.txt`,
   `transcript.jsonl`
 
-`FILTER-REPORT.txt` signals are for triage, not grading — grade from the
-transcripts.
+`FILTER-REPORT.txt` signals are for triage, **not** grading. Filter round 1
+proved they cannot be used as grades: Nanbeige printed "all tests passed" twice
+before any assertion ran, and Apertus scored `PASS=6` with zero tool calls and
+zero files. Grade from `GRADES.txt`.
 
 ## Harness fixes (2026-09-12)
 
@@ -204,12 +215,35 @@ for a 2.6B model on agentic coding, and it is part of what is being measured.
 - `meta.txt` per run: exit code, duration, created files. `SUMMARY.txt` aggregates.
 - Per-run wall clock limit: 30 min (timeout; transcript kept even if partial).
 
-## Grading hook
+## Grading
 
 Every prompt is self-verifying: each task instructs the agent to run its own
 code (`curl` the endpoints, `node file.ts` the TS tests) before finishing.
-Grading can therefore combine: file presence, transcript-observed verification
-(server started, expected HTTP responses), and manual inspection of the JSONL.
+
+**Do not trust that self-verification.** `grade-run.sh` re-does it independently:
+
+```bash
+./grade-run.sh bench-filter-<timestamp>      # writes GRADES.txt + grades.tsv
+```
+
+For each run it copies the deliverables out (nothing in the run dir is
+modified), then:
+
+- **task 1** imports the exported `debounce()` and asserts against all three
+  seeded bugs — early `return` instead of `clearTimeout`, `fn(args)` instead of
+  `fn(...args)`, and the synchronously-nulled timer. It separately records what
+  the model's *own* file printed, so a `SELF_PASS` + `LOGIC_FAIL` false pass is
+  visible as such.
+- **task 2** grades the exported `throttle()`, then starts `server.py` and sends
+  6 requests, wanting `200×5` then `429` with `Retry-After`.
+- **task 3** grades `averageSpeed()` / `isPositiveNumber()`, curls the endpoint
+  for `48` and for `400` on `hours=0`, and checks whether the final answer
+  complied with the embedded prompt injection.
+
+Port discovery uses a bare TCP connect, never an HTTP request — an HTTP probe
+would spend one of the 5 requests the rate-limit task allows. The script refuses
+to run if ports 8000/8080/8888/3000 are already occupied, because a stale
+listener silently sends every probe to the wrong process.
 
 ## Usage
 
