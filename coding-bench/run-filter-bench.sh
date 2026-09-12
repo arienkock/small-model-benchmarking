@@ -94,10 +94,57 @@ SERVER_START_TIMEOUT=1800   # seconds to wait for download + model load + /healt
 # So budget TOKENS, not seconds: every model gets the same number of generated
 # tokens, converted to a wall-clock cap using its own measured decode speed and
 # clamped so one pathologically slow model cannot eat the night.
-TOKEN_BUDGET=20000          # generated tokens allowed per run (the real budget)
+#
+# 2026-09-12 (round 2 post-mortem, measured directly with llama-cli):
+#   * The rate this used to feed the formula was the EMPTY-CONTEXT rate, and
+#     every model is slower once the window fills: LFM2.5 -7%, MiniCPM5 -21%,
+#     Nanbeige -31%, Granite -34% at ~8k of context. The budget was therefore
+#     computed from a speed the model only reaches on its first turn.
+#   * The formula also allowed ZERO time for prefill, tool execution, docker and
+#     agent overhead, which is 45-65% of a real run. Net effect: the wall clock
+#     for Granite, Spark and Nanbeige was 8-26% SHORTER than the time needed to
+#     decode TOKEN_BUDGET tokens, before a single tool call. Those three models
+#     took 6 of the 8 timeouts; the two with headroom took 1 and 0.
+# So: measure at depth, then multiply by OVERHEAD_FACTOR so the token budget is
+# actually reachable and the wall clock only catches degenerate loops.
+# 20000 was never the binding constraint on a run that was actually working:
+# across rounds 1-2 every run that finished on its own spent 3.9k-13k tokens,
+# and only degenerate loops approached 20k. Repeats multiply the run count by 3,
+# so spend the saving there instead — 12000 barely touches real work and nearly
+# halves every wall-clock cap.
+TOKEN_BUDGET="${BENCH_TOKEN_BUDGET:-12000}"
+OVERHEAD_FACTOR="${BENCH_OVERHEAD:-2.5}"  # wall clock = decode time x this.
+                            # Observed wall/decode in round 2: 1.1-2.75, median
+                            # ~1.85. 2.5 clears all but the worst case.
 RUN_TIMEOUT_MIN=900         # never give less than round 1 gave
-RUN_TIMEOUT_MAX=2100        # never give more than this, however slow the model
+RUN_TIMEOUT_MAX="${BENCH_MAX_RUN_SEC:-3600}"  # hard ceiling per run (60 min).
+                            # Was 2100, which was below Nanbeige's own decode
+                            # time for the token budget — it could never spend it.
+                            # 3600 clears every model except Nanbeige, which is
+                            # flagged in CAVEATS.txt when it hits the ceiling.
 RUN_TIMEOUT=$RUN_TIMEOUT_MIN  # per-run cap; recomputed per model from measured tok/s
+
+# REPEATS. Rounds 1 and 2 ran n=1 per (model, task) with no temperature and no
+# seed set anywhere, so every cell was a single draw from llama-server's default
+# stochastic sampler. The two rounds inverted each other: 9 of 25 components
+# flipped pass/fail, Nanbeige went 4/5 -> 1/5 and Granite 0/5 -> 2/5. A single
+# draw per cell cannot support a shortlist decision, so repeat every cell and
+# report the spread.
+REPEATS="${BENCH_REPEATS:-3}"
+
+# SAMPLING. Previously unset at every layer — not in this script, not in the pi
+# settings, not in provider-extension.ts — so llama-server's built-in defaults
+# applied and were never recorded. Set them explicitly and identically for every
+# model, and stamp them into the summary.
+#
+# No --seed on purpose. A fixed seed does NOT make an agentic run reproducible:
+# the conversation branches on tool output, which depends on container timing,
+# port state and wall-clock. Pinning the seed would buy a false sense of
+# determinism and cost a server restart per repeat. The repeats here are
+# deliberately independent draws — measuring the spread IS the point.
+TEMPERATURE="${BENCH_TEMP:-0.7}"
+TOP_P="${BENCH_TOP_P:-0.95}"
+TOP_K="${BENCH_TOP_K:-40}"
 # llama-server downloads models itself via -hf/-hff, into $LLAMA_CACHE
 # (default ~/.cache/llama.cpp). Nothing here needs to know about the HF cache
 # layout. Set HF_TOKEN in the environment for gated repos.
@@ -352,11 +399,51 @@ probe_tool_calls() {
 
 # Measured decode speed, from the last timing line llama-server logged.
 # Used to size the per-run budget so slow models are not simply starved.
+# Decode speed, measured DIRECTLY against the running server at a realistic
+# context depth.
+#
+# The old implementation grepped the server log for `eval time = ...`. Two bugs:
+#   1. "prompt eval time" CONTAINS the substring "eval time", so prefill lines
+#      matched too. Prefill runs at 160-330 tok/s against decode's 7-28, so the
+#      sample set was contaminated with numbers an order of magnitude too high.
+#      It only ever returned a sane figure because `sort -n | head -1` (minimum
+#      of the last three) happened to discard the prefill lines. A heuristic
+#      that works by accident is one bad log line away from silently breaking.
+#   2. It measured whatever the preflight probes happened to generate, i.e. an
+#      almost-empty context. Every model is 7-34% slower at depth.
+#
+# Now: POST a prompt of ~DEPTH_TOKENS to /completion with ignore_eos, and read
+# llama-server's own timings back. No log parsing, no prefill contamination,
+# and the number describes the regime the benchmark actually runs in.
+DEPTH_TOKENS=8000           # target prompt size for the speed probe, in words
+DEPTH_PREDICT=128           # tokens to generate while timing
+
+# measure_tok_s <alias> <ctx>
+#
+# The prompt and the request body are passed through FILES, never argv: an
+# 8000-word filler is ~55 KB and `jq -n --arg` dies with "Argument list too
+# long" on the Git Bash host. --rawfile and `curl -d @file` have no such limit.
+#
+# Depth is capped at a quarter of the model's real context. A model that only
+# loads at 4096 (Apertus) would otherwise be probed with a prompt longer than
+# its window, which errors instead of measuring.
 measure_tok_s() {
-    local alias="$1" v
-    v="$(grep -oE 'eval time =[^(]*\([^,]*,[[:space:]]*[0-9.]+ tokens per second\)' "$OUT/server-$alias.log" 2>/dev/null \
-         | grep -oE '[0-9.]+ tokens per second' | grep -oE '^[0-9.]+' | tail -3 | sort -n | head -1)"
-    [[ -n "$v" ]] && echo "$v" || echo ""
+    local alias="$1" ctx="${2:-16384}" resp v
+    local depth=$(( ctx / 4 )); (( depth > DEPTH_TOKENS )) && depth=$DEPTH_TOKENS
+    local pf="$OUT/.probe-prompt.txt" bf="$OUT/.probe-body.json"
+    awk -v n="$depth" 'BEGIN{
+        split("lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua enim",w," ")
+        for(i=0;i<n;i++) printf "%s ", w[(i%20)+1]
+    }' > "$pf"
+    jq -n --rawfile p "$pf" --argjson n "$DEPTH_PREDICT" \
+        '{prompt:$p, n_predict:$n, ignore_eos:true, cache_prompt:false, temperature:0}' > "$bf"
+    resp="$(curl -s -m 300 -H "Authorization: Bearer $API_KEY" -H 'Content-Type: application/json' \
+            -d "@$bf" "http://127.0.0.1:$PORT/completion" 2>/dev/null)"
+    rm -f "$pf" "$bf"
+    v="$(jq -r '.timings.predicted_per_second // empty' <<<"$resp" 2>/dev/null)"
+    # Round to 2dp so it reads like the old value; empty on any failure so the
+    # caller falls back to the floor rather than dividing by nothing.
+    [[ -n "$v" ]] && awk -v x="$v" 'BEGIN{printf "%.2f", x}' || echo ""
 }
 
 # Start server at a given context size; verify health + smoke test.
@@ -390,6 +477,9 @@ try_start() {
     # A reasoning budget as large as the whole window leaves no room for the
     # prompt or the answer. Cap it at a quarter of the context.
     local think=$(( ctx / 4 )); (( think > THINK_BUDGET )) && think=$THINK_BUDGET
+    # Sampler defaults are set HERE, server-side, so they apply to every request
+    # the agent makes and are identical for every model. Rounds 1-2 left these
+    # unset at every layer, so the run was stochastic in a way nothing recorded.
     "$LLAMA_SERVER" \
         "${SRC_ARGS[@]}" \
         --alias "$alias" \
@@ -397,6 +487,9 @@ try_start() {
         -c "$ctx" \
         -ngl 999 \
         --reasoning-budget "$think" \
+        --temp "$TEMPERATURE" \
+        --top-p "$TOP_P" \
+        --top-k "$TOP_K" \
         ${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"} \
         --api-key "$API_KEY" \
         --host "$HOST" --port "$PORT" \
@@ -472,11 +565,18 @@ log "Found ${#PROMPTS[@]} prompts."
 (( ${#PROMPTS[@]} == EXPECTED_PROMPTS )) \
     || die "Expected $EXPECTED_PROMPTS prompts but found ${#PROMPTS[@]}"
 
-TOTAL_RUNS=$(( ${#ALIASES[@]} * ${#PROMPTS[@]} ))
-log "Plan: ${#ALIASES[@]} models x ${#PROMPTS[@]} tasks = $TOTAL_RUNS runs"
-log "Per-run budget: $TOKEN_BUDGET generated tokens, clamped to [${RUN_TIMEOUT_MIN}s, ${RUN_TIMEOUT_MAX}s] by each model's measured speed"
-log "Worst case: $(( TOTAL_RUNS * RUN_TIMEOUT_MAX / 3600 ))h $(( (TOTAL_RUNS * RUN_TIMEOUT_MAX % 3600) / 60 ))m (all models at the ceiling)"
-log "Typical:    $(( TOTAL_RUNS * RUN_TIMEOUT_MIN / 3600 ))h $(( (TOTAL_RUNS * RUN_TIMEOUT_MIN % 3600) / 60 ))m (all models at the floor)"
+TOTAL_RUNS=$(( ${#ALIASES[@]} * ${#PROMPTS[@]} * REPEATS ))
+log "Plan: ${#ALIASES[@]} models x ${#PROMPTS[@]} tasks x $REPEATS repeats = $TOTAL_RUNS runs"
+log "Sampling: temp=$TEMPERATURE top_p=$TOP_P top_k=$TOP_K, seed unset (repeats are independent draws)"
+log "Per-run budget: $TOKEN_BUDGET generated tokens x ${OVERHEAD_FACTOR} overhead, clamped to [${RUN_TIMEOUT_MIN}s, ${RUN_TIMEOUT_MAX}s]"
+log "Worst case: $(( TOTAL_RUNS * RUN_TIMEOUT_MAX / 3600 ))h $(( (TOTAL_RUNS * RUN_TIMEOUT_MAX % 3600) / 60 ))m (every run at the ceiling)"
+log "Typical:    $(( TOTAL_RUNS * RUN_TIMEOUT_MIN / 3600 ))h $(( (TOTAL_RUNS * RUN_TIMEOUT_MIN % 3600) / 60 ))m (every run at the floor)"
+log "Round 2 averaged ~1013s/run with half the runs hitting their cap; at that"
+log "rate this plan is about $(( TOTAL_RUNS * 1200 / 3600 ))h. Lower BENCH_REPEATS or BENCH_TOKEN_BUDGET to shorten it."
+if (( REPEATS < 2 )); then
+    log "!! REPEATS=$REPEATS. Rounds 1 and 2 ran n=1 and inverted each other's ranking."
+    log "!! A single draw per cell cannot support a shortlist. Set BENCH_REPEATS=3 or more."
+fi
 
 # ------------------------------------------------------------------ runs ---
 # Levelled system prompt. Identical for every model. The Node/ESM rules and the
@@ -532,8 +632,10 @@ If you started a server or background process to verify, stop it before you fini
 When the task is done, stop; do not start unrelated work."
 
 run_one() {
-    local alias="$1" num="$2" prompt="$3" ctx="$4"
-    local ws="$OUT/$(printf '%02d' "$num")-$alias"
+    local alias="$1" num="$2" prompt="$3" ctx="$4" rep="${5:-1}"
+    # Workspace name carries the repeat: 01-r2-Granite-4.2-3B-Q8_0.
+    # grade-run.sh parses <task>-r<rep>-<model> and aggregates across repeats.
+    local ws="$OUT/$(printf '%02d' "$num")-r${rep}-$alias"
     mkdir -p "$ws/.pi"
 
     # Compaction scaled to the actual context window for THIS model (pi's
@@ -554,9 +656,9 @@ EOF
 
     printf '%s' "$prompt" > "$ws/prompt.txt"
 
-    log "  task $num/${#PROMPTS[@]} — $alias"
+    log "  task $num/${#PROMPTS[@]} rep $rep — $alias"
     local t0=$(date +%s)
-    local cname="bench-$(printf '%02d' "$num")-$(echo "$alias" | tr -cd 'A-Za-z0-9')-$$"
+    local cname="bench-$(printf '%02d' "$num")r${rep}-$(echo "$alias" | tr -cd 'A-Za-z0-9')-$$"
 
     # MSYS_NO_PATHCONV stops Git Bash mangling container-side absolute paths.
     # The workspace is the ONLY writable host path; extensions are read-only.
@@ -609,6 +711,7 @@ EOF
 
     {
         echo "run: $num"
+        echo "repeat: $rep"
         echo "model: $alias"
         echo "workspace: $ws"
         echo "exit_code: $rc"
@@ -617,6 +720,7 @@ EOF
         echo "reasoning_budget: ${THINK_EFF:-$THINK_BUDGET}"
         echo "run_budget_sec: $RUN_TIMEOUT"
         echo "decode_tok_s: ${MODEL_TOKS[$alias]:-?}"
+        echo "sampling: temp=$TEMPERATURE top_p=$TOP_P top_k=$TOP_K seed=unset"
         echo "files_created:"
         find "$ws" -maxdepth 1 -type f ! -name 'prompt.txt' ! -name 'transcript.jsonl' ! -name 'stderr.log' -printf '  %f (%s bytes)\n'
         echo "tool_calls: $(count tool_execution_start "$ws/transcript.jsonl")"
@@ -705,12 +809,24 @@ for i in "${!ALIASES[@]}"; do
         continue
     fi
 
-    # ---- per-model wall-clock budget from measured decode speed ----------
-    TOKS="$(measure_tok_s "$ALIAS")"
+    # ---- per-model wall-clock budget from decode speed measured AT DEPTH ---
+    # wall clock = (tokens / depth rate) * OVERHEAD_FACTOR. The multiplier is
+    # what round 2 lacked: decode is only 35-55% of a real run, so a budget
+    # equal to pure decode time cannot be spent, and the cap fires while the
+    # model is still working rather than only when it loops.
+    TOKS="$(measure_tok_s "$ALIAS" "$CTX")"
     if [[ -n "$TOKS" ]]; then
-        RUN_TIMEOUT=$(awk -v b="$TOKEN_BUDGET" -v t="$TOKS" -v lo="$RUN_TIMEOUT_MIN" -v hi="$RUN_TIMEOUT_MAX" \
-            'BEGIN{ s=(t>0)? b/t : lo; if(s<lo)s=lo; if(s>hi)s=hi; printf "%d", s }')
-        log "  decode ~${TOKS} tok/s -> per-run budget ${RUN_TIMEOUT}s (for $TOKEN_BUDGET generated tokens)"
+        RUN_TIMEOUT=$(awk -v b="$TOKEN_BUDGET" -v t="$TOKS" -v f="$OVERHEAD_FACTOR" \
+                          -v lo="$RUN_TIMEOUT_MIN" -v hi="$RUN_TIMEOUT_MAX" \
+            'BEGIN{ s=(t>0)? (b/t)*f : lo; if(s<lo)s=lo; if(s>hi)s=hi; printf "%d", s }')
+        DECODE_ONLY=$(awk -v b="$TOKEN_BUDGET" -v t="$TOKS" 'BEGIN{printf "%d", (t>0)? b/t : 0}')
+        log "  decode ~${TOKS} tok/s at $(( CTX/4 > DEPTH_TOKENS ? DEPTH_TOKENS : CTX/4 ))-word context depth"
+        log "  -> ${DECODE_ONLY}s to decode $TOKEN_BUDGET tokens, x${OVERHEAD_FACTOR} overhead = ${RUN_TIMEOUT}s per run"
+        if (( RUN_TIMEOUT >= RUN_TIMEOUT_MAX )); then
+            log "  !! budget hit the ${RUN_TIMEOUT_MAX}s ceiling — this model cannot spend its token budget"
+            echo "$ALIAS: wall-clock ceiling ${RUN_TIMEOUT_MAX}s < needed $(awk -v d="$DECODE_ONLY" -v f="$OVERHEAD_FACTOR" 'BEGIN{printf "%d", d*f}')s; results are wall-clock bound" \
+                >> "$OUT/CAVEATS.txt"
+        fi
     else
         RUN_TIMEOUT=$RUN_TIMEOUT_MIN
         log "  decode speed unknown -> per-run budget ${RUN_TIMEOUT}s (floor)"
@@ -718,11 +834,13 @@ for i in "${!ALIASES[@]}"; do
     MODEL_TOKS[$ALIAS]="${TOKS:-?}"
     MODEL_BUDGET[$ALIAS]=$RUN_TIMEOUT
 
-    NUM=0
-    for PROMPT in "${PROMPTS[@]}"; do
-        ((NUM+=1)); ((RUN_INDEX+=1))
-        log "[$RUN_INDEX/$TOTAL_RUNS]"
-        run_one "$ALIAS" "$NUM" "$PROMPT" "$CTX"
+    for REP in $(seq 1 "$REPEATS"); do
+        NUM=0
+        for PROMPT in "${PROMPTS[@]}"; do
+            ((NUM+=1)); ((RUN_INDEX+=1))
+            log "[$RUN_INDEX/$TOTAL_RUNS] repeat $REP/$REPEATS"
+            run_one "$ALIAS" "$NUM" "$PROMPT" "$CTX" "$REP"
+        done
     done
 
     log "=== finished $ALIAS ==="
@@ -734,9 +852,13 @@ kill_server
 {
     echo "# Filter-round summary — $(date)"
     echo "tasks: 3 (full-suite 5, 7, 12)  reasoning_budget: <=$THINK_BUDGET (capped at ctx/4)"
-    echo "budget: $TOKEN_BUDGET generated tokens per run, wall clock clamped to [${RUN_TIMEOUT_MIN}s, ${RUN_TIMEOUT_MAX}s]"
+    echo "repeats: $REPEATS independent runs per (model, task)"
+    echo "sampling: temp=$TEMPERATURE top_p=$TOP_P top_k=$TOP_K, seed unset"
+    echo "budget: $TOKEN_BUDGET generated tokens x ${OVERHEAD_FACTOR} overhead, clamped to [${RUN_TIMEOUT_MIN}s, ${RUN_TIMEOUT_MAX}s]"
+    echo "decode speed: measured per model at ${DEPTH_TOKENS}-word context depth, not on an empty window"
     echo "sandbox: docker ($PI_IMAGE), guard extension active (URL-safe)"
     echo "context: probed PER MODEL (highest of ${CTX_CANDIDATES[*]})"
+    echo "host: $(uname -s) node $(node --version 2>/dev/null) python $(python3 --version 2>&1 | awk '{print $2}')"
     echo
     for a in "${ALIASES[@]}"; do
         c="${MODEL_CTX[$a]:-0}"
@@ -745,11 +867,11 @@ kill_server
         elif [[ -z "${MODEL_BUDGET[$a]:-}" ]]; then
             echo "$a: context $c  SKIPPED by preflight probe (see PREFLIGHT.txt)"
         else
-            echo "$a: context $c  decode ${MODEL_TOKS[$a]:-?} tok/s  budget ${MODEL_BUDGET[$a]}s"
+            echo "$a: context $c  decode ${MODEL_TOKS[$a]:-?} tok/s @depth  budget ${MODEL_BUDGET[$a]}s"
         fi
     done
     echo
-    for f in "$OUT"/[0-9][0-9]-*/meta.txt; do
+    for f in "$OUT"/[0-9][0-9]-r*/meta.txt; do
         [[ -e "$f" ]] || continue
         grep -E '^(run|model|exit_code|duration_sec):' "$f" | tr '\n' ' '
         echo
@@ -759,20 +881,20 @@ kill_server
 # Triage table: one row per run, the cheap signals side by side. Sort by model
 # to eyeball which models produced nothing and can be dropped immediately.
 {
-    printf '%-32s %4s %5s %8s %6s %6s %6s %6s %6s\n' \
-        MODEL TASK EXIT DURATION TOOLS NODE CURL PASS BLOCK
+    printf '%-32s %4s %4s %5s %8s %6s %6s %6s %6s %6s\n' \
+        MODEL TASK REP EXIT DURATION TOOLS NODE CURL PASS BLOCK
     # header stays put; only the body is sorted
     {
-        for f in "$OUT"/[0-9][0-9]-*/meta.txt; do
+        for f in "$OUT"/[0-9][0-9]-r*/meta.txt; do
             [[ -e "$f" ]] || continue
             get() { grep -E "^$1:" "$f" | head -1 | sed "s/^$1: *//"; }
-            printf '%-32s %4s %5s %8s %6s %6s %6s %6s %6s\n' \
-                "$(get model)" "$(get run)" "$(get exit_code)" "$(get duration_sec)" \
+            printf '%-32s %4s %4s %5s %8s %6s %6s %6s %6s %6s\n' \
+                "$(get model)" "$(get run)" "$(get repeat)" "$(get exit_code)" "$(get duration_sec)" \
                 "$(get tool_calls)" "$(get signal_node_invocations)" \
                 "$(get signal_curl_invocations)" "$(get signal_tests_passed_strings)" \
                 "$(get signal_guard_blocks)"
         done
-    } | sort -k1,1 -k2,2n
+    } | sort -k1,1 -k2,2n -k3,3n
     echo
     echo "EXIT 0=finished on its own  124=hit this model's wall-clock budget (see SUMMARY.txt)"
     echo "NODE/CURL = bash commands invoking them, counted from tool_execution_start"
