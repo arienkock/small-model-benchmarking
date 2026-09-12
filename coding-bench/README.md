@@ -41,13 +41,21 @@ cd coding-bench
 full run refuses to start unless all models resolve, so a wrong repo id costs
 two minutes rather than a night.
 
-Model files are located across `$HF_HUB_CACHE`, `$HF_HOME/hub`, `$HF_CACHE`,
-the machine default, and `~/.cache/huggingface/hub`, in that order. Note that
-in the HF cache `snapshots/<rev>/*.gguf` are **symlinks** into `blobs/<sha>`,
-so the lookup uses `find -L ... -type f`: without `-L`, a size filter measures
-the link rather than its target and matches nothing, and `-type f` also skips
-the broken links an interrupted download leaves behind. A FAIL line says which
-of those cases applied.
+**No Hugging Face tooling is needed on the benchmark machine.** `llama-server`
+downloads models itself with `-hf <repo> -hff <file>`, caching them under
+`$LLAMA_CACHE` (default `~/.cache/llama.cpp`). `-hff` pins the exact filename,
+so the quant can never be guessed wrong (e.g. `Q6_K` vs `Q6_K_L`). Preflight
+only does a `curl` against the HF API to confirm each repo/file exists before
+the run starts — no install, no download. Export `HF_TOKEN` for gated repos.
+
+For GGUFs already on the machine, set the repo field to the literal word
+`local` and the third field to a path; it is loaded with `-m` and never
+downloaded. The path may contain globs, which matters for HF cache paths that
+embed a revision hash (`.../snapshots/*/model.gguf`). This avoids re-fetching
+several GB into llama.cpp's separate cache.
+
+If your llama.cpp is too old to have the built-in downloader, `-hf` will be
+rejected — use `local` entries for everything.
 
 All repo ids and GGUF filenames in `models.conf` were verified against the
 Hugging Face API on 2026-09-12. Two of the new models have no official GGUF

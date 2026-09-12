@@ -80,17 +80,14 @@ HOST=0.0.0.0                # 0.0.0.0: containers reach the server via
 API_KEY="sk-bench"
 THINK_BUDGET=4096           # server-side --reasoning-budget, equal for all models
 CTX_CANDIDATES=(16384 12288 8192 4096)  # probe order, PER MODEL, highest wins
-SERVER_START_TIMEOUT=600    # seconds to wait for model load + /health
+# The FIRST start of each model may include a multi-GB download, not just a
+# load, so this ceiling has to cover fetching the weights. Subsequent starts
+# hit the llama.cpp cache and take seconds.
+SERVER_START_TIMEOUT=1800   # seconds to wait for download + model load + /health
 RUN_TIMEOUT=900             # per-run wall clock limit (seconds)
-# Cache roots tried in order. HF's own env vars win when set, so this follows
-# the same resolution the `hf` CLI uses; the last entry is the machine default.
-HF_CACHE_ROOTS=(
-    ${HF_HUB_CACHE:-}
-    ${HF_HOME:+$HF_HOME/hub}
-    ${HF_CACHE:-}
-    "/c/Users/zenfi/.cache/huggingface/hub"
-    "$HOME/.cache/huggingface/hub"
-)
+# llama-server downloads models itself via -hf/-hff, into $LLAMA_CACHE
+# (default ~/.cache/llama.cpp). Nothing here needs to know about the HF cache
+# layout. Set HF_TOKEN in the environment for gated repos.
 EXPECTED_PROMPTS=3
 
 CHECK_ONLY=0
@@ -110,116 +107,76 @@ count_i() { local n; n="$(grep -ciE  "$1" "$2" 2>/dev/null || true)"; echo "${n:
 # Parsed before anything else so --check-models needs no server or docker.
 [[ -f "$MODELS_FILE" ]] || die "models file missing: $MODELS_FILE"
 
-ALIASES=(); REPOS=(); GLOBS=()
+ALIASES=(); REPOS=(); GLOBS=()   # GLOBS holds exact filenames (passed to -hff)
 while IFS= read -r LINE || [[ -n "$LINE" ]]; do
     LINE="${LINE%$'\r'}"
     [[ -z "${LINE// }" ]] && continue
     [[ "$LINE" == \#* ]] && continue
     IFS='|' read -r A R G _NOTES <<< "$LINE"
     [[ -n "$A" && -n "$R" && -n "$G" ]] || die "malformed models.conf line: $LINE"
+    # repo field "local" => field 3 is a path on this machine, loaded with -m
+    # instead of downloaded. Use it for GGUFs you already have, so llama.cpp
+    # does not re-download them into its own cache.
+    #
+    # The path may contain globs (HF cache paths have a revision hash in them,
+    # e.g. .../snapshots/*/model.gguf). Expand it here and keep the first real
+    # file, following symlinks — in the HF cache the snapshot entry is a
+    # symlink into blobs/, so test with -e/-r rather than a size check.
+    if [[ "$R" == "local" ]]; then
+        local_expanded=""
+        for cand in $G; do
+            if [[ -e "$cand" && -r "$cand" ]]; then local_expanded="$cand"; break; fi
+        done
+        [[ -n "$local_expanded" ]] \
+            || die "models.conf: no readable file matches local path for $A: $G"
+        G="$local_expanded"
+    fi
     ALIASES+=("$A"); REPOS+=("$R"); GLOBS+=("$G")
 done < "$MODELS_FILE"
 
 (( ${#ALIASES[@]} > 0 )) || die "no models enabled in $MODELS_FILE"
 
-# Which CLI can fetch models, if any.
-HF_BIN=""
-command -v hf              >/dev/null 2>&1 && HF_BIN="hf"
-[[ -z "$HF_BIN" ]] && command -v huggingface-cli >/dev/null 2>&1 && HF_BIN="huggingface-cli"
-
-# Search every plausible cache root for one repo's GGUF.
-#
-# NOTE: in the HF cache, snapshots/<rev>/<file>.gguf is a SYMLINK into
-# blobs/<sha>. `find -name X -size +100M` therefore matches NOTHING, because
-# -size measures the link (a few bytes), not its target. `-L` makes find follow
-# symlinks, so -type f both resolves the real file and skips broken links
-# (a pointer left by an interrupted download).
-find_cached() {
-    local repo="$1" pattern="$2" root dir hit
-    for root in "${HF_CACHE_ROOTS[@]}"; do
-        [[ -n "$root" && -d "$root" ]] || continue
-        dir="$root/models--${repo//\//--}"
-        [[ -d "$dir" ]] || continue
-        hit="$(find -L "$dir" -type f -name "$pattern" 2>/dev/null | head -1)"
-        [[ -n "$hit" ]] && { echo "$hit"; return 0; }
-    done
-    return 1
-}
-
-# Resolve one model's GGUF: cache hit, else download.
-#
-# Prints exactly one line:  "OK<TAB><path>"  or  "ERR<TAB><reason>"
-# It is always called in a command substitution, i.e. a SUBSHELL, so a status
-# variable set in here would not survive the return — the reason has to travel
-# out on stdout with the result.
-resolve_gguf() {
-    local repo="$1" pattern="$2" found
-
-    if found="$(find_cached "$repo" "$pattern")"; then
-        printf 'OK\t%s\n' "$found"; return 0
-    fi
-
-    # Distinguish "never downloaded" from "downloaded but incomplete": a repo
-    # directory with no resolvable file means broken symlinks left by an
-    # interrupted fetch, which needs a re-download, not a corrected repo id.
-    local why="not in any cache root"
-    local root
-    for root in "${HF_CACHE_ROOTS[@]}"; do
-        [[ -n "$root" && -d "$root/models--${repo//\//--}" ]] || continue
-        why="repo IS cached but no readable file matches '$pattern' (incomplete download, or wrong filename)"
-        break
-    done
-
-    if [[ -z "$HF_BIN" ]]; then
-        printf 'ERR\t%s; and neither '"'"'hf'"'"' nor '"'"'huggingface-cli'"'"' is installed to fetch it\n' "$why"
+# Verify a repo/file pair exists on the Hub WITHOUT downloading it, so a typo
+# aborts in seconds rather than part-way through the night. llama-server does
+# the actual fetching later via -hf/-hff.
+verify_hf() {
+    local repo="$1" file="$2" json
+    json="$(curl -sf --max-time 30 "https://huggingface.co/api/models/$repo" 2>/dev/null)" || {
+        printf 'ERR\trepo not found or unreachable: https://huggingface.co/%s\n' "$repo"; return 1; }
+    if ! jq -e --arg f "$file" '[.siblings[]?.rfilename] | index($f)' >/dev/null 2>&1 <<< "$json"; then
+        local near
+        near="$(jq -r '[.siblings[]?.rfilename | select(endswith(".gguf"))] | .[0:6] | join(", ")' <<< "$json" 2>/dev/null)"
+        printf 'ERR\tfile "%s" not in repo. Some .gguf files there: %s\n' "$file" "${near:-<none>}"
         return 1
     fi
-
-    # Download, keeping the output so a failure can be explained.
-    local dl_log; dl_log="$(mktemp 2>/dev/null || echo "/tmp/hf-dl-$$.log")"
-    if ! "$HF_BIN" download "$repo" --include "$pattern" > "$dl_log" 2>&1; then
-        printf 'ERR\tdownload failed: %s\n' "$(tr '\n' ' ' < "$dl_log" | tail -c 200)"
-        rm -f "$dl_log"; return 1
-    fi
-    rm -f "$dl_log"
-
-    if found="$(find_cached "$repo" "$pattern")"; then
-        printf 'OK\t%s\n' "$found"; return 0
-    fi
-    printf 'ERR\t%s\n' "download succeeded but no file matching '$pattern' appeared in the cache"
-    return 1
+    printf 'OK\t%s\n' "$file"
 }
 
-log "Resolving ${#ALIASES[@]} models from $MODELS_FILE ..."
-log "  cache roots: ${HF_CACHE_ROOTS[*]:-<none set>}"
-log "  downloader:  ${HF_BIN:-<none found>}"
-declare -a GGUFS
+log "Verifying ${#ALIASES[@]} models against the Hugging Face API ..."
 RESOLVE_FAILED=0
 for i in "${!ALIASES[@]}"; do
-    RESULT="$(resolve_gguf "${REPOS[$i]}" "${GLOBS[$i]}")"
-    STATUS="${RESULT%%$'\t'*}"
-    PAYLOAD="${RESULT#*$'\t'}"
-    if [[ "$STATUS" == "OK" ]]; then
-        GGUFS[$i]="$PAYLOAD"
-        printf '  PASS  %-32s %s\n' "${ALIASES[$i]}" "$(basename "$PAYLOAD")"
+    if [[ "${REPOS[$i]}" == "local" ]]; then
+        printf '  PASS  %-32s local file (%s)\n' "${ALIASES[$i]}" "${GLOBS[$i]}"
+        continue
+    fi
+    RESULT="$(verify_hf "${REPOS[$i]}" "${GLOBS[$i]}")"
+    if [[ "${RESULT%%$'\t'*}" == "OK" ]]; then
+        printf '  PASS  %-32s %s\n' "${ALIASES[$i]}" "${GLOBS[$i]}"
     else
-        GGUFS[$i]=""
         RESOLVE_FAILED=1
-        printf '  FAIL  %-32s %s\n' "${ALIASES[$i]}" "$PAYLOAD"
-        printf '        repo=%s  file=%s\n' "${REPOS[$i]}" "${GLOBS[$i]}"
-        printf '        fetch manually with:  %s download %s --include "%s"\n' \
-            "${HF_BIN:-hf}" "${REPOS[$i]}" "${GLOBS[$i]}"
+        printf '  FAIL  %-32s %s\n' "${ALIASES[$i]}" "${RESULT#*$'\t'}"
+        printf '        repo=%s\n' "${REPOS[$i]}"
     fi
 done
 
 if (( RESOLVE_FAILED )); then
     echo
-    die "one or more models could not be resolved (see FAIL lines above). Nothing was run."
+    die "one or more models could not be verified (see FAIL lines above). Nothing was run."
 fi
-log "All ${#ALIASES[@]} models resolved."
+log "All ${#ALIASES[@]} models exist on the Hub."
 
 if (( CHECK_ONLY )); then
-    log "--check-models: roster is good. Exiting without running the benchmark."
+    log "--check-models: roster is good (existence only; weights download on first use)."
     exit 0
 fi
 
@@ -289,11 +246,21 @@ chat_smoke_test() {
 }
 
 # Start server at a given context size; verify health + smoke test.
+# The first call per model also downloads the weights.
 try_start() {
-    local model_winpath="$1" alias="$2" ctx="$3"
+    local repo="$1" file="$2" alias="$3" ctx="$4"
     kill_server
+    # Either load a file already on this machine, or let llama-server fetch it:
+    # -hf downloads on first use and caches in $LLAMA_CACHE, and -hff pins the
+    # exact filename so the quant can never be guessed wrong.
+    local -a SRC_ARGS
+    if [[ "$repo" == "local" ]]; then
+        SRC_ARGS=(-m "$(cygpath -w "$file" 2>/dev/null || echo "$file")")
+    else
+        SRC_ARGS=(-hf "$repo" -hff "$file")
+    fi
     "$LLAMA_SERVER" \
-        -m "$model_winpath" \
+        "${SRC_ARGS[@]}" \
         --alias "$alias" \
         --jinja \
         -c "$ctx" \
@@ -498,15 +465,16 @@ RUN_INDEX=0
 
 for i in "${!ALIASES[@]}"; do
     ALIAS="${ALIASES[$i]}"
-    MPATH="$(cygpath -w "${GGUFS[$i]}")"
+    REPO="${REPOS[$i]}"
+    FILE="${GLOBS[$i]}"
 
     log "=== $ALIAS ($((i+1))/${#ALIASES[@]}) ==="
 
     # Per-model context probe: highest candidate THIS model actually loads.
-    log "  probing context (${CTX_CANDIDATES[*]}) ..."
+    log "  probing context (${CTX_CANDIDATES[*]}) — first start also downloads the weights"
     MODEL_CTX[$ALIAS]=0
     for CTX in "${CTX_CANDIDATES[@]}"; do
-        if try_start "$MPATH" "$ALIAS" "$CTX"; then
+        if try_start "$REPO" "$FILE" "$ALIAS" "$CTX"; then
             MODEL_CTX[$ALIAS]=$CTX
             break
         fi
