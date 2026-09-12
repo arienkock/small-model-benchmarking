@@ -10,18 +10,36 @@
  *                run-root truncation pattern are rewritten to the file's
  *                basename IN THE WORKSPACE (correct content, correct place —
  *                graded instead of lost). Anything else outside the workspace
- *                is blocked.
+ *                is blocked. prompt.txt is read-only (it is the grading baseline).
  *   read       : hallucinated paths are rewritten; real absolute paths that
  *                exist (e.g. /etc/..., /tmp/server.log) are allowed through.
  *   bash       : hallucinated absolute paths in commands are rewritten to '.'.
- *                A small denylist blocks machine-level damage (taskkill, wmic,
- *                docker, killall, rm -rf /, killing PID 1 or pi itself).
- *                Short bash timeouts are raised to 30s so server+curl
- *                verification can complete.
+ *                A denylist blocks machine-level damage and package installs.
+ *                Bash timeouts are clamped into [30s, 120s].
  *
- * This is belt-and-braces on top of the docker sandbox: the container already
- * prevents host damage; this guard makes sure work lands where the grader
- * looks, and stops self-sabotage inside the container.
+ * ---------------------------------------------------------------------------
+ * 2026-09-12: URL-MANGLING FIX (this was the single biggest harness defect)
+ *
+ * The previous Windows-path rule was:
+ *
+ *     cmd.replace(/[A-Za-z]:[\\/][^\s;&|'"]*​/g, ".")
+ *
+ * `[A-Za-z]:[\\/]` matches the "p://" inside "http://". Every command
+ * containing a URL was destroyed before it ran:
+ *
+ *     curl -s http://localhost:8000/api/todos      ->  curl -s htt.
+ *     curl "http://host/api?distance=240&hours=5"  ->  curl "htt.&hours=5"
+ *
+ * That produced the `curl: (6) Could not resolve host: htt.` seen in nearly
+ * every transcript of the 20260911-143308 run, for BOTH models, and is why
+ * almost no HTTP verification succeeded. See bench-findings-143308.md §0.
+ *
+ * The fix is two-layer:
+ *   1. URLs are masked out before any path rewriting and restored afterwards,
+ *      so no path rule can ever touch a URL again regardless of its shape.
+ *   2. The drive-letter rule additionally requires a real drive letter — a
+ *      single character not preceded by another word character.
+ * ---------------------------------------------------------------------------
  */
 
 export default function (pi: ExtensionAPI) {
@@ -32,6 +50,10 @@ export default function (pi: ExtensionAPI) {
 	// certainly a hallucination (observed patterns from the 2026-09-11 runs)?
 	const HALLUCINATION = /llama\.cpp|coding-bench|testbed|home\/ubuntu/i;
 
+	// The task prompt is the grading baseline. LFM2.5 overwrote it in two
+	// separate tasks of the 143308 run; never let that happen again.
+	const PROTECTED = /^(?:\.\/)?prompt\.txt$/;
+
 	function toPosix(p: string): string {
 		return String(p).replace(/\\/g, "/");
 	}
@@ -39,7 +61,7 @@ export default function (pi: ExtensionAPI) {
 	// Strip Windows drive roots (D:/, C:\) and MSYS roots (/d/, /c/).
 	function stripRoots(s: string): string {
 		s = s.replace(/^[A-Za-z]:\//, "/");
-	 s = s.replace(/^\/[A-Za-z]\//, "/");
+		s = s.replace(/^\/[A-Za-z]\//, "/");
 		return s;
 	}
 
@@ -63,7 +85,7 @@ export default function (pi: ExtensionAPI) {
 				if (part === "..") {
 					depth--;
 					if (depth < 0) return null;
-			} else depth++;
+				} else depth++;
 			}
 			return s;
 		}
@@ -72,6 +94,25 @@ export default function (pi: ExtensionAPI) {
 			return stripped.slice(CWD.length + 1) || ".";
 		}
 		return null;
+	}
+
+	// ------------------------------------------------------------ url masking --
+	// Any scheme://rest token is replaced by an opaque placeholder for the
+	// duration of path rewriting. NUL cannot appear in a model-authored command,
+	// so the placeholder can never collide with real content.
+	const URL_TOKEN = /[a-zA-Z][a-zA-Z0-9+.-]*:\/\/[^\s;&|'"`]*/g;
+
+	function maskUrls(cmd: string): { masked: string; urls: string[] } {
+		const urls: string[] = [];
+		const masked = cmd.replace(URL_TOKEN, (m) => {
+			urls.push(m);
+			return `\u0000U${urls.length - 1}\u0000`;
+		});
+		return { masked, urls };
+	}
+
+	function unmaskUrls(cmd: string, urls: string[]): string {
+		return cmd.replace(/\u0000U(\d+)\u0000/g, (_m, i) => urls[Number(i)] ?? "");
 	}
 
 	// ---------------------------------------------------------------- hook --
@@ -83,6 +124,14 @@ export default function (pi: ExtensionAPI) {
 		if (tool === "write" || tool === "edit") {
 			if (typeof input.path === "string") {
 				const inside = resolveInsideCwd(input.path);
+				if (inside !== null && PROTECTED.test(inside)) {
+					return {
+						block: true,
+						reason:
+							"Blocked: prompt.txt is the task description and is read-only. " +
+							"Write your deliverables to the filenames the task asks for.",
+					};
+				}
 				if (inside !== null) {
 					input.path = inside;
 				} else if (HALLUCINATION.test(input.path)) {
@@ -114,19 +163,27 @@ export default function (pi: ExtensionAPI) {
 		if (tool === "bash") {
 			let cmd: string = input.command ?? "";
 
+			// URLs are taken out of play first — see the header comment. Every
+			// path rule below operates on a command with no URLs left in it.
+			const { masked, urls } = maskUrls(cmd);
+			cmd = masked;
+
 			// Rewrite hallucinated absolute paths in commands:
-			//   /d/llama.cpp/...  D:\llama.cpp\...  /testbed  /home/ubuntu  /c/...
+			//   /d/llama.cpp/...  D:\llama.cpp\...  /testbed  /home/ubuntu  /c/Users/...
 			// Replaced with '.' so `cd <path> && cmd` becomes `cd . && cmd`.
 			cmd = cmd
 				.replace(
 					/(?:[A-Za-z]:[\\/]|\/[A-Za-z]\/)?[^\s;&|'"]*(?:llama\.cpp|coding-bench|testbed|home\/ubuntu)[^\s;&|'"]*/gi,
 					"."
 				)
-				.replace(/[A-Za-z]:[\\/][^\s;&|'"]*/g, ".")
+				// A drive letter is ONE character and is never preceded by another
+				// word character. Without this guard the rule ate "http://...".
+				.replace(/(?<![A-Za-z0-9_])[A-Za-z]:[\\/][^\s;&|'"]*/g, ".")
 				.replace(/\/[A-Za-z]\/(?:Users|Windows|Program Files)[^\s;&|'"]*/g, ".");
 
-			// Denylist: machine-level damage or self-sabotage. In the docker
-			// sandbox these are mostly impossible anyway; cheap to keep.
+			cmd = unmaskUrls(cmd, urls);
+
+			// Denylist: machine-level damage, self-sabotage, or rule-breaking.
 			const denied: [RegExp, string][] = [
 				[/\b(taskkill|wmic|shutdown|killall)\b/i, "not available in this environment"],
 				[/\bdocker\b/i, "docker is not available to the agent"],
@@ -134,6 +191,19 @@ export default function (pi: ExtensionAPI) {
 				[/\brm\s+[^&;|]*\s\/(\s|$)/, "refusing to delete the filesystem root"],
 				[/\bkill\s+(-\S+\s+)?(1|\$PPID)\b/, "refusing to kill PID 1 or the parent process"],
 				[/\bpkill\b[^&;|]*(\bnode\b|\bpi\b)/i, "refusing to kill the agent process"],
+				// The tasks say "do not install packages" and "run TypeScript with
+				// node file.ts". MiniCPM5 ran `npm install typescript` and npx
+				// ts-node/tsx/esbuild in the 143308 run, which both breaks the rule
+				// and hides the model's actual TypeScript ability behind a toolchain.
+				[
+					/\b(?:npm|pnpm|yarn)\s+(?:i|install|add)\b/i,
+					"package installation is disabled in this benchmark",
+				],
+				[/\bnpx\b/i, "npx is disabled — run TypeScript directly with `node file.ts`"],
+				[
+					/\bpip3?\s+install\b/i,
+					"package installation is disabled — use the Python standard library",
+				],
 			];
 			for (const [re, why] of denied) {
 				if (re.test(cmd)) {
@@ -148,10 +218,17 @@ export default function (pi: ExtensionAPI) {
 
 			input.command = cmd;
 
-			// Server + curl verification needs more than the 3-10s the models pick.
-			if (typeof input.timeout === "number" && input.timeout < 15) {
-				input.timeout = 30;
-			}
+			// Timeout clamping, both directions:
+			//   floor 30s — server + curl verification needs more than the 3-10s
+			//               the models pick for themselves.
+			//   ceiling 120s — a server started in the FOREGROUND never returns.
+			//               In the 143308 run that burned the entire 30-minute
+			//               budget on several tasks (MiniCPM5 tasks 1, 9, 10).
+			//               Capping it costs the model 2 minutes and gives it a
+			//               timeout message it can actually react to.
+			const t = input.timeout;
+			if (typeof t !== "number" || t < 30) input.timeout = 30;
+			else if (t > 120) input.timeout = 120;
 			return;
 		}
 	});

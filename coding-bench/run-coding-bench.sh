@@ -81,6 +81,11 @@ mkdir -p "$OUT"
 log()  { echo "[bench] $*"; }
 die()  { echo "ERROR: $*" >&2; exit 1; }
 
+# `grep -c` prints "0" AND exits 1 when nothing matches, so the idiom
+# `$(grep -c ... || echo 0)` yields the two-line string "0\n0" and corrupts
+# meta.txt. Always a single integer, missing file included.
+count() { local n; n="$(grep -c "$1" "$2" 2>/dev/null || true)"; echo "${n:-0}"; }
+
 # Single-instance lock: two concurrent bench runs kill each other's
 # llama-server (taskkill-by-port) and pi agents. Refuse to double-start.
 # NOTE: no flock in Git Bash's MSYS — mkdir is the atomic primitive on
@@ -263,10 +268,27 @@ log "Benchmark context size: $BENCH_CTX (equal for both models)"
 log "Reasoning budget: $THINK_BUDGET tokens (server-side, equal for both models)"
 
 # ------------------------------------------------------------------ runs ---
+# Kept IDENTICAL to run-filter-bench.sh so the two rounds measure the same
+# thing. The Node/ESM rules and the background-server pattern are environment
+# facts, not task hints: without them both incumbents burned most of their
+# budget on the same three ESM errors and on foreground-server hangs, which
+# masked the coding ability being measured. See bench-findings-143308.md §4.
 APPEND_SYSTEM="You are being benchmarked. Work only inside the current working directory. \
 Use relative paths for all file operations and commands (e.g. write server.py, run node todos.ts). Never use absolute paths. \
-Python code must use only the Python standard library; never install packages. \
-TypeScript files run directly with 'node file.ts'. \
+Python code must use only the Python standard library. Package installation is disabled: npm, npx and pip install will be refused. \
+\
+TypeScript runs directly with 'node file.ts' (Node 24 strips types; it does not type-check). Follow these rules or it will not run: \
+imports of your own files MUST include the .ts extension (import { f } from './util.ts'); \
+use ESM only — export/import, never require() or module.exports; \
+do not use enums, namespaces, or constructor parameter properties; \
+there is no test framework — do not use describe/it/expect; use 'node:assert' and console.log. \
+\
+To verify a server, start it in the background with output captured, then read the log if something fails: \
+python3 server.py > server.log 2>&1 & \
+then note the pid from \$!, curl the endpoints, and kill that pid when done. \
+If you get 'Address already in use', set allow_reuse_address = True on your HTTPServer subclass. \
+Every bash command is limited to 120 seconds, so never run a server in the foreground. \
+\
 Always verify your work by running it (as each task instructs) before finishing. \
 If you started a server or background process to verify, stop it before you finish. \
 When the task is done, stop; do not start unrelated work."
@@ -338,7 +360,7 @@ EOF
         echo "reasoning_budget: $THINK_BUDGET"
         echo "files_created:"
         find "$ws" -maxdepth 1 -type f ! -name 'prompt.txt' ! -name 'transcript.jsonl' ! -name 'stderr.log' -printf '  %f (%s bytes)\n'
-        echo "tool_calls: $(grep -c tool_execution_start "$ws/transcript.jsonl" 2>/dev/null || echo 0)"
+        echo "tool_calls: $(count tool_execution_start "$ws/transcript.jsonl")"
         echo "output_tokens_total: $(jq -s '[.[] | select(.type=="message_end") | .message.usage.output] | add // 0' "$ws/transcript.jsonl" 2>/dev/null)"
         echo "input_tokens_total: $(jq -s '[.[] | select(.type=="message_end") | .message.usage.input] | add // 0' "$ws/transcript.jsonl" 2>/dev/null)"
     } > "$ws/meta.txt"
