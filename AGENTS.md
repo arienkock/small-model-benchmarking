@@ -6,10 +6,46 @@ host's quirks). Everything below is about the benchmark repo itself.
 
 - Repo lives at **`/d/llama.cpp`** on that host. `llama-server.exe` and the GPU are there;
   the pi agent runs in Docker and reaches the server via `host.docker.internal`.
-- Pull result dirs back with:
-  ```bash
-  ssh benchlaptop "cd /d/llama.cpp/coding-bench && tar czf - bench-filter-<ts>" | tar xzf - -C .
-  ```
+
+## Before running anything
+
+A run holds `coding-bench/.bench-lock/` and pins ~6.5 GB of VRAM for hours.
+**Check first; do not start a second run or kill `llama-server.exe` if one is active:**
+
+```bash
+ssh benchlaptop 'cat /d/llama.cpp/coding-bench/.bench-lock/info 2>/dev/null; tasklist //FI "IMAGENAME eq llama-server.exe"'
+```
+
+## Starting a long run
+
+Runs take 8-10 h and must outlive the SSH session. **Do not use `nohup ... &`** — Windows sshd
+tears down the process tree on disconnect and the run dies silently hours later. Launch it as a
+scheduled task instead, which is detached from the session:
+
+```bash
+ssh benchlaptop 'schtasks //create //tn BenchRun //sc once //st 00:00 //f //tr "\"C:\Program Files\Git\bin\bash.exe\" -lc \"cd /d/llama.cpp/coding-bench && ./run-filter-bench.sh > bench-run.log 2>&1\""
+schtasks //run //tn BenchRun'
+```
+
+The `/ST is earlier than current time` warning at create time is expected and harmless — `/run`
+starts it immediately. Clean up afterwards with `schtasks //delete //tn BenchRun //f`. Then poll:
+
+```bash
+ssh benchlaptop 'tail -20 /d/llama.cpp/coding-bench/bench-run.log'
+```
+
+## Fetching results
+
+Result dirs are untracked in the laptop's repo, so git is no help — stream them over SSH. This is
+read-only and safe to do while a run is in progress:
+
+```bash
+ssh benchlaptop 'cd /d/llama.cpp/coding-bench && tar czf - --warning=no-file-changed bench-filter-<ts>' | tar xzf - -C .
+```
+
+`--warning=no-file-changed` is required for a live run; without it tar exits non-zero as soon as
+the harness writes to a file it is reading. The newest run dir is a snapshot of work in progress —
+its `transcript.jsonl` may end in a torn line.
 
 ## Pushing code without the GitHub round trip
 
@@ -23,20 +59,3 @@ ssh benchlaptop 'cd /d/llama.cpp && git config receive.denyCurrentBranch updateI
 ```
 
 `origin` (GitHub) stays the backup remote.
-
-## Before running anything
-
-A run holds `coding-bench/.bench-lock/` and pins ~6.5 GB of VRAM for hours.
-**Check first; do not start a second run or kill `llama-server.exe` if one is active:**
-
-```bash
-ssh benchlaptop 'cat /d/llama.cpp/coding-bench/.bench-lock/info 2>/dev/null; tasklist //FI "IMAGENAME eq llama-server.exe"'
-```
-
-Long runs take 8-10 h and must survive disconnect:
-
-```bash
-ssh benchlaptop 'cd /d/llama.cpp/coding-bench && nohup ./run-filter-bench.sh > bench-run.log 2>&1 &'
-```
-
-If the run dies with the SSH session, use `schtasks /create /sc once` instead.
