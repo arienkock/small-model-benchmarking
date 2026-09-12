@@ -656,6 +656,15 @@ for i in "${!ALIASES[@]}"; do
     for CTX in "${CTX_CANDIDATES[@]}"; do
         if try_start "$REPO" "$FILE" "$ALIAS" "$CTX" "${SRVARGS[$i]}"; then
             # ACTUAL_CTX, not CTX: the server caps -c at the training context.
+            # If it did cap, restart at the real size. --reasoning-budget was
+            # derived from the value we ASKED for, so leaving it would hand
+            # Apertus a 4096-token budget inside a 4096-token window -- the very
+            # thing this is meant to prevent.
+            if (( ACTUAL_CTX < CTX )); then
+                log "  restarting $ALIAS at its real context $ACTUAL_CTX so the reasoning budget matches"
+                try_start "$REPO" "$FILE" "$ALIAS" "$ACTUAL_CTX" "${SRVARGS[$i]}" \
+                    || { log "  !! $ALIAS failed to restart at $ACTUAL_CTX"; MODEL_CTX[$ALIAS]=0; break; }
+            fi
             MODEL_CTX[$ALIAS]=$ACTUAL_CTX
             break
         fi
@@ -733,8 +742,10 @@ kill_server
         c="${MODEL_CTX[$a]:-0}"
         if [[ "$c" == "0" ]]; then
             echo "$a: DID-NOT-LOAD (skipped)"
+        elif [[ -z "${MODEL_BUDGET[$a]:-}" ]]; then
+            echo "$a: context $c  SKIPPED by preflight probe (see PREFLIGHT.txt)"
         else
-            echo "$a: context $c  decode ${MODEL_TOKS[$a]:-?} tok/s  budget ${MODEL_BUDGET[$a]:-?}s"
+            echo "$a: context $c  decode ${MODEL_TOKS[$a]:-?} tok/s  budget ${MODEL_BUDGET[$a]}s"
         fi
     done
     echo
