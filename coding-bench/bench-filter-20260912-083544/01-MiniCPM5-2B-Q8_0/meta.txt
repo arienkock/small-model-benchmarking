@@ -1,0 +1,17 @@
+run: 1
+model: MiniCPM5-2B-Q8_0
+workspace: /d/llama.cpp/coding-bench/bench-filter-20260912-083544/01-MiniCPM5-2B-Q8_0
+exit_code: 124
+duration_sec: 903
+context: 16384
+reasoning_budget: 4096
+files_created:
+  debounce.ts (1520 bytes)
+  meta.txt (203 bytes)
+tool_calls: 24
+output_tokens_total: 13734
+input_tokens_total: 15907
+signal_node_invocations: 66
+signal_curl_invocations: 0
+signal_tests_passed_strings: 57
+signal_guard_blocks: 0

@@ -1,0 +1,19 @@
+run: 3
+model: LFM2.5-2.6B-Q8_0
+workspace: /d/llama.cpp/coding-bench/bench-filter-20260912-083544/03-LFM2.5-2.6B-Q8_0
+exit_code: 124
+duration_sec: 903
+context: 16384
+reasoning_budget: 4096
+files_created:
+  averageSpeed.ts (1050 bytes)
+  meta.txt (203 bytes)
+  server.log (0 bytes)
+  server.py (1799 bytes)
+tool_calls: 22
+output_tokens_total: 14958
+input_tokens_total: 23524
+signal_node_invocations: 0
+signal_curl_invocations: 29
+signal_tests_passed_strings: 0
+signal_guard_blocks: 5

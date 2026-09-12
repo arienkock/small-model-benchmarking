@@ -1,0 +1,17 @@
+run: 3
+model: Spark-X2.5-4B-Q6_K
+workspace: /d/llama.cpp/coding-bench/bench-filter-20260912-083544/03-Spark-X2.5-4B-Q6_K
+exit_code: 124
+duration_sec: 903
+context: 16384
+reasoning_budget: 4096
+files_created:
+  meta.txt (207 bytes)
+  server.py (2362 bytes)
+tool_calls: 3
+output_tokens_total: 8908
+input_tokens_total: 2340
+signal_node_invocations: 0
+signal_curl_invocations: 0
+signal_tests_passed_strings: 0
+signal_guard_blocks: 0

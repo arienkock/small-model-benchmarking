@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "/workspace/server.py", line 69, in <module>
+    run()
+  File "/workspace/server.py", line 64, in run
+    with HTTPServer(server_address, AverageSpeedHandler) as server:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/socketserver.py", line 456, in __init__
+    self.server_bind()
+  File "/usr/lib/python3.11/http/server.py", line 136, in server_bind
+    socketserver.TCPServer.server_bind(self)
+  File "/usr/lib/python3.11/socketserver.py", line 472, in server_bind
+    self.socket.bind(self.server_address)
+TypeError: bind(): AF_INET address must be tuple, not str

@@ -19,4 +19,4 @@ LICENSE-LLVM-OpenMP
 # (a real lock file for the coding-bench tooling itself should stay committable)
 coding-bench/bench-coding-*/**/package-lock.json
 coding-bench/smoke-test/**/package-lock.json
-benchmark*/**/package-lock.json
+benchmark*/**/package-lock.jsoncoding-bench/bench-filter-*/**/package-lock.json
