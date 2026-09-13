@@ -200,7 +200,7 @@ burning ~140-180 s. Worth knowing; not what caused the timeouts.
 (Granite is its closest peer at 1875 s). Until then its 9/15 is a floor, not a score, and it
 must not be cut.
 
-### 3.1 Why Nanbeige prefills so slowly — mechanism found, magnitude unexplained
+### 3.1 Why Nanbeige prefills so slowly — RESOLVED by measurement
 
 Read straight out of the GGUF on the laptop:
 
@@ -208,62 +208,93 @@ Read straight out of the GGUF on the laptop:
 general.architecture              nanbeige
 nanbeige.block_count              22
 nanbeige.num_loops                2        <-- weights are re-run, not just stacked
-nanbeige.skip_loop_final_norm     False
 nanbeige.vocab_size               166144   <-- largest in the roster by 27%
 nanbeige.attention.head_count     48  (head_count_kv 8, embedding_length 3072)
 ```
 
-`num_loops = 2` means every token runs **44 transformer-block passes over 22 physical weight
-sets**, with a norm between the passes. So the alias's "3B" describes the file, not the work:
-compute per token is that of a ~44-layer model while weight traffic is that of a 22-layer
-one. That predicts roughly 2x on both phases, and it matches decode (its naive 23.4 GB/s
-implied bandwidth becomes ~47 GB/s once you count the weights twice — right in the normal
-range).
+`num_loops = 2` means every token runs **44 transformer-block passes over 22
+physical weight sets**. llama.cpp confirms it: `offloaded 45/45 layers to GPU`.
+So the alias's "3B" describes the file, not the work — and `llama-bench` reports
+the real parameter count as **4.17 B**, not 3 B.
 
-It does **not** explain a 12-14x prefill penalty. Roughly 6x is unaccounted for, and
-crucially it is **not the quant** — see §4.1. Not determinable from the logs at the verbosity
-this harness runs. One cheap test settles it: `llama-bench.exe` is already on the laptop;
-`-p 512 -n 0` versus `-p 0 -n 128` separates prefill from decode in minutes with no run lock.
+That costs a flat **2.0x**, and measurement says it costs nothing else:
+
+| prefill | Granite Q8_0 | Spark Q6_K | Nanbeige Q6_K | Nanbeige / Granite |
+|---|---|---|---|---|
+| pp128 | 135.6 | 129.6 | 70.3 | 0.52 |
+| pp512 | 248.8 | 212.1 | 127.8 | 0.51 |
+| pp2048 | 227.4 | 198.8 | 117.6 | 0.52 |
+| pp512 @ d2048 | 201.5 | 190.1 | 102.6 | 0.51 |
+
+Dead flat across batch size and depth. **The 12-14x seen in round 3's server logs
+was never a model property** — same weights, same card, 8x faster under
+`llama-bench`.
+
+**It was a VRAM cliff.** Per-token KV cost differs enormously across the roster
+because Nanbeige carries 44 layers' worth of cache:
+
+| model | CUDA0 weights | KV/token | KV @16k | total @16k | headroom of 6143 MiB |
+|---|---|---|---|---|---|
+| Granite-4.2-3B | 3449 MiB | 80 KiB | 1280 MiB | 4729 MiB | 1414 MiB |
+| Spark-X2.5-4B | 3217 MiB | 108 KiB | 1728 MiB | 4945 MiB | 1198 MiB |
+| **Nanbeige4.2-3B** | 3026 MiB | **176 KiB** | **2816 MiB** | **5842 MiB** | **301 MiB** |
+
+A depth sweep finds the cliff exactly where that arithmetic predicts, and finds
+that Granite has none:
+
+| depth | Nanbeige pp512 | Granite pp512 | ratio |
+|---|---|---|---|
+| 0 | 127.7 | 253.9 | 0.50 |
+| 8192 | 64.1 | 126.3 | 0.51 |
+| 12288 | 51.3 | — | ~0.52 |
+| **15360** | **12.4** | **87.7** | **0.14** |
+
+12.4 tok/s is the 15.7 the round-3 server logs recorded. Confirmed live: at
+`-c 16384` llama-server sat at **6000 MiB of 6143**.
+
+**The fix is `q8_0` KV**, and it is verified: at d15360 Nanbeige prefills at
+**43.74 tok/s against 12.42 with f16** — a 3.5x recovery landing on the
+pre-cliff trend. In the harness it drops resident VRAM from 6000 to 4838 MiB.
+Nanbeige runs round 4 with `-ctk q8_0 -ctv q8_0`.
 
 ## 4. Harness defects to fix before round 4
 
 These are ordered by how much they distort results.
 
-### 4.1 The quant question, answered — Q6_K is not the problem
+### 4.1 The quant question, answered properly — and the earlier answer corrected
 
-§2 of the old version hypothesised that Q6_K is slower than Q8_0 on Maxwell (CC 5.2, no
-DP4A) and that Spark and Nanbeige had been paying a penalty that said nothing about the
-models. **The prefill half of that is now disproved by a control the old version did not
-have**: Spark is also Q6_K and prefills at **162.7 tok/s at depth, against Granite's Q8_0
-165.5** — a 2% difference. Q6_K costs essentially nothing in the compute-bound prefill GEMM
-on this card, and Nanbeige's collapse therefore cannot be its quant.
+An earlier draft of this file concluded from Spark-vs-Granite prefill that "Q6_K
+costs essentially nothing". **That was right about prefill and wrong as a general
+claim**, because it generalised a prefill result to decode. The prescribed
+same-model test has now been run on two pairs and it says the opposite at decode:
 
-Decode is a different phase and still shows a gap, now computed from **real** GGUF sizes
-rather than the old version's estimates:
+| model | quant | size | pp512 | tg128 | implied decode BW |
+|---|---|---|---|---|---|
+| MiniCPM5-2B | Q8_0 | 2.49 GiB | 371.2 | **28.53** | 76.3 GB/s |
+| MiniCPM5-2B | Q4_K_M | 1.45 GiB | 375.8 | **27.02** | 42.1 GB/s |
+| Nanbeige4.2-3B | Q8_0 | 4.13 GiB | 127.5 | **11.38** | 50.5 GB/s |
+| Nanbeige4.2-3B | Q6_K | 3.34 GiB | 127.8 | **9.37** | 33.6 GB/s |
 
-| Model | Quant | Real GGUF | decode @depth | Implied BW @depth |
-|---|---|---|---|---|
-| LFM2.5-2.6B | Q8_0 | 2.68 GiB | 24.4 | 70.2 GB/s |
-| MiniCPM5-2B | Q8_0 | 2.50 GiB | 21.9 | 58.7 GB/s |
-| Granite-4.2-3B | Q8_0 | 3.63 GiB | 13.1 | 51.0 GB/s — MoE hybrid, active != total, discount |
-| Spark-X2.5-4B | **Q6_K** | 3.15 GiB | 12.2 | **41.2 GB/s** |
-| Nanbeige4.2-3B | **Q6_K** | 3.35 GiB | 6.5 | 23.4 naive / ~47 counting loops twice |
+**Prefill is quant-independent** (differences under 1.2%, within error — this is
+the part the earlier draft got right, and Spark-at-Q6_K prefilling within 2% of
+Granite-at-Q8_0 was the control that established it).
 
-Against the two dense Q8_0 models (59-70 GB/s), Spark's 41 GB/s is ~30% low — consistent
-with a real but modest K-quant **decode** penalty. Granite is not a usable comparator here
-(MoE: active parameters are far below total, so its implied figure is meaningless).
+**Decode is not.** The smaller K-quant is slower in both pairs: Q4_K_M is 42%
+smaller and 5% slower, Q6_K is 19% smaller and 18% slower. If decode were purely
+bandwidth-bound, Q4_K_M should reach ~49 tok/s; it reaches 27, i.e. 55% of the
+bandwidth-predicted rate. On this Maxwell card (CC 5.2, no DP4A) K-quant
+dequantisation costs more than the bandwidth it saves.
 
-So: one confounded data point, pointing at a decode-only penalty of roughly 30%. **The
-prescribed same-model test is now nearly free** and should be run before re-quantising
-anything:
+**Policy: Q8_0 wherever it fits.** Below Q8_0 you buy VRAM, never speed. Both
+round-3 Q6_K entries were therefore running handicapped, and Spark's 12/15 was
+scored roughly 20% slow.
 
-- `MiniCPM5-2B-Q4_K_M.gguf` is **already on the laptop** next to its Q8_0, in the same HF
-  snapshot directory — a same-model, same-architecture K-quant-vs-Q8_0 pair, no download.
-- `bartowski/Nanbeige_Nanbeige4.2-3B-GGUF` ships `Q8_0` alongside the Q6_K in use, so the
-  Nanbeige arm is a one-filename `-hff` swap.
-
-Run both arms through `llama-bench` rather than the full harness; that also isolates prefill
-from decode, which the current probe conflates.
+The exception is Nanbeige, and it shows why per-model configuration beats uniform
+settings: Q8_0 would need 4.13 GiB of weights plus 2816 MiB of f16 KV = 6.6 GB,
+which does not load at all. It keeps Q6_K and spends its headroom on KV instead
+(§3.1). Spark has 1198 MiB spare and could plausibly afford Q8_0 weights if it
+traded f16 KV for q8_0 — the obvious next experiment, deliberately not bundled
+into round 4 so the round changes one thing at a time.
 
 ### 4.2 `OVERHEAD_FACTOR = 2.5` rests on a premise the run disproves
 
@@ -424,33 +455,27 @@ quality grounds stays with you.
 Ordered by value per GPU-hour. Tier 0 and Tier 1 need no overnight run and should all land
 before the next full round starts.
 
-### Tier 0 — cheap measurements (~2 h total, no bench lock needed)
+### Tier 0 — DONE 2026-09-13 (artifacts: quant-probe-20260913-121335/, kv1-134136/)
 
-**E1. Settle the quant policy with a same-model comparison.** The §4.1 gap rests on one
-confounded data point. Two clean arms are available almost for free:
+**E1 quant policy — done, and it reversed a conclusion.** See §4.1: Q8_0 beats
+K-quants at decode on this card, measured on two same-model pairs. Prefill is
+quant-independent.
 
-| Arm | Quant A | Quant B | Cost |
-|---|---|---|---|
-| MiniCPM5-2B | Q8_0 *(on disk)* | Q4_K_M *(already on disk, same HF snapshot)* | 0 download |
-| Nanbeige4.2-3B | Q6_K *(on disk)* | Q8_0 *(one `-hff` swap)* | ~3.6 GB download |
+**E2 hardware facts — done.** `llama-bench -v` yields what no server log at
+`verbosity = 3` ever held: per-model CUDA0 vs CPU_Mapped buffer sizes, KV per
+token, and `offloaded N/N layers to GPU` for all three (full offload confirmed,
+not inferred). Real parameter counts too — Nanbeige is 4.17 B, not 3 B. Resident
+VRAM at the harness's real configuration is **6000 MiB of 6143** for Nanbeige
+with f16 KV, 4838 MiB with q8_0 KV. `--parallel 1` is confirmed by llama.cpp's
+own line: `n_parallel is set to auto, using n_parallel = 4 and kv_unified = true`
+is what round 3 ran; the harness now logs `n_slots = 1, kv_unified = 'false'`.
 
-Run `llama-bench.exe` (already on the laptop), not the harness: `-p 512 -n 128` reports
-prefill and decode separately, which is the distinction §4.1 turns on. **Decides:** whether
-the ~30% decode gap is the quant or the model, and therefore whether Spark and Nanbeige
-should be re-quantised to Q8_0 before any scored round.
+**E3 Nanbeige prefill — done, fully explained.** See §3.1. Flat 2.0x from
+`num_loops = 2`, plus a VRAM cliff above ~12k that `q8_0` KV removes.
 
-**E2. Record the hardware facts that no log currently holds.** Start one model with `-lv 4`
-and stop at "model loaded" (~20 s). Capture `load_tensors` buffer sizes, CUDA-vs-CPU split,
-layer offload, KV and compute buffer sizes. Sample `nvidia-smi --query-gpu=memory.used` once
-while loaded. **Decides:** the §4.5 and §6 unknowns, permanently — full-offload is currently
-inferred from throughput, not observed, and no resident-VRAM figure has ever been captured.
-Add the same lines to `SUMMARY.txt` so no future round has to reconstruct them.
-
-**E3. Isolate Nanbeige's prefill penalty.** `llama-bench -p 128,512,2048 -n 0` against
-Nanbeige at both quants, plus `-ngl 0` as a CPU baseline. With `num_loops = 2` accounting for
-~2x of a 12-14x penalty (§3.1), this says whether the residual ~6x scales with batch (a
-kernel/architecture problem) or is fixed overhead. **Decides:** whether Nanbeige is viable on
-this card at all, which E5 would otherwise spend 4.5 h discovering.
+Nothing in Tier 0 remains open. The one loose end deliberately left is Spark at
+Q8_0 + q8_0 KV, which needs a ~4.1 GB download and would change two variables in
+a round whose purpose is to change as few as possible.
 
 ### Tier 1 — harness fixes (code only, no GPU time)
 
@@ -528,3 +553,41 @@ forwarding rather than debugging ability — worth knowing before weighting task
 3. E7 (~1.5 h). Confirms repeats are measuring what they claim.
 4. E6 (~4.5 h) or drop Nanbeige per E3.
 5. Full round with the fixed harness, Qwen-Coder baseline added, E8-E10 scoring in place.
+
+---
+
+## 10. Round 4 — what is actually running
+
+Launched 2026-09-13 14:11, hard deadline 07:00, artifacts in
+`bench-filter-20260913-141131/`.
+
+**36 cells: 3 models x 3 tasks x 4 repeats = 24 scored trials per model**, against
+round 3's 18. Sizing from each model's own probe, measured during the smoke test
+rather than assumed:
+
+| model | config | decode @depth | cap/cell | 12 cells |
+|---|---|---|---|---|
+| Nanbeige4.2-3B | Q6_K + **q8_0 KV** | 7.42 tok/s | 2184 s | 7.3 h |
+| Spark-X2.5-4B | Q6_K, f16 KV | 13.01 tok/s | 1245 s | 4.2 h |
+| Granite-4.2-3B | Q8_0, f16 KV | 16.04 tok/s | 1010 s | 3.4 h |
+
+Worst case 14.8 h; at round 3's actual/worst ratio of 0.68, expect ~10 h. The
+`BENCH_DEADLINE` guard refuses to start any cell that cannot finish by 07:00 and
+reserves floor budget for cells still owed to later models, so the expensive
+first model cannot starve the last one. Models run Nanbeige, Spark, Granite so
+that anything the guard trims is the best-characterised model, not the one this
+round exists to settle.
+
+**Round 4 is not comparable to round 3 for any model.** `--parallel 1`, the
+honest overhead factor and a working speed probe all changed the defaults for
+everyone. Round 3 is a pilot study, not a baseline.
+
+**What the smoke test caught before the real run** (`smoke-20260913-135250/`):
+Docker Desktop was dead and would have failed cell 1; the prompt-count guard
+rejected a one-task file; and positively, `measure_tok_s` now returns a number
+for all three models — the failure that cost Nanbeige the whole of round 3.
+
+Still open for round 5, in priority order: E5 grading granularity (the only lever
+that buys resolution without GPU time), E7 temp=0 vs temp=0.7 to separate sampling
+noise from harness noise, E10 scoring false passes as a first-class negative, and
+the Qwen2.5-Coder-3B baseline.
