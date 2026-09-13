@@ -168,8 +168,18 @@ grade_module() {
     fi
 
     # Only surface the logic text when it says something the shipped text does not.
+    # Round 3 showed the stale-text case matters: when the logic run fails with a
+    # DIFFERENT error than the shipped run, the shipped error is what got printed
+    # and it was often the more superficial one. Granite r3 and LFM2.5 r2 both
+    # displayed a packaging-shaped "Cannot determine intended module format" when
+    # the real defect in each was "Assignment to constant variable" — an algorithm
+    # bug reported as a packaging bug. Print the logic text whenever it ran.
     local text="$gtxt"
-    [[ "$logic" == "PASS" && "$shipped" != "PASS" ]] && text="$gtxt  [scaffolding-only failure: the algorithm passes]"
+    if [[ "$logic" == "PASS" && "$shipped" != "PASS" ]]; then
+        text="$gtxt  [scaffolding-only failure: the algorithm passes]"
+    elif [[ "$logic" != "-" && "$logic" != "PASS" && -n "${ltxt:-}" && "$ltxt" != "$gtxt" ]]; then
+        text="$gtxt  [logic-run: $ltxt]"
+    fi
     printf '%s\t%s\t%s' "$shipped" "$logic" "$text"
 }
 

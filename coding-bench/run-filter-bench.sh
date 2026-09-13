@@ -113,9 +113,19 @@ SERVER_START_TIMEOUT=1800   # seconds to wait for download + model load + /healt
 # so spend the saving there instead — 12000 barely touches real work and nearly
 # halves every wall-clock cap.
 TOKEN_BUDGET="${BENCH_TOKEN_BUDGET:-12000}"
-OVERHEAD_FACTOR="${BENCH_OVERHEAD:-2.5}"  # wall clock = decode time x this.
-                            # Observed wall/decode in round 2: 1.1-2.75, median
-                            # ~1.85. 2.5 clears all but the worst case.
+OVERHEAD_FACTOR="${BENCH_OVERHEAD:-1.35}"  # wall clock = decode time x this.
+                            # Was 2.5, justified by "decode is 35-55% of a real
+                            # run". Round 3's own server logs disprove that:
+                            # summing every prompt-eval and eval line, the GPU is
+                            # busy for 85-99% of wall clock (Granite 96%, Spark
+                            # 99%), so tool execution, docker and agent overhead
+                            # together are 1-7%, not 45-65%. The 2.5x was not
+                            # buying overhead headroom, it was silently funding
+                            # 1.1-1.4x more tokens than TOKEN_BUDGET claims:
+                            # models generated 13.7k-16.6k against a nominal
+                            # 12000. Prefill is the real addition (11-16% of
+                            # server time for four of five models), so decode
+                            # time x ~1.2 is the honest figure; 1.35 adds slack.
 RUN_TIMEOUT_MIN=900         # never give less than round 1 gave
 RUN_TIMEOUT_MAX="${BENCH_MAX_RUN_SEC:-3600}"  # hard ceiling per run (60 min).
                             # Was 2100, which was below Nanbeige's own decode
@@ -123,6 +133,7 @@ RUN_TIMEOUT_MAX="${BENCH_MAX_RUN_SEC:-3600}"  # hard ceiling per run (60 min).
                             # 3600 clears every model except Nanbeige, which is
                             # flagged in CAVEATS.txt when it hits the ceiling.
 RUN_TIMEOUT=$RUN_TIMEOUT_MIN  # per-run cap; recomputed per model from measured tok/s
+
 
 # REPEATS. Rounds 1 and 2 ran n=1 per (model, task) with no temperature and no
 # seed set anywhere, so every cell was a single draw from llama-server's default
@@ -165,6 +176,16 @@ die()  { echo "ERROR: $*" >&2; exit 1; }
 # so `$(grep -c ... || echo 0)` produces the two-line string "0\n0". These
 # always yield a single integer, including when the file does not exist.
 count()   { local n; n="$(grep -c    "$1" "$2" 2>/dev/null || true)"; echo "${n:-0}"; }
+
+# DEADLINE. Set BENCH_DEADLINE to a `date -d`-parsable time (e.g. "tomorrow 07:00"
+# or "2026-09-14 07:00") and no cell will be started that cannot finish before it.
+# Unset = no guard, the old behaviour.
+DEADLINE_EPOCH=""
+if [[ -n "${BENCH_DEADLINE:-}" ]]; then
+    DEADLINE_EPOCH="$(date -d "$BENCH_DEADLINE" +%s 2>/dev/null || true)"
+    [[ -n "$DEADLINE_EPOCH" ]] || die "BENCH_DEADLINE='$BENCH_DEADLINE' is not a parsable date"
+    (( DEADLINE_EPOCH > $(date +%s) )) || die "BENCH_DEADLINE='$BENCH_DEADLINE' is in the past"
+fi
 count_i() { local n; n="$(grep -ciE  "$1" "$2" 2>/dev/null || true)"; echo "${n:-0}"; }
 
 # ---------------------------------------------------- transcript signals ---
@@ -437,7 +458,18 @@ measure_tok_s() {
     }' > "$pf"
     jq -n --rawfile p "$pf" --argjson n "$DEPTH_PREDICT" \
         '{prompt:$p, n_predict:$n, ignore_eos:true, cache_prompt:false, temperature:0}' > "$bf"
-    resp="$(curl -s -m 300 -H "Authorization: Bearer $API_KEY" -H 'Content-Type: application/json' \
+    # PROBE_TIMEOUT. Round 3: this was a flat `-m 300`. Nanbeige prefills at
+    # ~15 tok/s at depth, so its ~7400-token probe needed ~475s and the curl was
+    # cut off every time. measure_tok_s returned empty, the caller took the floor
+    # branch, and the model ran all 9 cells on 900s against peers' 1188-2369s —
+    # it generated 3722 tokens/cell against their 13.7k-16.6k. The single slowest
+    # model is exactly the one that most needs a measured budget, and a fixed
+    # timeout guarantees it is the one that cannot get one.
+    # Allow for the worst prefill rate we have ever measured on this card (the
+    # ~12 tok/s Nanbeige shows past its VRAM cliff) plus the decode, plus slack.
+    local budget=$(( depth / 8 + DEPTH_PREDICT * 10 + 120 ))
+    (( budget < 300 )) && budget=300
+    resp="$(curl -s -m "$budget" -H "Authorization: Bearer $API_KEY" -H 'Content-Type: application/json' \
             -d "@$bf" "http://127.0.0.1:$PORT/completion" 2>/dev/null)"
     rm -f "$pf" "$bf"
     v="$(jq -r '.timings.predicted_per_second // empty' <<<"$resp" 2>/dev/null)"
@@ -486,6 +518,7 @@ try_start() {
         --jinja \
         -c "$ctx" \
         -ngl 999 \
+        --parallel 1 \
         --reasoning-budget "$think" \
         --temp "$TEMPERATURE" \
         --top-p "$TOP_P" \
@@ -829,7 +862,17 @@ for i in "${!ALIASES[@]}"; do
         fi
     else
         RUN_TIMEOUT=$RUN_TIMEOUT_MIN
-        log "  decode speed unknown -> per-run budget ${RUN_TIMEOUT}s (floor)"
+        log "  !! decode speed UNKNOWN -> per-run budget ${RUN_TIMEOUT}s (floor, NOT measured)"
+        # Round 3 took this branch silently for Nanbeige and nothing in the run
+        # said so; the caveat had to be reconstructed by hand afterwards. A model
+        # on an unmeasured budget is not comparable to one on a measured budget,
+        # and the artifact must say that itself.
+        {
+            echo "$ALIAS: per-run budget fell to the ${RUN_TIMEOUT_MIN}s FLOOR — the speed probe returned nothing."
+            echo "    This budget is NOT measured and NOT comparable to the other models' budgets."
+            echo "    Do not read this model's timeouts as slowness or looping; check whether the agent"
+            echo "    was still making progress at cutoff, and re-run with a forced budget before cutting it."
+        } >> "$OUT/CAVEATS.txt"
     fi
     MODEL_TOKS[$ALIAS]="${TOKS:-?}"
     MODEL_BUDGET[$ALIAS]=$RUN_TIMEOUT
@@ -838,6 +881,23 @@ for i in "${!ALIASES[@]}"; do
         NUM=0
         for PROMPT in "${PROMPTS[@]}"; do
             ((NUM+=1)); ((RUN_INDEX+=1))
+            # DEADLINE GUARD. An overnight run has a hard hand-back time, and a
+            # cell that cannot finish before it is worse than no cell: it burns
+            # the clock and produces a torn transcript. Refuse to START a cell
+            # whose own budget would cross the deadline, and reserve the floor
+            # budget for every cell still owed to the models after this one so a
+            # slow early model cannot starve a later one. Skipped cells are
+            # recorded, so the analysis sees unequal n instead of silent gaps.
+            if [[ -n "$DEADLINE_EPOCH" ]]; then
+                cells_left_other=$(( (${#ALIASES[@]} - i - 1) * ${#PROMPTS[@]} * REPEATS ))
+                reserve=$(( cells_left_other * RUN_TIMEOUT_MIN ))
+                need=$(( $(date +%s) + RUN_TIMEOUT + reserve ))
+                if (( need > DEADLINE_EPOCH )); then
+                    log "    SKIPPED by deadline guard (needs ${RUN_TIMEOUT}s + ${reserve}s reserved for later models)"
+                    echo "$ALIAS task $NUM repeat $REP: skipped, deadline guard" >> "$OUT/SKIPPED-DEADLINE.txt"
+                    continue
+                fi
+            fi
             log "[$RUN_INDEX/$TOTAL_RUNS] repeat $REP/$REPEATS"
             run_one "$ALIAS" "$NUM" "$PROMPT" "$CTX" "$REP"
         done
