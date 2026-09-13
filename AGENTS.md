@@ -9,7 +9,8 @@ host's quirks). Everything below is about the benchmark repo itself.
 
 ## Before running anything
 
-A run holds `coding-bench/.bench-lock/` and pins ~6.5 GB of VRAM for hours.
+A run holds `coding-bench/.bench-lock/` and occupies essentially the whole GPU for hours (the
+card is 6144 MiB / ~6 GiB total; the host itself has ~24 GiB of system RAM).
 **Check first; do not start a second run or kill `llama-server.exe` if one is active:**
 
 ```bash
