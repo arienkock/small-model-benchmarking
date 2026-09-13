@@ -71,8 +71,10 @@ PI_IMAGE="coding-bench-agent:latest"
 EXTENSION="$SCRIPT_DIR/provider-extension.ts"
 GUARD_EXT="$SCRIPT_DIR/bench-guard.ts"
 DOCKERFILE_DIR="$SCRIPT_DIR/docker"
-PROMPTS_FILE="$SCRIPT_DIR/prompts-filter.txt"
-MODELS_FILE="$SCRIPT_DIR/models.conf"
+# Roster and task list are selectable so a smoke test and a shortlist round can
+# reuse this script unchanged. Defaults are the full filter round.
+PROMPTS_FILE="${BENCH_PROMPTS:-$SCRIPT_DIR/prompts-filter.txt}"
+MODELS_FILE="${BENCH_MODELS:-$SCRIPT_DIR/models.conf}"
 
 PORT=8123
 HOST=0.0.0.0                # 0.0.0.0: containers reach the server via
@@ -126,7 +128,8 @@ OVERHEAD_FACTOR="${BENCH_OVERHEAD:-1.35}"  # wall clock = decode time x this.
                             # 12000. Prefill is the real addition (11-16% of
                             # server time for four of five models), so decode
                             # time x ~1.2 is the honest figure; 1.35 adds slack.
-RUN_TIMEOUT_MIN=900         # never give less than round 1 gave
+RUN_TIMEOUT_MIN="${BENCH_MIN_RUN_SEC:-900}"   # never give less than round 1 gave;
+                            # overridable so a smoke test can use a short cap
 RUN_TIMEOUT_MAX="${BENCH_MAX_RUN_SEC:-3600}"  # hard ceiling per run (60 min).
                             # Was 2100, which was below Nanbeige's own decode
                             # time for the token budget — it could never spend it.
