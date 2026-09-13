@@ -1,0 +1,36 @@
+OUT=/d/llama.cpp/coding-bench/decode-measure-20260912-193403
+long.txt words: 8000
+=== LFM2.5-2.6B-Q8_0 / empty_ctx ===
+LFM2.5-2.6B-Q8_0	empty_ctx	50.9	26.3
+=== LFM2.5-2.6B-Q8_0 / deep_ctx ===
+LFM2.5-2.6B-Q8_0	deep_ctx	287.2	24.4
+=== MiniCPM5-2B-Q8_0 / empty_ctx ===
+MiniCPM5-2B-Q8_0	empty_ctx	43.5	27.8
+=== MiniCPM5-2B-Q8_0 / deep_ctx ===
+MiniCPM5-2B-Q8_0	deep_ctx	209.6	21.9
+skip VibeThinker-3B-Q8_0 (skipped at preflight)
+=== Granite-4.2-3B-Q8_0 / empty_ctx ===
+Granite-4.2-3B-Q8_0	empty_ctx	36.3	19.7
+=== Granite-4.2-3B-Q8_0 / deep_ctx ===
+Granite-4.2-3B-Q8_0	deep_ctx	165.5	13.1
+=== Spark-X2.5-4B-Q6_K / empty_ctx ===
+Spark-X2.5-4B-Q6_K	empty_ctx	27.5	13.5
+=== Spark-X2.5-4B-Q6_K / deep_ctx ===
+Spark-X2.5-4B-Q6_K	deep_ctx	162.7	12.2
+=== Nanbeige4.2-3B-Q6_K / empty_ctx ===
+Nanbeige4.2-3B-Q6_K	empty_ctx	3.0	9.4
+=== Nanbeige4.2-3B-Q6_K / deep_ctx ===
+Nanbeige4.2-3B-Q6_K	deep_ctx	15.5	6.5
+skip Apertus-4B-Instruct-v1.1-Q8_0 (skipped at preflight)
+DONE
+model	phase	prompt_tok_s	decode_tok_s
+LFM2.5-2.6B-Q8_0	empty_ctx	50.9	26.3
+LFM2.5-2.6B-Q8_0	deep_ctx	287.2	24.4
+MiniCPM5-2B-Q8_0	empty_ctx	43.5	27.8
+MiniCPM5-2B-Q8_0	deep_ctx	209.6	21.9
+Granite-4.2-3B-Q8_0	empty_ctx	36.3	19.7
+Granite-4.2-3B-Q8_0	deep_ctx	165.5	13.1
+Spark-X2.5-4B-Q6_K	empty_ctx	27.5	13.5
+Spark-X2.5-4B-Q6_K	deep_ctx	162.7	12.2
+Nanbeige4.2-3B-Q6_K	empty_ctx	3.0	9.4
+Nanbeige4.2-3B-Q6_K	deep_ctx	15.5	6.5

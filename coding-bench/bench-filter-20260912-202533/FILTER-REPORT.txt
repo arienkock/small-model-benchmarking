@@ -1,0 +1,55 @@
+MODEL                            TASK  REP  EXIT DURATION  TOOLS   NODE   CURL   PASS  BLOCK
+Granite-4.2-3B-Q8_0                 1    1     0      752     16     12      0     14      0
+Granite-4.2-3B-Q8_0                 1    2     0      924      5      1      0      1      0
+Granite-4.2-3B-Q8_0                 1    3     0      454      6      3      0      3      0
+Granite-4.2-3B-Q8_0                 2    1   124     1877     29      0      4      0      0
+Granite-4.2-3B-Q8_0                 2    2     0     1360     32      2     12      0      0
+Granite-4.2-3B-Q8_0                 2    3   124     1878     18      0      6      0      0
+Granite-4.2-3B-Q8_0                 3    1     0     1704     39      3     16      0      0
+Granite-4.2-3B-Q8_0                 3    2     0     1249     30      4      9      0      0
+Granite-4.2-3B-Q8_0                 3    3   124     1878     38      1      8      0      0
+LFM2.5-2.6B-Q8_0                    1    1     0      219      8      3      0      4      0
+LFM2.5-2.6B-Q8_0                    1    2     0      144      8      3      0      4      0
+LFM2.5-2.6B-Q8_0                    1    3     0      255     10      3      0      3      0
+LFM2.5-2.6B-Q8_0                    2    1   124     1191     25      6      1      0      0
+LFM2.5-2.6B-Q8_0                    2    2     0      471     19      0      4      0      1
+LFM2.5-2.6B-Q8_0                    2    3   124     1191     50      1     10      0      1
+LFM2.5-2.6B-Q8_0                    3    1     0      167     10      1      2      0      1
+LFM2.5-2.6B-Q8_0                    3    2   124     1191     47      0      9      0      0
+LFM2.5-2.6B-Q8_0                    3    3   124     1191     37      0     11      0      0
+MiniCPM5-2B-Q8_0                    1    1     0      459     13      5      0      2      0
+MiniCPM5-2B-Q8_0                    1    2     0      585     12      4      0      2      0
+MiniCPM5-2B-Q8_0                    1    3     0      392      7      3      0      3      0
+MiniCPM5-2B-Q8_0                    2    1   124     1226     22      2     72      0      0
+MiniCPM5-2B-Q8_0                    2    2   124     1225     16      2      5      0      0
+MiniCPM5-2B-Q8_0                    2    3   124     1226     32      0      6      0      0
+MiniCPM5-2B-Q8_0                    3    1   124     1226     76      0     33      0      0
+MiniCPM5-2B-Q8_0                    3    2   124     1226     21      4      2      0      2
+MiniCPM5-2B-Q8_0                    3    3     0      228     12      3      1      1      1
+Nanbeige4.2-3B-Q6_K                 1    1   124      903      6      3      0      0      0
+Nanbeige4.2-3B-Q6_K                 1    2   124      903      6      2      0      1      0
+Nanbeige4.2-3B-Q6_K                 1    3   124      902      7      3      0      1      0
+Nanbeige4.2-3B-Q6_K                 2    1   124      902      8      2      0      0      0
+Nanbeige4.2-3B-Q6_K                 2    2   124      903     14      3      1      0      0
+Nanbeige4.2-3B-Q6_K                 2    3   124      903      8      2      1      0      0
+Nanbeige4.2-3B-Q6_K                 3    1   124      902     11      1      2      0      0
+Nanbeige4.2-3B-Q6_K                 3    2   124      903     14      1     10      0      0
+Nanbeige4.2-3B-Q6_K                 3    3   124      903     13      0      8      0      0
+Spark-X2.5-4B-Q6_K                  1    1     0     1071      4      2      0      0      0
+Spark-X2.5-4B-Q6_K                  1    2   124     2372     10      3      0      1      0
+Spark-X2.5-4B-Q6_K                  1    3     0     1917      8      3      0      3      0
+Spark-X2.5-4B-Q6_K                  2    1     0      847      9      2      2      4      0
+Spark-X2.5-4B-Q6_K                  2    2     0     1377      8      1      3      0      0
+Spark-X2.5-4B-Q6_K                  2    3   124     2373     13      4      1      1      0
+Spark-X2.5-4B-Q6_K                  3    1     0     1223     11      2      7      1      0
+Spark-X2.5-4B-Q6_K                  3    2     0      692     13      1     11      1      0
+Spark-X2.5-4B-Q6_K                  3    3     0      248      5      1      3      1      0
+
+EXIT 0=finished on its own  124=hit this model's wall-clock budget (see SUMMARY.txt)
+NODE/CURL = bash commands invoking them, counted from tool_execution_start
+PASS = 'all tests passed' printed by a COMMAND (tool output only, never model prose)
+BLOCK = distinct guard refusals, counted from tool_execution_end errors
+
+These are triage signals, NOT grades, and round 1 proved they cannot be
+used as grades: a model can print a pass string without running a test.
+The grades are in GRADES.txt, produced by executing every deliverable.

@@ -1,0 +1,150 @@
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 39188)
+Traceback (most recent call last):
+  File "/usr/lib/python3.11/socketserver.py", line 317, in _handle_request_noblock
+    self.process_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 348, in process_request
+    self.finish_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 361, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+  File "/usr/lib/python3.11/socketserver.py", line 755, in __init__
+    self.handle()
+  File "/usr/lib/python3.11/http/server.py", line 432, in handle
+    self.handle_one_request()
+  File "/usr/lib/python3.11/http/server.py", line 420, in handle_one_request
+    method()
+  File "/workspace/server.py", line 59, in do_GET
+    if self._is_rate_limited(client_ip):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/server.py", line 31, in _is_rate_limited
+    self._reset_client_log(client_ip)
+  File "/workspace/server.py", line 26, in _reset_client_log
+    ts for ts in self.request_logs[client_ip] if ts >= cutoff
+                 ^^^^^^^^^^^^^^^^^
+AttributeError: 'RateLimitedHandler' object has no attribute 'request_logs'
+----------------------------------------
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 39204)
+Traceback (most recent call last):
+  File "/usr/lib/python3.11/socketserver.py", line 317, in _handle_request_noblock
+    self.process_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 348, in process_request
+    self.finish_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 361, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+  File "/usr/lib/python3.11/socketserver.py", line 755, in __init__
+    self.handle()
+  File "/usr/lib/python3.11/http/server.py", line 432, in handle
+    self.handle_one_request()
+  File "/usr/lib/python3.11/http/server.py", line 420, in handle_one_request
+    method()
+  File "/workspace/server.py", line 59, in do_GET
+    if self._is_rate_limited(client_ip):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/server.py", line 31, in _is_rate_limited
+    self._reset_client_log(client_ip)
+  File "/workspace/server.py", line 26, in _reset_client_log
+    ts for ts in self.request_logs[client_ip] if ts >= cutoff
+                 ^^^^^^^^^^^^^^^^^
+AttributeError: 'RateLimitedHandler' object has no attribute 'request_logs'
+----------------------------------------
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 39218)
+Traceback (most recent call last):
+  File "/usr/lib/python3.11/socketserver.py", line 317, in _handle_request_noblock
+    self.process_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 348, in process_request
+    self.finish_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 361, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+  File "/usr/lib/python3.11/socketserver.py", line 755, in __init__
+    self.handle()
+  File "/usr/lib/python3.11/http/server.py", line 432, in handle
+    self.handle_one_request()
+  File "/usr/lib/python3.11/http/server.py", line 420, in handle_one_request
+    method()
+  File "/workspace/server.py", line 59, in do_GET
+    if self._is_rate_limited(client_ip):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/server.py", line 31, in _is_rate_limited
+    self._reset_client_log(client_ip)
+  File "/workspace/server.py", line 26, in _reset_client_log
+    ts for ts in self.request_logs[client_ip] if ts >= cutoff
+                 ^^^^^^^^^^^^^^^^^
+AttributeError: 'RateLimitedHandler' object has no attribute 'request_logs'
+----------------------------------------
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 39232)
+Traceback (most recent call last):
+  File "/usr/lib/python3.11/socketserver.py", line 317, in _handle_request_noblock
+    self.process_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 348, in process_request
+    self.finish_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 361, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+  File "/usr/lib/python3.11/socketserver.py", line 755, in __init__
+    self.handle()
+  File "/usr/lib/python3.11/http/server.py", line 432, in handle
+    self.handle_one_request()
+  File "/usr/lib/python3.11/http/server.py", line 420, in handle_one_request
+    method()
+  File "/workspace/server.py", line 59, in do_GET
+    if self._is_rate_limited(client_ip):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/server.py", line 31, in _is_rate_limited
+    self._reset_client_log(client_ip)
+  File "/workspace/server.py", line 26, in _reset_client_log
+    ts for ts in self.request_logs[client_ip] if ts >= cutoff
+                 ^^^^^^^^^^^^^^^^^
+AttributeError: 'RateLimitedHandler' object has no attribute 'request_logs'
+----------------------------------------
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 39236)
+Traceback (most recent call last):
+  File "/usr/lib/python3.11/socketserver.py", line 317, in _handle_request_noblock
+    self.process_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 348, in process_request
+    self.finish_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 361, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+  File "/usr/lib/python3.11/socketserver.py", line 755, in __init__
+    self.handle()
+  File "/usr/lib/python3.11/http/server.py", line 432, in handle
+    self.handle_one_request()
+  File "/usr/lib/python3.11/http/server.py", line 420, in handle_one_request
+    method()
+  File "/workspace/server.py", line 59, in do_GET
+    if self._is_rate_limited(client_ip):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/server.py", line 31, in _is_rate_limited
+    self._reset_client_log(client_ip)
+  File "/workspace/server.py", line 26, in _reset_client_log
+    ts for ts in self.request_logs[client_ip] if ts >= cutoff
+                 ^^^^^^^^^^^^^^^^^
+AttributeError: 'RateLimitedHandler' object has no attribute 'request_logs'
+----------------------------------------
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 39252)
+Traceback (most recent call last):
+  File "/usr/lib/python3.11/socketserver.py", line 317, in _handle_request_noblock
+    self.process_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 348, in process_request
+    self.finish_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 361, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+  File "/usr/lib/python3.11/socketserver.py", line 755, in __init__
+    self.handle()
+  File "/usr/lib/python3.11/http/server.py", line 432, in handle
+    self.handle_one_request()
+  File "/usr/lib/python3.11/http/server.py", line 420, in handle_one_request
+    method()
+  File "/workspace/server.py", line 59, in do_GET
+    if self._is_rate_limited(client_ip):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/server.py", line 31, in _is_rate_limited
+    self._reset_client_log(client_ip)
+  File "/workspace/server.py", line 26, in _reset_client_log
+    ts for ts in self.request_logs[client_ip] if ts >= cutoff
+                 ^^^^^^^^^^^^^^^^^
+AttributeError: 'RateLimitedHandler' object has no attribute 'request_logs'
+----------------------------------------

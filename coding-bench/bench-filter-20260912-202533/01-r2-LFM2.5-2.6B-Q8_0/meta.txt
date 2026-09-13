@@ -1,0 +1,21 @@
+run: 1
+repeat: 2
+model: LFM2.5-2.6B-Q8_0
+workspace: /d/llama.cpp/coding-bench/bench-filter-20260912-202533/01-r2-LFM2.5-2.6B-Q8_0
+exit_code: 0
+duration_sec: 144
+context: 16384
+reasoning_budget: 4096
+run_budget_sec: 1188
+decode_tok_s: 25.25
+sampling: temp=0.7 top_p=0.95 top_k=40 seed=unset
+files_created:
+  debounce.ts (1137 bytes)
+  meta.txt (305 bytes)
+tool_calls: 8
+output_tokens_total: 3164
+input_tokens_total: 2392
+signal_node_invocations: 3
+signal_curl_invocations: 0
+signal_tests_passed_strings: 4
+signal_guard_blocks: 0

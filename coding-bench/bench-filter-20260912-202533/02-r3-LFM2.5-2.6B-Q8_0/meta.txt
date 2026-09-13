@@ -1,0 +1,23 @@
+run: 2
+repeat: 3
+model: LFM2.5-2.6B-Q8_0
+workspace: /d/llama.cpp/coding-bench/bench-filter-20260912-202533/02-r3-LFM2.5-2.6B-Q8_0
+exit_code: 124
+duration_sec: 1191
+context: 16384
+reasoning_budget: 4096
+run_budget_sec: 1188
+decode_tok_s: 25.25
+sampling: temp=0.7 top_p=0.95 top_k=40 seed=unset
+files_created:
+  meta.txt (308 bytes)
+  server.log (0 bytes)
+  server.py (2172 bytes)
+  throttle.ts (1602 bytes)
+tool_calls: 50
+output_tokens_total: 18785
+input_tokens_total: 38856
+signal_node_invocations: 1
+signal_curl_invocations: 10
+signal_tests_passed_strings: 0
+signal_guard_blocks: 1

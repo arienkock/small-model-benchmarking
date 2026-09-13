@@ -1,0 +1,23 @@
+run: 3
+repeat: 3
+model: MiniCPM5-2B-Q8_0
+workspace: /d/llama.cpp/coding-bench/bench-filter-20260912-202533/03-r3-MiniCPM5-2B-Q8_0
+exit_code: 0
+duration_sec: 228
+context: 16384
+reasoning_budget: 4096
+run_budget_sec: 1223
+decode_tok_s: 24.51
+sampling: temp=0.7 top_p=0.95 top_k=40 seed=unset
+files_created:
+  averageSpeed.ts (1470 bytes)
+  meta.txt (305 bytes)
+  server.log (295 bytes)
+  server.py (1829 bytes)
+tool_calls: 12
+output_tokens_total: 5211
+input_tokens_total: 1444
+signal_node_invocations: 3
+signal_curl_invocations: 1
+signal_tests_passed_strings: 1
+signal_guard_blocks: 1

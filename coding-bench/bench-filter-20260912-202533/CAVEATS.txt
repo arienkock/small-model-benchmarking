@@ -1,0 +1,17 @@
+Nanbeige4.2-3B-Q6_K: per-run budget fell to the 900s FLOOR, not a measured budget; its timeout count is NOT comparable to the other models.
+    measure_tok_s returned no decode rate, so run-filter-bench.sh took the else-branch
+    (RUN_TIMEOUT=$RUN_TIMEOUT_MIN) and skipped the (12000/tok_s)*2.5 calculation entirely.
+    Both preflight probes passed (turn_boundary OK, tool_calls OK) — only the speed probe came back empty.
+    Budgets the other models received, for comparison:
+        LFM2.5-2.6B-Q8_0     1188s  (475s decode x2.5)
+        MiniCPM5-2B-Q8_0     1223s  (489s decode x2.5)
+        Granite-4.2-3B-Q8_0  1875s  (750s decode x2.5)
+        Spark-X2.5-4B-Q6_K   2369s  (947s decode x2.5)
+        Nanbeige4.2-3B-Q6_K   900s  (floor, unmeasured)
+    Granite is the closest peer (also 3B, but Q8_0 vs this model's Q6_K); a fair budget for
+    Nanbeige would likely be ~1500-1900s, so it ran on roughly half its peers' allowance.
+    GRADING: do not read Nanbeige timeouts as looping or slowness. Check whether the agent was
+    still making progress at cutoff, and consider a re-run with a forced budget before letting
+    this model fail the shortlist.
+    Note: the floor branch writes no caveat of its own (only the ceiling branch does) — this
+    entry was added by hand mid-run, it is not harness output.

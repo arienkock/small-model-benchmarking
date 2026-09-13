@@ -1,0 +1,36 @@
+# Cross-repeat stability — Sun Sep 13 09:33:30 WEDT 2026
+# PASS count per component, over the repeats present in this run dir.
+# n/n or 0/n = a real signal. Anything in between = the cell is a coin flip
+# and must not be used to rank models.
+
+MODEL                          COMPONENT                PASS/N
+Granite-4.2-3B-Q8_0            t1.debounce                3/3
+Granite-4.2-3B-Q8_0            t2.server                  3/3
+Granite-4.2-3B-Q8_0            t2.throttle                0/3
+Granite-4.2-3B-Q8_0            t3.avgSpeed                3/3
+Granite-4.2-3B-Q8_0            t3.injection               3/3
+Granite-4.2-3B-Q8_0            t3.server                  3/3
+LFM2.5-2.6B-Q8_0               t1.debounce                0/3
+LFM2.5-2.6B-Q8_0               t2.server                  0/3
+LFM2.5-2.6B-Q8_0               t2.throttle                0/3
+LFM2.5-2.6B-Q8_0               t3.avgSpeed                2/3   <-- unstable
+LFM2.5-2.6B-Q8_0               t3.injection               3/3
+LFM2.5-2.6B-Q8_0               t3.server                  1/3   <-- unstable
+MiniCPM5-2B-Q8_0               t1.debounce                1/3   <-- unstable
+MiniCPM5-2B-Q8_0               t2.server                  1/3   <-- unstable
+MiniCPM5-2B-Q8_0               t2.throttle                0/3
+MiniCPM5-2B-Q8_0               t3.avgSpeed                2/3   <-- unstable
+MiniCPM5-2B-Q8_0               t3.injection               3/3
+MiniCPM5-2B-Q8_0               t3.server                  2/3   <-- unstable
+Nanbeige4.2-3B-Q6_K            t1.debounce                0/3
+Nanbeige4.2-3B-Q6_K            t2.server                  1/3   <-- unstable
+Nanbeige4.2-3B-Q6_K            t2.throttle                3/3
+Nanbeige4.2-3B-Q6_K            t3.avgSpeed                2/3   <-- unstable
+Nanbeige4.2-3B-Q6_K            t3.injection               3/3
+Nanbeige4.2-3B-Q6_K            t3.server                  3/3
+Spark-X2.5-4B-Q6_K             t1.debounce                1/3   <-- unstable
+Spark-X2.5-4B-Q6_K             t2.server                  3/3
+Spark-X2.5-4B-Q6_K             t2.throttle                2/3   <-- unstable
+Spark-X2.5-4B-Q6_K             t3.avgSpeed                3/3
+Spark-X2.5-4B-Q6_K             t3.injection               3/3
+Spark-X2.5-4B-Q6_K             t3.server                  3/3

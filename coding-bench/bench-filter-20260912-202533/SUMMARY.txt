@@ -1,0 +1,63 @@
+# Filter-round summary — Sun Sep 13 09:30:15 WEDT 2026
+tasks: 3 (full-suite 5, 7, 12)  reasoning_budget: <=4096 (capped at ctx/4)
+repeats: 3 independent runs per (model, task)
+sampling: temp=0.7 top_p=0.95 top_k=40, seed unset
+budget: 12000 generated tokens x 2.5 overhead, clamped to [900s, 3600s]
+decode speed: measured per model at 8000-word context depth, not on an empty window
+sandbox: docker (coding-bench-agent:latest), guard extension active (URL-safe)
+context: probed PER MODEL (highest of 16384 12288 8192 4096)
+host: MINGW64_NT-10.0-19045 node v24.11.1 python 3.14.0
+
+LFM2.5-2.6B-Q8_0: context 16384  decode 25.25 tok/s @depth  budget 1188s
+MiniCPM5-2B-Q8_0: context 16384  decode 24.51 tok/s @depth  budget 1223s
+VibeThinker-3B-Q8_0: context 16384  SKIPPED by preflight probe (see PREFLIGHT.txt)
+Granite-4.2-3B-Q8_0: context 16384  decode 16.00 tok/s @depth  budget 1875s
+Spark-X2.5-4B-Q6_K: context 16384  decode 12.66 tok/s @depth  budget 2369s
+Nanbeige4.2-3B-Q6_K: context 16384  decode ? tok/s @depth  budget 900s
+Apertus-4B-Instruct-v1.1-Q8_0: context 4096  SKIPPED by preflight probe (see PREFLIGHT.txt)
+
+run: 1 model: Granite-4.2-3B-Q8_0 exit_code: 0 duration_sec: 752 
+run: 1 model: LFM2.5-2.6B-Q8_0 exit_code: 0 duration_sec: 219 
+run: 1 model: MiniCPM5-2B-Q8_0 exit_code: 0 duration_sec: 459 
+run: 1 model: Nanbeige4.2-3B-Q6_K exit_code: 124 duration_sec: 903 
+run: 1 model: Spark-X2.5-4B-Q6_K exit_code: 0 duration_sec: 1071 
+run: 1 model: Granite-4.2-3B-Q8_0 exit_code: 0 duration_sec: 924 
+run: 1 model: LFM2.5-2.6B-Q8_0 exit_code: 0 duration_sec: 144 
+run: 1 model: MiniCPM5-2B-Q8_0 exit_code: 0 duration_sec: 585 
+run: 1 model: Nanbeige4.2-3B-Q6_K exit_code: 124 duration_sec: 903 
+run: 1 model: Spark-X2.5-4B-Q6_K exit_code: 124 duration_sec: 2372 
+run: 1 model: Granite-4.2-3B-Q8_0 exit_code: 0 duration_sec: 454 
+run: 1 model: LFM2.5-2.6B-Q8_0 exit_code: 0 duration_sec: 255 
+run: 1 model: MiniCPM5-2B-Q8_0 exit_code: 0 duration_sec: 392 
+run: 1 model: Nanbeige4.2-3B-Q6_K exit_code: 124 duration_sec: 902 
+run: 1 model: Spark-X2.5-4B-Q6_K exit_code: 0 duration_sec: 1917 
+run: 2 model: Granite-4.2-3B-Q8_0 exit_code: 124 duration_sec: 1877 
+run: 2 model: LFM2.5-2.6B-Q8_0 exit_code: 124 duration_sec: 1191 
+run: 2 model: MiniCPM5-2B-Q8_0 exit_code: 124 duration_sec: 1226 
+run: 2 model: Nanbeige4.2-3B-Q6_K exit_code: 124 duration_sec: 902 
+run: 2 model: Spark-X2.5-4B-Q6_K exit_code: 0 duration_sec: 847 
+run: 2 model: Granite-4.2-3B-Q8_0 exit_code: 0 duration_sec: 1360 
+run: 2 model: LFM2.5-2.6B-Q8_0 exit_code: 0 duration_sec: 471 
+run: 2 model: MiniCPM5-2B-Q8_0 exit_code: 124 duration_sec: 1225 
+run: 2 model: Nanbeige4.2-3B-Q6_K exit_code: 124 duration_sec: 903 
+run: 2 model: Spark-X2.5-4B-Q6_K exit_code: 0 duration_sec: 1377 
+run: 2 model: Granite-4.2-3B-Q8_0 exit_code: 124 duration_sec: 1878 
+run: 2 model: LFM2.5-2.6B-Q8_0 exit_code: 124 duration_sec: 1191 
+run: 2 model: MiniCPM5-2B-Q8_0 exit_code: 124 duration_sec: 1226 
+run: 2 model: Nanbeige4.2-3B-Q6_K exit_code: 124 duration_sec: 903 
+run: 2 model: Spark-X2.5-4B-Q6_K exit_code: 124 duration_sec: 2373 
+run: 3 model: Granite-4.2-3B-Q8_0 exit_code: 0 duration_sec: 1704 
+run: 3 model: LFM2.5-2.6B-Q8_0 exit_code: 0 duration_sec: 167 
+run: 3 model: MiniCPM5-2B-Q8_0 exit_code: 124 duration_sec: 1226 
+run: 3 model: Nanbeige4.2-3B-Q6_K exit_code: 124 duration_sec: 902 
+run: 3 model: Spark-X2.5-4B-Q6_K exit_code: 0 duration_sec: 1223 
+run: 3 model: Granite-4.2-3B-Q8_0 exit_code: 0 duration_sec: 1249 
+run: 3 model: LFM2.5-2.6B-Q8_0 exit_code: 124 duration_sec: 1191 
+run: 3 model: MiniCPM5-2B-Q8_0 exit_code: 124 duration_sec: 1226 
+run: 3 model: Nanbeige4.2-3B-Q6_K exit_code: 124 duration_sec: 903 
+run: 3 model: Spark-X2.5-4B-Q6_K exit_code: 0 duration_sec: 692 
+run: 3 model: Granite-4.2-3B-Q8_0 exit_code: 124 duration_sec: 1878 
+run: 3 model: LFM2.5-2.6B-Q8_0 exit_code: 124 duration_sec: 1191 
+run: 3 model: MiniCPM5-2B-Q8_0 exit_code: 0 duration_sec: 228 
+run: 3 model: Nanbeige4.2-3B-Q6_K exit_code: 124 duration_sec: 903 
+run: 3 model: Spark-X2.5-4B-Q6_K exit_code: 0 duration_sec: 248 
