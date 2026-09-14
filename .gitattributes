@@ -1,0 +1,8 @@
+# The bench host is Windows/Git Bash. Git for Windows defaults to
+# core.autocrlf=true, which would put CRLF into these on checkout: bash then
+# fails with "\r: command not found", and CR inside the chat template would be
+# rendered into the prompt the model actually sees. Pin them to LF.
+*.sh      text eol=lf
+*.jinja   text eol=lf
+*.ts      text eol=lf
+*.py      text eol=lf
