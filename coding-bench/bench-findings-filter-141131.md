@@ -244,12 +244,9 @@ Compaction is itself generated output charged against the budget:
 Spark spent a sixth of its entire generation budget writing summaries of its
 own context.
 
-This matters most for Nanbeige, which was moved to `q8_0` KV specifically to
-reach 16,384 (see `models-round4.conf`). It bought 6,144 tokens of window that
-are reserved and never carry content. At `-c 12288` with f16 KV it would fit
-(176 KiB/tok x 12288 = 2,112 MiB + 3,026 MiB weights = 5,138 MiB of 6,143) and
-get a 7.7k working window. Worth measuring whether the 2.5k of extra working
-window is worth the KV quantisation.
+The 6,144 reserved tokens are the same for every model and never carry
+content. The fix is not per-model context tuning — see 8.1, where the reserve
+turns out to be set by `THINK_BUDGET`, not by the context probe.
 
 ### 6.3 Confirmed non-issues
 
@@ -265,21 +262,147 @@ window is worth the KV quantisation.
   costs a component slot and yields no signal — replace it with something
   discriminating.
 
-## 7. What to change
+## 7. Self-verification is already measurable, and it is the strongest signal here
 
-1. **Split the grade.** Report algorithm and packaging separately. One number
-   hides the only difference between these three models.
+Cross-tabulating "did the model ever execute the artifact it was graded on"
+against the grade, over all 36 cells:
+
+| | graded .ts passed |
+|---|---|
+| model executed that artifact at least once | **18/29 (62%)** |
+| model never executed it | **1/7 (14%)** |
+
+No other variable in this round separates that cleanly — not model, not task,
+not repeat.
+
+**It is coverage, not volume.** Granite ran the most verification commands of
+any model and shipped the worst:
+
+| model | verification commands | cells where it never ran the graded artifact | shipped .ts pass |
+|---|---|---|---|
+| Granite | 97 | 4 | 4/12 |
+| Nanbeige | 72 | 2 | 7/12 |
+| Spark | 48 | 1 | 8/12 |
+
+All four of Granite's never-executed cells are failures (`02-r1`, `02-r4`,
+`03-r4` LOAD_FAIL; `02-r3` LOGIC_FAIL). In three of four task-2 cells it ran
+`node throttle.ts` zero times while curling the server 3-7 times. Task 2's
+prompt carries two verification instructions — "a brief self-test that passes
+when run with: node throttle.ts", then "Verify before finishing: curl /api/time
+six times". Granite obeyed the second and dropped the first. Its `02-r3` logic
+bug (`const windowStart = 0`) would have been caught instantly: the self-test
+it wrote asserts `called === 3`, and it never ran it.
+
+Granite also has the best red-to-green convergence in the round (32 red : 65
+green, ends green in 11 of 12 cells). It verifies diligently, and it verifies
+the wrong artifact.
+
+### 7.1 Proposed measurement
+
+Stop prescribing the mechanism. Replace both verification lines in each prompt
+with one non-prescriptive line — "Before you finish, verify your work; how you
+verify is up to you" — and drop the "prints 'all tests passed'" requirement.
+The choice then becomes observable instead of dictated.
+
+This costs the grader nothing. `grade-run.sh` already imports the exported
+function and tests it independently, and already computes the `logic:` column
+with the model's own test block stripped. It never depended on the model's
+self-test to decide the grade.
+
+Four components, all derivable from the transcript plus the existing grader:
+
+1. **Coverage** (binary, per graded artifact) — did any executed command load
+   this artifact? Not just a basename match on the command line: also count a
+   command that executes a file which imports the artifact, so a model that
+   writes `test_throttle.ts` gets credit. This is the predictive one.
+2. **Mechanism** (categorical, unscored) — in-file self-test / separate test
+   file / ad-hoc one-liner / manual probe / none. Descriptive. This is the
+   "choice is itself signal" part; scoring it would just re-impose a preference.
+3. **Detection** (binary, scored only where the grader says FAIL) — did the
+   model's own verification go red on the defect the grader later found? This
+   splits "never looked" from "looked and misread", which round 4 shows are
+   different failures: Granite `02-r1` never looked; Nanbeige `01-r4` ran the
+   same check five times, watched it fail five times, and misread it every time.
+4. **Correction** (ratio) — red check, then an edit, then the same check green.
+   Measures acting on a failing signal rather than producing one.
+
+Keep the existing false-pass counter (`self:SELF_PASS` + `LOGIC_FAIL`) as a
+fifth line; `01-r2-Granite` produced one this round.
+
+## 8. Withdrawn: re-measuring Nanbeige at `-c 12288` with f16 KV
+
+An earlier draft of this document proposed this. It should not be run.
+
+The implicit hypothesis was that `q8_0` KV might be degrading Nanbeige — it is
+the only model in the roster with a quantised cache, and two of its results
+look like the kind of damage that would cause (1/4 on the argument-spread bug,
+and the corrupted identifier in 5.1 that it could not copy correctly from its
+own context).
+
+That does not hold. The corruption first appears at **tool call #2, at a
+context depth of ~729 input tokens**. At that depth f16 and `q8_0` KV are
+indistinguishable; nothing has been evicted and almost nothing has been
+quantised. It is a sampling artifact on a rare identifier at temp 0.7, not
+cache damage.
+
+With that gone there is no reason to re-run it, and `models-round4.conf`
+already settled the general question deliberately: per-model setup is the
+design, the benchmark ranks deployable configurations rather than bare weights,
+and `q8_0` KV is Nanbeige's best deployable configuration. Arguing otherwise
+without new evidence is re-litigating a decision the roster made on purpose.
+
+### 8.1 What replaces it: one uniform knob, not a per-model re-measurement
+
+The compaction tax in 6.2 is real, but it is not a context-window problem. The
+numbers:
+
+```
+reserve = ctx * 3/8      = 6144      (compaction fires at ctx - reserve = 10240)
+think   = min(ctx/4, THINK_BUDGET)
+        = min(4096, 4096) = 4096
+6144 = 4096 + 2048
+```
+
+The reserve is exactly the reasoning budget plus 2048 tokens of answer room.
+The 10.2k working window is set by `THINK_BUDGET`, not by anything about
+context. Measured per-turn reasoning across all 509 assistant turns:
+
+| model | turns | median | p90 | max | turns > 3000 |
+|---|---|---|---|---|---|
+| Granite | 210 | 60 | 677 | 4524 | 4 |
+| Nanbeige | 190 | 44 | 461 | 4120 | 2 |
+| Spark | 109 | 82 | 3647 | 4160 | 16 |
+
+Seven turns out of 509 exceeded 4000 reasoning tokens. Every model reserves
+6144 tokens of window, permanently, for a per-turn allowance that 98% of turns
+use under 700 of.
+
+`THINK_BUDGET=2048` drops the reserve to 4096 (`ctx/4`) and moves the
+compaction trigger from 10,240 to 12,288 — a 20% larger working window, one
+knob, applied identically to all three models, no per-model confound
+introduced.
+
+The risk is Spark, which genuinely uses long reasoning (16 turns over 3000
+tokens, against 6 for the other two combined). That risk is the experiment:
+long reasoning is also Spark's documented failure mode (5.6 — 40,172 characters
+of reasoning across two tool calls and no deliverable at all). Whether a lower
+cap costs Spark its analytical edge or stops it talking itself out of shipping
+is worth one smoke run to settle. Nothing else in the roster needs to change.
+
+## 9. What to change
+
+1. **Split the grade.** Report algorithm and packaging separately (2). One
+   number hides the only difference between these three models.
 2. **Raise the overhead factor to ~1.9x** (6.1), or budget on wall clock.
 3. **Drop the injection component** (6.3) and spend the slot on a task that
    separates.
-4. **Decide what the self-test is for.** It is currently the dominant cause of
-   failure and it tests packaging, not problem-solving. Either keep it and say
-   so explicitly, or grade the exported function and treat the self-test as a
-   separate component.
-5. **Re-measure Nanbeige at `-c 12288` with f16 KV** (6.2) before accepting
-   `q8_0` KV as its configuration.
+4. **Make verification a measured behaviour, not a dictated one** (7.1). Stop
+   prescribing the mechanism; score coverage, detection and correction, and
+   record the chosen mechanism without scoring it.
+5. **Test `THINK_BUDGET=2048`** (8.1) in a smoke run before the next full
+   round. Do not re-measure Nanbeige's context (8).
 6. **Do not pick a winner from this round.** Spark leads on shipped output and
    has the best reasoning per token, but p=0.19 against Granite and 11 of 18
    components are coin flips. If a decision is needed now, Spark — on the
-   strength of 0 packaging deaths and the cleanest debugging discipline, not on
+   strength of 0 packaging deaths and the best verification coverage, not on
    the score.
