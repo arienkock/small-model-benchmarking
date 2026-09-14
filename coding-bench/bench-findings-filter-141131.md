@@ -406,11 +406,10 @@ Items 1-3 are implemented; 4-6 are not.
    (round 4 actually spent 12.3h; same behaviour under the new budgets would be
    ~15.3h). **Set `BENCH_DEADLINE` for the next overnight run** — the deadline
    guard is the only thing that bounds this, and it is inactive when unset.
-3. **Drop the injection component.** [DONE] The preamble is gone from
-   `prompts-filter.txt` task 3 and the detector is gone from `grade_task3`. The
-   slot is not yet refilled — designing a task that actually separates these
-   three is a separate piece of work, and nothing in this round says what it
-   should be.
+3. **Drop the injection component.** [DONE] The preamble is gone and the
+   detector is gone from `grade_task3`. Superseded by §11: the whole of task 3
+   has since been replaced, because the injection was not the only part of it
+   that had stopped separating anything.
 4. **[not done] Make verification a measured behaviour, not a dictated one** (7.1). Stop
    prescribing the mechanism; score coverage, detection and correction, and
    record the chosen mechanism without scoring it.
@@ -556,3 +555,96 @@ refuses to start without `BENCH_DEADLINE` — at 1.9x the guard is the only boun
 Round 3' numbers are **not** comparable to round 4's for any model: the overhead
 factor changed. That is why two incumbents run alongside VibeThinker rather than
 comparing it against round 4's table.
+
+## 11. The task list, and why task 3 is now a different task
+
+**It has never changed.** `prompts-filter.txt` was created once, in `355c925`,
+and the only edit since was removing the injection preamble. Rounds 1, 2, 3 and
+4 all ran the same three tasks: suite T5 (debounce bugfix), T7 (rate limiter),
+T12 (average speed).
+
+Repetition is not itself the problem — these are static local weights with no
+memory between runs, so there is no contamination, and repeats are how variance
+gets beaten. **Saturation** is the problem: a task everyone passes tells you
+nothing however many times it runs.
+
+### 11.1 Which tasks still separate the current roster
+
+Pass-count range across the three models, round 4:
+
+| component | Granite | Nanbeige | Spark | range |
+|---|---|---|---|---|
+| t2.throttle.pkg | 1/4 | 3/4 | 4/4 | 3 |
+| t1.debounce.algo | 3/4 | 1/4 | 1/4 | 2 |
+| t2.server | 4/4 | 2/4 | 3/4 | 2 |
+| t3.server | 2/4 | 3/4 | 4/4 | 2 |
+| t1.debounce.pkg | 3/4 | 2/4 | 3/4 | 1 |
+| t2.throttle.algo | 2/4 | 3/4 | 3/4 | 1 |
+| **t3.avgSpeed.algo** | 3/4 | 4/4 | 4/4 | **1 — saturated** |
+| **t3.avgSpeed.pkg** | 3/4 | 3/4 | 4/4 | **1 — saturated** |
+
+By task: **t2 = 2.00, t1 = 1.50, t3 = 1.33**. Task 3 is the weakest, and its
+`avgSpeed` half is effectively dead — the function is `distance / hours` rounded
+to two decimals. What remained after the injection went was a saturated
+arithmetic function plus a second HTTP server duplicating task 2's.
+
+Worth recording: the original "three most discriminating" selection was made on
+a **0-10 rubric over two models — LFM2.5 and MiniCPM5 — that have both since
+been cut**, n=1 per task. The task list has never been validated against the
+models actually being compared. T5 and T7 have held up anyway; T12 has not.
+
+### 11.2 T12 out, T4 in
+
+Task 3 is now suite **T4**, the books-server bugfix, taken verbatim from
+`prompts.txt`. Three reasons, in order of weight:
+
+1. **Its seeded bug is invisible to shallow verification and visible to
+   thorough verification.** Verified by running the unmodified server: plain
+   `curl` returns 200 with valid JSON, so a model that checks the body sees a
+   working server and stops. Only `curl -i`/`-v` shows there is no
+   `Content-Length`. §7 found verification coverage to be the sharpest axis in
+   the whole benchmark — 62% pass when a model executed the artifact it was
+   graded on, 14% when it did not — but it could only be measured from the
+   transcript after the fact. **T4 puts that axis into the grade itself.**
+2. **It is the suite's only Python bugfix.** Round 4's worst cells across every
+   model were Python server bugs (`self.full_path`, `parse_qs` returning lists,
+   `self.connection.headers`). Until now those appeared only as self-inflicted
+   damage inside a build task, confounded with the build. T4 isolates it: the
+   bug is given, and finding it is the task.
+3. **Cost-neutral.** Three tasks stay three tasks, so the round stays ~12h.
+
+The honest counter-argument: on the original rubric T4 scored 4.0 vs 7.5 — a
+spread of 3.5 against T12's 6.0 — so by the criterion that picked the current
+list, T4 is the weaker task. That criterion was n=1 subjective scoring on two
+models now cut, and T12's measured spread against the *current* roster has since
+collapsed to 1. Measured discrimination on the models being compared is the
+better guide.
+
+### 11.3 Grading
+
+T4 has one deliverable (`server.py`) and no TypeScript, so the algo/pkg split
+does not apply. Rather than collapse it to one pass/fail, it is graded as three
+independent components:
+
+| component | checks |
+|---|---|
+| `books.status` | 200 on `/api/books`, 404 on an unknown path |
+| `books.body` | valid JSON, both seeded books |
+| `books.headers` | `Content-Type: application/json` **and** a correct `Content-Length` |
+
+`status` and `body` are already correct in the buggy original, so they catch a
+"fix" that broke something that worked. `headers` is the seeded bug. Tested
+against three servers — the unmodified original (`headers:FAIL`, "no
+Content-Length — the seeded bug"), a correct fix (all three PASS), and a
+plausible half-fix with `Content-Length` off by one (`headers:FAIL`,
+"Content-Length 111, body is 110").
+
+### 11.4 One lever not pulled
+
+T4's prompt ends *"confirm valid JSON with correct status and headers"* — it
+tells the model to check headers. Left as written, for consistency with the
+other two tasks and because rewriting verification instructions is §9 item 4,
+which is still not done. Deleting the two words **"and headers"** would turn
+task 3 into a pure verification-coverage probe: the model would have to decide
+for itself to look, which is exactly what item 4 proposes to measure. That is a
+one-word change and a real decision, so it is flagged rather than taken.

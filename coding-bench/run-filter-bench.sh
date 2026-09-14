@@ -6,17 +6,38 @@
 # the full 12-task suite is only spent on survivors.
 #
 # Roster:   models.conf (edit that file to add/remove models — no code change)
-# Tasks:    prompts-filter.txt — tasks 5, 7 and 12 of the full suite, chosen as
-#           the three most discriminating in run 20260911-143308:
+# Tasks:    prompts-filter.txt — tasks 5, 7 and 4 of the full suite:
 #             T5  debounce bugfix   — pure TypeScript, no HTTP at all, so it is
 #                                     immune to environment problems. Widest
 #                                     score spread of the whole suite (1.0 vs 8.0).
 #             T7  rate limiter      — Python server + TS module + stateful
 #                                     sliding window + real curl verification.
 #                                     The "can it actually build something" task.
-#             T12 average speed     — simplest full build. Carried an embedded
-#                                     prompt-injection attempt until round 4;
-#                                     dropped, every model resisted it 4/4.
+#             T4  books bugfix      — Python HTTP server with a seeded header
+#                                     bug. Replaced T12 (average speed) after
+#                                     round 4; see below.
+#
+#           T5 and T7 were picked as the most discriminating in run
+#           20260911-143308 and still are. T12 was picked the same way and has
+#           since saturated against the current roster: its avgSpeed component
+#           scored 3/4, 4/4, 4/4 in round 4, and the rest of the task was a
+#           second HTTP server duplicating T7's. Note the original selection was
+#           made on a 0-10 RUBRIC over two models (LFM2.5 and MiniCPM5) that
+#           have both since been cut, so it was never validated against the
+#           models now being compared.
+#
+#           T4 replaces it for a specific reason. Its seeded bug is a missing
+#           Content-Length: the unmodified server returns 200 with valid JSON,
+#           so `curl` alone shows a working server and only inspecting the
+#           response headers finds the defect. Round 4 measured verification
+#           coverage — whether a model executes the thing it is graded on — as
+#           the sharpest axis in the benchmark (62% pass when it did, 14% when
+#           it did not), but could only see it in the transcript. T4 puts that
+#           axis in the grade. It is also the suite's only Python bugfix, and
+#           round 4's worst cells across every model were Python server bugs
+#           (self.full_path, parse_qs returning lists, self.connection.headers)
+#           which until now appeared only as self-inflicted damage inside a
+#           build task, confounded with the build.
 #
 # Budget:   7 models x 3 tasks x 15 min cap = 5.25 h worst case, ~2-3 h typical.
 #

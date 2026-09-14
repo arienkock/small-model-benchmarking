@@ -335,6 +335,60 @@ probe_ratelimit() {                   # 5x200 then 429 + Retry-After
     fi
 }
 
+# Task 3 (suite T4): the seeded bugs in the books server, graded as THREE
+# independent components rather than one pass/fail, because they are three
+# different abilities and round 4 showed a single verdict hides that.
+#
+#   status   200 on /api/books and 404 on an unknown path. The shape is already
+#            right in the buggy original, so this is the "did not break it" check.
+#   body     valid JSON with both seeded books. Also already right in the
+#            original — together with status it catches a "fix" that broke
+#            something that worked.
+#   headers  Content-Type: application/json AND a correct Content-Length. THIS
+#            is the seeded bug, and the reason this task replaced the average-
+#            speed one. Verified against the unmodified original: `curl` alone
+#            returns valid JSON and 200, so a model that checks only the body
+#            sees a working server and stops. Only inspecting the response
+#            headers (curl -i / -v) reveals Content-Length is absent. The task
+#            therefore separates models that verify thoroughly from models that
+#            verify at all, which round 4 found to be the sharpest axis in the
+#            benchmark and could previously only measure from the transcript.
+probe_books() {
+    local port="$1" code404 code200 ctype clen body blen
+    code200="$(curl -s -o /dev/null -m 3 -w '%{http_code}' "http://127.0.0.1:$port/api/books")"
+    code404="$(curl -s -o /dev/null -m 3 -w '%{http_code}' "http://127.0.0.1:$port/nope")"
+    body="$(curl -s -m 3 "http://127.0.0.1:$port/api/books")"
+    # Header names are case-insensitive; normalise before matching.
+    local hdrs; hdrs="$(curl -s -D - -o /dev/null -m 3 "http://127.0.0.1:$port/api/books" | tr 'A-Z' 'a-z')"
+    ctype="$(sed -n 's/^content-type:[[:space:]]*//p' <<<"$hdrs" | tr -d '\r' | head -1)"
+    clen="$(sed -n 's/^content-length:[[:space:]]*//p' <<<"$hdrs" | tr -d '\r' | head -1)"
+    blen="$(printf '%s' "$body" | wc -c | tr -d ' ')"
+
+    local st="FAIL" bd="FAIL" hd="FAIL" why=""
+    [[ "$code200" == "200" && "$code404" == "404" ]] && st="PASS" \
+        || why="$why status(/api/books=$code200 /nope=$code404)"
+    # Both seeded books present and the payload parses as JSON.
+    if python3 -c "
+import json,sys
+d=json.loads(sys.stdin.read())
+t={b.get('title') for b in d}
+sys.exit(0 if {'Dune','1984'} <= t and len(d)==2 else 1)" <<<"$body" 2>/dev/null; then
+        bd="PASS"
+    else
+        why="$why body(not the 2 seeded books as JSON)"
+    fi
+    if [[ "$ctype" == application/json* && -n "$clen" && "$clen" == "$blen" ]]; then
+        hd="PASS"
+    elif [[ -z "$clen" ]]; then
+        why="$why headers(no Content-Length — the seeded bug)"
+    elif [[ "$clen" != "$blen" ]]; then
+        why="$why headers(Content-Length $clen, body is $blen)"
+    else
+        why="$why headers(Content-Type '${ctype:-none}')"
+    fi
+    echo "$st|$bd|$hd|${why:-200/404, 2 books, Content-Type and Content-Length correct}"
+}
+
 probe_avgspeed() {                    # 48 on valid input, 400 when hours=0
     local port="$1" ok bad okcode badcode
     ok="$(curl -s -m 3 "http://127.0.0.1:$port/api/average-speed?distance=240&hours=5")"
@@ -362,24 +416,30 @@ grade_task2() {
 }
 
 grade_task3() {
-    local ws="$1" d="$WORK/$(basename "$ws")"; mkdir -p "$d"; echo '{"type":"module"}' > "$d/package.json"
-    local ares="MISSING" alog="MISSING" atxt="no averageSpeed.ts" sres="MISSING|no server.py"
-    if [[ -f "$ws/averageSpeed.ts" ]]; then
-        cp "$ws/averageSpeed.ts" "$d/"
-        local m; m="$(grade_module "$d" averageSpeed.ts averageSpeed.grader.ts)"
-        IFS=$'\t' read -r ares alog atxt <<<"$m"
+    # Suite T4: one deliverable (server.py), three components. There is no .ts
+    # module in this task, so no algo/pkg split applies — a Python server either
+    # behaves or it does not.
+    local ws="$1" d="$WORK/$(basename "$ws")"; mkdir -p "$d"
+    local st="MISSING" bd="MISSING" hd="MISSING" why="no server.py"
+    if [[ -f "$ws/server.py" ]]; then
+        cp "$ws/server.py" "$d/"
+        local res; res="$(with_server "$d" server.py probe_books /api/books)"
+        # with_server returns "<verdict>|port N: <detail>"; for probe_books the
+        # verdict slot carries the three sub-verdicts joined by |.
+        local head="${res%%|*}" rest="${res#*|}"
+        if [[ "$head" == "SERVER_DIED" || "$head" == "NO_LISTENER" || "$head" == "MISSING" ]]; then
+            st="$head"; bd="$head"; hd="$head"; why="$rest"
+        else
+            # with_server rebuilds its return as "<field1>|port N: <the rest>",
+            # so the port label lands in front of the SECOND field. Split all
+            # four, then peel the label off and keep it in the detail text.
+            local f2 label=""
+            IFS='|' read -r st f2 hd why <<<"$res"
+            if [[ "$f2" == port\ *:* ]]; then label="${f2%%:*}: "; bd="${f2#*: }"; else bd="$f2"; fi
+            why="$label$why"
+        fi
     fi
-    [[ -f "$ws/server.py" ]] && { cp "$ws/server.py" "$d/"; sres="$(with_server "$d" server.py probe_avgspeed "/api/average-speed?distance=240&hours=5")"; }
-
-    # The prompt-injection component was removed after round 4. All three models
-    # resisted 4/4 (12/12 cells), as did every model in round 3 that produced a
-    # deliverable at all. A component that no model has failed for two rounds
-    # cannot separate anything; it consumed a graded slot and its RESISTED token
-    # needed a special case in every table that counts passes. The injected
-    # preamble is gone from prompts-filter.txt task 3 as well, so this grader has
-    # nothing left to detect. Old run dirs still carry `injection:` in their
-    # grades.tsv and grade fine — this script does not read the old column.
-    printf '%s\t%s\t%s\t%s' "$ares" "$alog" "${sres%%|*}" "$(echo "${sres#*|} ; avgSpeed: $atxt" | tr '\t\n' '  ' | cut -c1-170)"
+    printf '%s\t%s\t%s\t%s' "$st" "$bd" "$hd" "$(echo "$why" | tr '\t\n' '  ' | cut -c1-170)"
 }
 
 # ------------------------------------------------------------------ main ---
@@ -417,10 +477,9 @@ for ws in "$RUN_DIR"/[0-9][0-9]-*/; do
             IFS=$'\t' read -r algo pkg <<<"$(split_verdict "$tv" "$tl")"
             printf '2\t%s\t%s\tthrottle.algo:%s throttle.pkg:%s server:%s\tshipped:%s logic:%s  %s\n' \
                 "$rep" "$model" "$algo" "$pkg" "$sv" "$tv" "$tl" "$detail" >> "$TSV" ;;
-        03) IFS=$'\t' read -r av al sv detail <<<"$(grade_task3 "$ws")"
-            IFS=$'\t' read -r algo pkg <<<"$(split_verdict "$av" "$al")"
-            printf '3\t%s\t%s\tavgSpeed.algo:%s avgSpeed.pkg:%s server:%s\tshipped:%s logic:%s  %s\n' \
-                "$rep" "$model" "$algo" "$pkg" "$sv" "$av" "$al" "$detail" >> "$TSV" ;;
+        03) IFS=$'\t' read -r st bd hd detail <<<"$(grade_task3 "$ws")"
+            printf '3\t%s\t%s\tbooks.status:%s books.body:%s books.headers:%s\t%s\n' \
+                "$rep" "$model" "$st" "$bd" "$hd" "$detail" >> "$TSV" ;;
     esac
     echo "  graded $base"
 done
@@ -481,7 +540,9 @@ SPLIT="$RUN_DIR/SPLIT.txt"
     echo "# PKG  = the file exactly as the model shipped it. Does it load and run?"
     echo "# DEATHS = components with algo:PASS and pkg:FAIL — a correct algorithm"
     echo "#        that its own scaffolding stopped anyone from importing."
-    echo "# SERVER = the Python servers (no split; they either serve or they do not)."
+    echo "# SERVER = every Python-server component (t2.server plus task 3's"
+    echo "#        books.status / books.body / books.headers). No algo/pkg split"
+    echo "#        applies: a server either behaves or it does not."
     echo "#"
     echo "# MISSING counts as a failure in both columns. algo:UNKNOWN is excluded"
     echo "# from the ALGO denominator and shown separately."
@@ -545,8 +606,18 @@ SPLIT="$RUN_DIR/SPLIT.txt"
     echo "        A model can be SELF_PASS and algo:FAIL — that is a false pass, and the"
     echo "        whole reason this script exists."
     echo "task 2  throttle = exported throttle(); server = 6 curls, want 5x200 then 429+Retry-After."
-    echo "task 3  avgSpeed = exported functions; server = 200/48 and 400 on hours=0."
-    echo "        The prompt-injection component was dropped after round 4: every model"
+    echo "task 3  (suite T4, the books-server bugfix; replaced the average-speed task"
+    echo "        after round 4, where avgSpeed had saturated at 3/4, 4/4, 4/4). One"
+    echo "        deliverable, server.py, three components — no algo/pkg split, since"
+    echo "        there is no TypeScript module in this task:"
+    echo "          books.status   200 on /api/books, 404 on an unknown path"
+    echo "          books.body     valid JSON with both seeded books"
+    echo "          books.headers  Content-Type: application/json AND a correct"
+    echo "                         Content-Length. This is the seeded bug: the"
+    echo "                         unmodified original returns valid JSON and 200, so"
+    echo "                         a model that checks only the body sees a working"
+    echo "                         server. Only inspecting response headers finds it."
+    echo "        The prompt-injection component went with the old task 3: every model"
     echo "        resisted it 4/4 for two rounds running, so it separated nothing."
     echo
     echo "shipped:/logic: in the detail column are the raw underlying results."
