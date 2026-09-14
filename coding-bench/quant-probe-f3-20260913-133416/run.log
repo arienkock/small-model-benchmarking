@@ -1,0 +1,68 @@
+[13:34:16] ===== F3 — reproduce the harness config: llama-server -c 16384, -lv 4 =====
+[13:34:16] F3 nanbeige-4slot
+[13:34:19]   nanbeige-4slot healthy; VRAM now 3074 MiB
+  timings: prompt_n=None prompt_per_second=None predicted_n=None predicted_per_second=None
+[13:34:19]   nanbeige-4slot VRAM at load+7k ctx: 3074 MiB
+0.00.323.379 I srv  llama_server: n_parallel is set to auto, using n_parallel = 4 and kv_unified = true
+0.00.721.193 W common_fit_params: failed to fit params to free device memory: n_gpu_layers already set by user to 999, abort
+0.01.017.260 I load_tensors: loading model tensors, this can take a while... (load_mode = mmap)
+0.01.313.071 I load_tensors: offloading output layer to GPU
+0.01.313.077 I load_tensors: offloading 43 repeating layers to GPU
+0.01.313.077 I load_tensors: offloaded 45/45 layers to GPU
+0.01.313.102 I load_tensors:   CPU_Mapped model buffer size =   399.29 MiB
+0.01.313.103 I load_tensors:        CUDA0 model buffer size =  3025.96 MiB
+[13:34:25] F3 nanbeige-1slot
+[13:34:27]   nanbeige-1slot healthy; VRAM now 3074 MiB
+  timings: prompt_n=None prompt_per_second=None predicted_n=None predicted_per_second=None
+[13:34:27]   nanbeige-1slot VRAM at load+7k ctx: 3074 MiB
+0.00.796.153 W common_fit_params: failed to fit params to free device memory: n_gpu_layers already set by user to 999, abort
+0.01.088.777 I load_tensors: loading model tensors, this can take a while... (load_mode = mmap)
+0.01.402.459 I load_tensors: offloading output layer to GPU
+0.01.402.464 I load_tensors: offloading 43 repeating layers to GPU
+0.01.402.465 I load_tensors: offloaded 45/45 layers to GPU
+0.01.402.489 I load_tensors:   CPU_Mapped model buffer size =   399.29 MiB
+0.01.402.491 I load_tensors:        CUDA0 model buffer size =  3025.96 MiB
+[13:34:33] F3 granite-4slot
+[13:34:35]   granite-4slot healthy; VRAM now 3496 MiB
+  timings: prompt_n=None prompt_per_second=None predicted_n=None predicted_per_second=None
+[13:34:35]   granite-4slot VRAM at load+7k ctx: 3496 MiB
+0.00.240.075 I srv  llama_server: n_parallel is set to auto, using n_parallel = 4 and kv_unified = true
+0.00.472.203 W common_fit_params: failed to fit params to free device memory: n_gpu_layers already set by user to 999, abort
+0.00.656.380 I load_tensors: loading model tensors, this can take a while... (load_mode = mmap)
+0.00.970.742 I load_tensors: offloading output layer to GPU
+0.00.970.747 I load_tensors: offloading 39 repeating layers to GPU
+0.00.970.748 I load_tensors: offloaded 41/41 layers to GPU
+0.00.970.773 I load_tensors:   CPU_Mapped model buffer size =   260.31 MiB
+0.00.970.775 I load_tensors:        CUDA0 model buffer size =  3448.60 MiB
+[13:34:41] F3 granite-1slot
+[13:34:43]   granite-1slot healthy; VRAM now 3496 MiB
+  timings: prompt_n=None prompt_per_second=None predicted_n=None predicted_per_second=None
+[13:34:44]   granite-1slot VRAM at load+7k ctx: 3496 MiB
+0.00.726.351 W common_fit_params: failed to fit params to free device memory: n_gpu_layers already set by user to 999, abort
+0.00.911.146 I load_tensors: loading model tensors, this can take a while... (load_mode = mmap)
+0.01.219.043 I load_tensors: offloading output layer to GPU
+0.01.219.048 I load_tensors: offloading 39 repeating layers to GPU
+0.01.219.049 I load_tensors: offloaded 41/41 layers to GPU
+0.01.219.074 I load_tensors:   CPU_Mapped model buffer size =   260.31 MiB
+0.01.219.075 I load_tensors:        CUDA0 model buffer size =  3448.60 MiB
+[13:34:49] F3 spark-1slot
+[13:34:52]   spark-1slot healthy; VRAM now 3265 MiB
+  timings: prompt_n=None prompt_per_second=None predicted_n=None predicted_per_second=None
+[13:34:52]   spark-1slot VRAM at load+7k ctx: 3265 MiB
+0.01.068.333 I load_tensors: loading model tensors, this can take a while... (load_mode = mmap)
+0.01.343.247 I load_tensors: offloading output layer to GPU
+0.01.343.252 I load_tensors: offloading 35 repeating layers to GPU
+0.01.343.253 I load_tensors: offloaded 37/37 layers to GPU
+0.01.343.278 I load_tensors:   CPU_Mapped model buffer size =   262.50 MiB
+0.01.343.279 I load_tensors:        CUDA0 model buffer size =  3217.49 MiB
+[13:34:58] F3 nanbeige-kvq8
+[13:35:00]   nanbeige-kvq8 healthy; VRAM now 3074 MiB
+  timings: prompt_n=None prompt_per_second=None predicted_n=None predicted_per_second=None
+[13:35:00]   nanbeige-kvq8 VRAM at load+7k ctx: 3074 MiB
+0.00.839.685 W common_fit_params: failed to fit params to free device memory: n_gpu_layers already set by user to 999, abort
+0.01.134.110 I load_tensors: loading model tensors, this can take a while... (load_mode = mmap)
+0.01.448.545 I load_tensors: offloading output layer to GPU
+0.01.448.550 I load_tensors: offloading 43 repeating layers to GPU
+0.01.448.551 I load_tensors: offloaded 45/45 layers to GPU
+0.01.448.575 I load_tensors:   CPU_Mapped model buffer size =   399.29 MiB
+0.01.448.576 I load_tensors:        CUDA0 model buffer size =  3025.96 MiB

@@ -1,0 +1,149 @@
+0.00.179.998 I cmn  common_param: common_params_print_info: build 10896 (fa6769818) with Clang 20.1.8 for Windows x86_64
+0.00.180.004 I cmn  common_param: common_params_print_info: verbosity = 4 (adjust with the `-lv N` CLI arg)
+0.00.180.006 I cmn  common_param: device_info:
+0.00.239.966 I cmn  common_param:   - CUDA0   : NVIDIA GeForce GTX 970M (6143 MiB, 5270 MiB free)
+0.00.239.978 I cmn  common_param:   - CPU     : Intel(R) Core(TM) i7-6820HK CPU @ 2.70GHz (24393 MiB, 18778 MiB free)
+0.00.240.069 I cmn  common_param: system_info: n_threads = 4 (n_threads_batch = 4) / 8 | CUDA : ARCHS = 500,610,700,750,800,860,890,900 | USE_GRAPHS = 1 | FA_QUANTS = q4_0-q4_0,q8_0-q8_0,f16-f16,bf16-bf16 | CPU : SSE3 = 1 | SSSE3 = 1 | AVX = 1 | AVX2 = 1 | F16C = 1 | FMA = 1 | BMI2 = 1 | LLAMAFILE = 1 | OPENMP = 1 | REPACK = 1 | 
+0.00.240.075 I srv  llama_server: n_parallel is set to auto, using n_parallel = 4 and kv_unified = true
+0.00.240.156 I srv          init: running without SSL
+0.00.240.245 I srv          init: using 8 threads for HTTP server
+0.00.240.635 W srv  llama_server: -----------------
+0.00.240.641 W srv  llama_server: CORS is set to allow all origins ('*') and no API key is set
+0.00.240.642 W srv  llama_server: this can be a security risk (cross-origin attacks)
+0.00.240.642 W srv  llama_server: more info: https://github.com/ggml-org/llama.cpp/pull/25655
+0.00.240.643 W srv  llama_server: -----------------
+0.00.240.673 I srv         start: binding port with default address family
+0.00.245.954 I srv    load_model: loading model 'C:/Users/zenfi/.cache/huggingface/hub/models--ibm-granite--granite-4.2-3b-GGUF/snapshots/c40945d71cd90f249a56985e8155551a9188dc30/granite-4.2-3b-Q8_0.gguf'
+0.00.245.958 I srv    load_model: local path 'C:/Users/zenfi/.cache/huggingface/hub/models--ibm-granite--granite-4.2-3b-GGUF/snapshots/c40945d71cd90f249a56985e8155551a9188dc30/granite-4.2-3b-Q8_0.gguf'
+0.00.246.010 I cmn  common_init_: fitting params to device memory ...
+0.00.246.011 I cmn  common_init_: (for bugs during this step try to reproduce them with -fit off, or provide --verbose logs if the bug only occurs with -fit on)
+0.00.246.105 I common_params_fit_impl: getting device memory data for initial parameters:
+0.00.455.216 I common_memory_breakdown_print: | memory breakdown [MiB] | total   free    self   model   context   compute    unaccounted |
+0.00.455.222 I common_memory_breakdown_print: |   - CUDA0 (GTX 970M)   |  6143 = 5270 + (4807 =  3448 +    1280 +      79) +       -3933 |
+0.00.455.223 I common_memory_breakdown_print: |   - Host               |                  286 =   260 +       0 +      26                |
+0.00.472.077 I common_params_fit_impl: projected to use 4807 MiB of device memory vs. 5270 MiB of free device memory
+0.00.472.108 I common_params_fit_impl: cannot meet free memory target of 1024 MiB, need to reduce device memory by 561 MiB
+0.00.472.109 I common_params_fit_impl: context size set by user to 16384 -> no change
+0.00.472.203 W common_fit_params: failed to fit params to free device memory: n_gpu_layers already set by user to 999, abort
+0.00.472.225 I common_fit_params: fitting params to free memory took 0.23 seconds
+0.00.506.505 I llama_model_loader: loaded meta data with 35 key-value pairs and 363 tensors from C:/Users/zenfi/.cache/huggingface/hub/models--ibm-granite--granite-4.2-3b-GGUF/snapshots/c40945d71cd90f249a56985e8155551a9188dc30/granite-4.2-3b-Q8_0.gguf (version GGUF V3 (latest))
+0.00.506.541 I llama_model_loader: Dumping metadata keys/values. Note: KV overrides do not apply in this output.
+0.00.506.546 I llama_model_loader: - kv   0:                       general.architecture str              = granite
+0.00.506.548 I llama_model_loader: - kv   1:                               general.type str              = model
+0.00.506.567 I llama_model_loader: - kv   2:                     general.sampling.top_p f32              = 0.950000
+0.00.506.569 I llama_model_loader: - kv   3:                      general.sampling.temp f32              = 1.000000
+0.00.506.570 I llama_model_loader: - kv   4:                               general.name str              = Granite 4.2 3b
+0.00.506.571 I llama_model_loader: - kv   5:                           general.basename str              = granite-4.2
+0.00.506.572 I llama_model_loader: - kv   6:                         general.size_label str              = 3B
+0.00.506.573 I llama_model_loader: - kv   7:                            general.license str              = apache-2.0
+0.00.506.574 I llama_model_loader: - kv   8:                        granite.block_count u32              = 40
+0.00.506.575 I llama_model_loader: - kv   9:                     granite.context_length u32              = 131072
+0.00.506.576 I llama_model_loader: - kv  10:                   granite.embedding_length u32              = 2560
+0.00.506.577 I llama_model_loader: - kv  11:                granite.feed_forward_length u32              = 8192
+0.00.506.577 I llama_model_loader: - kv  12:               granite.attention.head_count u32              = 40
+0.00.506.578 I llama_model_loader: - kv  13:            granite.attention.head_count_kv u32              = 8
+0.00.506.580 I llama_model_loader: - kv  14:                     granite.rope.freq_base f32              = 10000000.000000
+0.00.506.582 I llama_model_loader: - kv  15:   granite.attention.layer_norm_rms_epsilon f32              = 0.000010
+0.00.506.583 I llama_model_loader: - kv  16:                         granite.vocab_size u32              = 100352
+0.00.506.584 I llama_model_loader: - kv  17:               granite.rope.dimension_count u32              = 64
+0.00.506.586 I llama_model_loader: - kv  18:                    granite.attention.scale f32              = 0.015625
+0.00.506.587 I llama_model_loader: - kv  19:                    granite.embedding_scale f32              = 1.000000
+0.00.506.588 I llama_model_loader: - kv  20:                     granite.residual_scale f32              = 1.000000
+0.00.506.590 I llama_model_loader: - kv  21:                        granite.logit_scale f32              = 1.000000
+0.00.506.590 I llama_model_loader: - kv  22:            tokenizer.ggml.add_space_prefix bool             = false
+0.00.506.591 I llama_model_loader: - kv  23:                       tokenizer.ggml.model str              = gpt2
+0.00.506.592 I llama_model_loader: - kv  24:                         tokenizer.ggml.pre str              = granite-docling
+0.00.530.256 I llama_model_loader: - kv  25:                      tokenizer.ggml.tokens arr[str,100352]  = ["!", "\"", "#", "$", "%", "&", "'", ...
+0.00.539.669 I llama_model_loader: - kv  26:                  tokenizer.ggml.token_type arr[i32,100352]  = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...
+0.00.563.122 I llama_model_loader: - kv  27:                      tokenizer.ggml.merges arr[str,100000]  = ["Ġ Ġ", "ĠĠ ĠĠ", "i n", "Ġ t",...
+0.00.563.153 I llama_model_loader: - kv  28:                tokenizer.ggml.bos_token_id u32              = 100283
+0.00.563.154 I llama_model_loader: - kv  29:                tokenizer.ggml.eos_token_id u32              = 100257
+0.00.563.156 I llama_model_loader: - kv  30:            tokenizer.ggml.unknown_token_id u32              = 100269
+0.00.563.158 I llama_model_loader: - kv  31:            tokenizer.ggml.padding_token_id u32              = 100257
+0.00.563.185 I llama_model_loader: - kv  32:                    tokenizer.chat_template str              = {%- macro tool_to_json(tool) -%}\n    ...
+0.00.563.186 I llama_model_loader: - kv  33:               general.quantization_version u32              = 2
+0.00.563.186 I llama_model_loader: - kv  34:                          general.file_type u32              = 7
+0.00.563.188 I llama_model_loader: - type  f32:   81 tensors
+0.00.563.189 I llama_model_loader: - type q8_0:  282 tensors
+0.00.563.191 I print_info: file format = GGUF V3 (latest)
+0.00.563.192 I print_info: file type   = Q8_0
+0.00.563.199 I print_info: file size   = 3.62 GiB (8.50 BPW) 
+0.00.563.322 I llama_prepare_model_devices: using device CUDA0 (NVIDIA GeForce GTX 970M) (0000:01:00.0) - 5270 MiB free
+0.00.617.047 I load: 72 unused tokens
+0.00.632.717 I load: printing all EOG tokens:
+0.00.632.726 I load:   - 100257 ('<|im_end|>')
+0.00.632.727 I load:   - 100261 ('<|fim_pad|>')
+0.00.632.728 I load:   - 100284 ('</s>')
+0.00.633.013 I load: special tokens cache size = 96
+0.00.656.235 I load: token to piece cache size = 0.6152 MB
+0.00.656.269 I print_info: arch                  = granite
+0.00.656.270 I print_info: vocab_only            = 0
+0.00.656.271 I print_info: no_alloc              = 0
+0.00.656.271 I print_info: n_ctx_train           = 131072
+0.00.656.272 I print_info: n_embd_inp            = 2560
+0.00.656.274 I print_info: n_embd                = 2560
+0.00.656.275 I print_info: n_embd_out            = 2560
+0.00.656.275 I print_info: n_layer               = 40
+0.00.656.276 I print_info: n_layer_all           = 40
+0.00.656.299 I print_info: n_head                = 40
+0.00.656.301 I print_info: n_head_kv             = 8
+0.00.656.302 I print_info: n_rot                 = 64
+0.00.656.302 I print_info: n_swa                 = 0
+0.00.656.303 I print_info: is_swa_any            = 0
+0.00.656.303 I print_info: non_causal_type       = 0
+0.00.656.304 I print_info: n_embd_head_k         = 64
+0.00.656.304 I print_info: n_embd_head_v         = 64
+0.00.656.306 I print_info: n_gqa                 = 5
+0.00.656.309 I print_info: n_embd_k_gqa          = 512
+0.00.656.311 I print_info: n_embd_v_gqa          = 512
+0.00.656.313 I print_info: f_norm_eps            = 0.0e+00
+0.00.656.315 I print_info: f_norm_rms_eps        = 1.0e-05
+0.00.656.315 I print_info: f_clamp_kqv           = 0.0e+00
+0.00.656.316 I print_info: f_max_alibi_bias      = 0.0e+00
+0.00.656.317 I print_info: f_logit_scale         = 1.0e+00
+0.00.656.318 I print_info: f_attn_scale          = 1.6e-02
+0.00.656.318 I print_info: f_attn_value_scale    = 0.0000
+0.00.656.321 I print_info: n_ff                  = 8192
+0.00.656.321 I print_info: n_expert              = 0
+0.00.656.322 I print_info: n_expert_used         = 0
+0.00.656.322 I print_info: n_expert_groups       = 0
+0.00.656.323 I print_info: n_group_used          = 0
+0.00.656.323 I print_info: causal attn           = 1
+0.00.656.323 I print_info: pooling type          = -1
+0.00.656.324 I print_info: rope type             = 0
+0.00.656.324 I print_info: rope scaling          = linear
+0.00.656.325 I print_info: freq_base_train       = 10000000.0
+0.00.656.326 I print_info: freq_scale_train      = 1
+0.00.656.327 I print_info: n_ctx_orig_yarn       = 131072
+0.00.656.327 I print_info: rope_yarn_log_mul     = 0.0000
+0.00.656.328 I print_info: rope_finetuned        = yes
+0.00.656.329 I print_info: model type            = 3B
+0.00.656.331 I print_info: model params          = 3.66 B
+0.00.656.331 I print_info: general.name          = Granite 4.2 3b
+0.00.656.332 I print_info: f_embedding_scale     = 1.000000
+0.00.656.333 I print_info: f_residual_scale      = 1.000000
+0.00.656.334 I print_info: f_attention_scale     = 0.015625
+0.00.656.334 I print_info: n_ff_shexp            = 0
+0.00.656.335 I print_info: vocab type            = BPE
+0.00.656.335 I print_info: n_vocab               = 100352
+0.00.656.335 I print_info: n_merges              = 100000
+0.00.656.336 I print_info: BOS token             = 100283 '<s>'
+0.00.656.337 I print_info: EOS token             = 100257 '<|im_end|>'
+0.00.656.337 I print_info: EOT token             = 100257 '<|im_end|>'
+0.00.656.338 I print_info: UNK token             = 100269 '<unk>'
+0.00.656.338 I print_info: PAD token             = 100257 '<|im_end|>'
+0.00.656.339 I print_info: LF token              = 198 'Ċ'
+0.00.656.339 I print_info: FIM PRE token         = 100258 '<|fim_prefix|>'
+0.00.656.340 I print_info: FIM SUF token         = 100260 '<|fim_suffix|>'
+0.00.656.340 I print_info: FIM MID token         = 100259 '<|fim_middle|>'
+0.00.656.341 I print_info: FIM PAD token         = 100261 '<|fim_pad|>'
+0.00.656.341 I print_info: EOG token             = 100257 '<|im_end|>'
+0.00.656.342 I print_info: EOG token             = 100261 '<|fim_pad|>'
+0.00.656.342 I print_info: EOG token             = 100284 '</s>'
+0.00.656.343 I print_info: max token length      = 256
+0.00.656.380 I load_tensors: loading model tensors, this can take a while... (load_mode = mmap)
+0.00.970.742 I load_tensors: offloading output layer to GPU
+0.00.970.747 I load_tensors: offloading 39 repeating layers to GPU
+0.00.970.748 I load_tensors: offloaded 41/41 layers to GPU
+0.00.970.773 I load_tensors:   CPU_Mapped model buffer size =   260.31 MiB
+0.00.970.775 I load_tensors:        CUDA0 model buffer size =  3448.60 MiB

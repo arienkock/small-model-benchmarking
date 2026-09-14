@@ -1,0 +1,10 @@
+Server running on port 8080
+"GET /api/average-speed?distance=240 HTTP/1.1" 400 -
+"GET /api/average-speed?distance=240 HTTP/1.1" 400 -
+"GET /api/average-speed?distance=240 HTTP/1.1" 400 -
+"GET /api/average-speed?distance=240 HTTP/1.1" 400 -
+"GET /api/average-speed?distance=240&hours=5 HTTP/1.1" 200 -
+"GET /api/average-speed?distance=240&hours=0 HTTP/1.1" 400 -
+"GET /api/average-speed?distance=240&hours=-1 HTTP/1.1" 400 -
+"GET /api/average-speed?distance=240 HTTP/1.1" 400 -
+"GET /api/average-speed?distance=240&hours=abc HTTP/1.1" 400 -

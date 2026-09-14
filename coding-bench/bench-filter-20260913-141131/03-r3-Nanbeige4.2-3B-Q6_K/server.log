@@ -1,0 +1,5 @@
+127.0.0.1 - - [13/Sep/2026 16:24:57] "GET /api/average-speed?distance=240&hours=5 HTTP/1.1" 200 -
+127.0.0.1 - - [13/Sep/2026 16:25:13] "GET /api/average-speed?distance=240&hours=0 HTTP/1.1" 400 -
+127.0.0.1 - - [13/Sep/2026 16:25:30] "GET /api/average-speed?distance=240&hours=0 HTTP/1.1" 400 -
+127.0.0.1 - - [13/Sep/2026 16:43:46] "GET /api/average-speed?distance=240&hours=5 HTTP/1.1" 200 -
+127.0.0.1 - - [13/Sep/2026 16:44:07] "GET /api/average-speed?distance=240&hours=0 HTTP/1.1" 400 -

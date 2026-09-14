@@ -1,0 +1,23 @@
+run: 2
+repeat: 2
+model: Nanbeige4.2-3B-Q6_K
+workspace: /d/llama.cpp/coding-bench/bench-filter-20260913-141131/02-r2-Nanbeige4.2-3B-Q6_K
+exit_code: 0
+duration_sec: 2070
+context: 16384
+reasoning_budget: 4096
+run_budget_sec: 2183
+decode_tok_s: 7.42
+sampling: temp=0.7 top_p=0.95 top_k=40 seed=unset
+files_created:
+  meta.txt (311 bytes)
+  server.log (326 bytes)
+  server.py (2304 bytes)
+  throttle.ts (2141 bytes)
+tool_calls: 16
+output_tokens_total: 7727
+input_tokens_total: 9232
+signal_node_invocations: 2
+signal_curl_invocations: 2
+signal_tests_passed_strings: 0
+signal_guard_blocks: 0

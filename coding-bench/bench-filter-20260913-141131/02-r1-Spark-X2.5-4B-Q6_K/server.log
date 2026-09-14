@@ -1,0 +1,154 @@
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 39850)
+Traceback (most recent call last):
+  File "/usr/lib/python3.11/socketserver.py", line 317, in _handle_request_noblock
+    self.process_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 348, in process_request
+    self.finish_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 361, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+  File "/usr/lib/python3.11/socketserver.py", line 755, in __init__
+    self.handle()
+  File "/usr/lib/python3.11/http/server.py", line 432, in handle
+    self.handle_one_request()
+  File "/usr/lib/python3.11/http/server.py", line 420, in handle_one_request
+    method()
+  File "/workspace/server.py", line 59, in do_GET
+    _send_json(200, {"now": int(time.time())})
+  File "/workspace/server.py", line 45, in _send_json
+    self._send_header(key, value)
+    ^^^^
+NameError: name 'self' is not defined
+----------------------------------------
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 39866)
+Traceback (most recent call last):
+  File "/usr/lib/python3.11/socketserver.py", line 317, in _handle_request_noblock
+    self.process_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 348, in process_request
+    self.finish_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 361, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+  File "/usr/lib/python3.11/socketserver.py", line 755, in __init__
+    self.handle()
+  File "/usr/lib/python3.11/http/server.py", line 432, in handle
+    self.handle_one_request()
+  File "/usr/lib/python3.11/http/server.py", line 420, in handle_one_request
+    method()
+  File "/workspace/server.py", line 59, in do_GET
+    _send_json(200, {"now": int(time.time())})
+  File "/workspace/server.py", line 45, in _send_json
+    self._send_header(key, value)
+    ^^^^
+NameError: name 'self' is not defined
+----------------------------------------
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 39868)
+Traceback (most recent call last):
+  File "/usr/lib/python3.11/socketserver.py", line 317, in _handle_request_noblock
+    self.process_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 348, in process_request
+    self.finish_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 361, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+  File "/usr/lib/python3.11/socketserver.py", line 755, in __init__
+    self.handle()
+  File "/usr/lib/python3.11/http/server.py", line 432, in handle
+    self.handle_one_request()
+  File "/usr/lib/python3.11/http/server.py", line 420, in handle_one_request
+    method()
+  File "/workspace/server.py", line 59, in do_GET
+    _send_json(200, {"now": int(time.time())})
+  File "/workspace/server.py", line 45, in _send_json
+    self._send_header(key, value)
+    ^^^^
+NameError: name 'self' is not defined
+----------------------------------------
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 39878)
+Traceback (most recent call last):
+  File "/usr/lib/python3.11/socketserver.py", line 317, in _handle_request_noblock
+    self.process_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 348, in process_request
+    self.finish_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 361, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+  File "/usr/lib/python3.11/socketserver.py", line 755, in __init__
+    self.handle()
+  File "/usr/lib/python3.11/http/server.py", line 432, in handle
+    self.handle_one_request()
+  File "/usr/lib/python3.11/http/server.py", line 420, in handle_one_request
+    method()
+  File "/workspace/server.py", line 59, in do_GET
+    _send_json(200, {"now": int(time.time())})
+  File "/workspace/server.py", line 45, in _send_json
+    self._send_header(key, value)
+    ^^^^
+NameError: name 'self' is not defined
+----------------------------------------
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 39880)
+Traceback (most recent call last):
+  File "/usr/lib/python3.11/socketserver.py", line 317, in _handle_request_noblock
+    self.process_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 348, in process_request
+    self.finish_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 361, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+  File "/usr/lib/python3.11/socketserver.py", line 755, in __init__
+    self.handle()
+  File "/usr/lib/python3.11/http/server.py", line 432, in handle
+    self.handle_one_request()
+  File "/usr/lib/python3.11/http/server.py", line 420, in handle_one_request
+    method()
+  File "/workspace/server.py", line 59, in do_GET
+    _send_json(200, {"now": int(time.time())})
+  File "/workspace/server.py", line 45, in _send_json
+    self._send_header(key, value)
+    ^^^^
+NameError: name 'self' is not defined
+----------------------------------------
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 39890)
+Traceback (most recent call last):
+  File "/usr/lib/python3.11/socketserver.py", line 317, in _handle_request_noblock
+    self.process_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 348, in process_request
+    self.finish_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 361, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+  File "/usr/lib/python3.11/socketserver.py", line 755, in __init__
+    self.handle()
+  File "/usr/lib/python3.11/http/server.py", line 432, in handle
+    self.handle_one_request()
+  File "/usr/lib/python3.11/http/server.py", line 420, in handle_one_request
+    method()
+  File "/workspace/server.py", line 59, in do_GET
+    _send_json(200, {"now": int(time.time())})
+  File "/workspace/server.py", line 45, in _send_json
+    self._send_header(key, value)
+    ^^^^
+NameError: name 'self' is not defined
+----------------------------------------
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 46920)
+Traceback (most recent call last):
+  File "/usr/lib/python3.11/socketserver.py", line 317, in _handle_request_noblock
+    self.process_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 348, in process_request
+    self.finish_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 361, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+  File "/usr/lib/python3.11/socketserver.py", line 755, in __init__
+    self.handle()
+  File "/usr/lib/python3.11/http/server.py", line 432, in handle
+    self.handle_one_request()
+  File "/usr/lib/python3.11/http/server.py", line 420, in handle_one_request
+    method()
+  File "/workspace/server.py", line 59, in do_GET
+    _send_json(200, {"now": int(time.time())})
+  File "/workspace/server.py", line 45, in _send_json
+    self._send_header(key, value)
+    ^^^^
+NameError: name 'self' is not defined
+----------------------------------------

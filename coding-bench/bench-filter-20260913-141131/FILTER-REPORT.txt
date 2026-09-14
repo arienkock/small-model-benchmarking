@@ -1,0 +1,46 @@
+MODEL                            TASK  REP  EXIT DURATION  TOOLS   NODE   CURL   PASS  BLOCK
+Granite-4.2-3B-Q8_0                 1    1     0      298      7      2      0      4      0
+Granite-4.2-3B-Q8_0                 1    2     0      741     11      3      0      3      0
+Granite-4.2-3B-Q8_0                 1    3   124     1016     11      4      0      3      0
+Granite-4.2-3B-Q8_0                 1    4     0      246      5      1      0      2      0
+Granite-4.2-3B-Q8_0                 2    1   124     1016     19      0      4      0      0
+Granite-4.2-3B-Q8_0                 2    2   124     1016      9      1      2      0      0
+Granite-4.2-3B-Q8_0                 2    3   124     1016     40      0      7      0      0
+Granite-4.2-3B-Q8_0                 2    4   124     1017     15      0      3      0      0
+Granite-4.2-3B-Q8_0                 3    1     0      874     17      3      5      0      0
+Granite-4.2-3B-Q8_0                 3    2     0      715     24      2      8      0      0
+Granite-4.2-3B-Q8_0                 3    3   124     1016     36      2      7      0      0
+Granite-4.2-3B-Q8_0                 3    4   124     1016      8      0      2      0      0
+Nanbeige4.2-3B-Q6_K                 1    1     0     1760     10      4      0      1      0
+Nanbeige4.2-3B-Q6_K                 1    2   124     2186     12      8      0      1      0
+Nanbeige4.2-3B-Q6_K                 1    3     0      948      5      2      0      2      0
+Nanbeige4.2-3B-Q6_K                 1    4   124     2186     14      6      0      1      1
+Nanbeige4.2-3B-Q6_K                 2    1   124     2186     21      0      0      0      0
+Nanbeige4.2-3B-Q6_K                 2    2     0     2070     16      2      2      0      0
+Nanbeige4.2-3B-Q6_K                 2    3     0     1798      9      2      1      1      0
+Nanbeige4.2-3B-Q6_K                 2    4   124     2186     22      5      1      0      0
+Nanbeige4.2-3B-Q6_K                 3    1     0     1714     17      3      4      0      0
+Nanbeige4.2-3B-Q6_K                 3    2   124     2186     28      0     16      0      0
+Nanbeige4.2-3B-Q6_K                 3    3     0     1508     16      3      5      0      0
+Nanbeige4.2-3B-Q6_K                 3    4     0      602     12      2      4      0      0
+Spark-X2.5-4B-Q6_K                  1    1   124     1246      8      2      0      1      0
+Spark-X2.5-4B-Q6_K                  1    2   124     1246      2      0      0      1      0
+Spark-X2.5-4B-Q6_K                  1    3   124     1246      5      3      0      0      0
+Spark-X2.5-4B-Q6_K                  1    4     0      518      6      2      0      2      0
+Spark-X2.5-4B-Q6_K                  2    1   124     1246     11      2      4      0      0
+Spark-X2.5-4B-Q6_K                  2    2     0     1011      9      1      1      1      0
+Spark-X2.5-4B-Q6_K                  2    3   124     1246     10      1      2      1      0
+Spark-X2.5-4B-Q6_K                  2    4   124     1246      9      1      1      0      0
+Spark-X2.5-4B-Q6_K                  3    1     0     1158     14      2      7      3      0
+Spark-X2.5-4B-Q6_K                  3    2     0     1060     19      3     11      3      0
+Spark-X2.5-4B-Q6_K                  3    3   124     1246      6      1      7      1      0
+Spark-X2.5-4B-Q6_K                  3    4     0      569     11      2      3      0      0
+
+EXIT 0=finished on its own  124=hit this model's wall-clock budget (see SUMMARY.txt)
+NODE/CURL = bash commands invoking them, counted from tool_execution_start
+PASS = 'all tests passed' printed by a COMMAND (tool output only, never model prose)
+BLOCK = distinct guard refusals, counted from tool_execution_end errors
+
+These are triage signals, NOT grades, and round 1 proved they cannot be
+used as grades: a model can print a pass string without running a test.
+The grades are in GRADES.txt, produced by executing every deliverable.

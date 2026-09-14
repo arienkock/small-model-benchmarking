@@ -1,0 +1,5 @@
+[13:35:28] ===== F3 — reproduce the harness config: llama-server -c 16384, -lv 4 =====
+[13:35:28] F3 nanbeige-4slot
+[13:35:34]   nanbeige-4slot healthy; VRAM now 6000 MiB
+      0 [main] bash (11156) child_copy: cygheap read copy failed, 0x2103514B0..0x210361418, done 0, windows pid 11156, Win32 error 299
+  21493 [main] bash (11156) C:\Program Files\Git\usr\bin\bash.exe: *** fatal error in forked process - ccalloc would have returned NULL

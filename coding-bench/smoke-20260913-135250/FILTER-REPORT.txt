@@ -1,0 +1,13 @@
+MODEL                            TASK  REP  EXIT DURATION  TOOLS   NODE   CURL   PASS  BLOCK
+Granite-4.2-3B-Q8_0                 1    1   124      243      7      2      0      1      0
+Nanbeige4.2-3B-Q6_K                 1    1   124      273      2      1      0      0      0
+Spark-X2.5-4B-Q6_K                  1    1   124      243      0      0      0      0      0
+
+EXIT 0=finished on its own  124=hit this model's wall-clock budget (see SUMMARY.txt)
+NODE/CURL = bash commands invoking them, counted from tool_execution_start
+PASS = 'all tests passed' printed by a COMMAND (tool output only, never model prose)
+BLOCK = distinct guard refusals, counted from tool_execution_end errors
+
+These are triage signals, NOT grades, and round 1 proved they cannot be
+used as grades: a model can print a pass string without running a test.
+The grades are in GRADES.txt, produced by executing every deliverable.

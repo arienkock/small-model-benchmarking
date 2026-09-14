@@ -1,0 +1,50 @@
+# Filter-round summary — Mon, Sep 14, 2026  2:36:37 AM
+tasks: 3 (full-suite 5, 7, 12)  reasoning_budget: <=4096 (capped at ctx/4)
+repeats: 4 independent runs per (model, task)
+sampling: temp=0.7 top_p=0.95 top_k=40, seed unset
+budget: 12000 generated tokens x 1.35 overhead, clamped to [900s, 3600s]
+decode speed: measured per model at 8000-word context depth, not on an empty window
+sandbox: docker (coding-bench-agent:latest), guard extension active (URL-safe)
+context: probed PER MODEL (highest of 16384 12288 8192 4096)
+host: MINGW64_NT-10.0-19045 node v24.11.1 python 3.14.0
+
+Nanbeige4.2-3B-Q6_K: context 16384  decode 7.42 tok/s @depth  budget 2183s
+Spark-X2.5-4B-Q6_K: context 16384  decode 13.03 tok/s @depth  budget 1243s
+Granite-4.2-3B-Q8_0: context 16384  decode 15.98 tok/s @depth  budget 1013s
+
+run: 1 model: Granite-4.2-3B-Q8_0 exit_code: 0 duration_sec: 298 
+run: 1 model: Nanbeige4.2-3B-Q6_K exit_code: 0 duration_sec: 1760 
+run: 1 model: Spark-X2.5-4B-Q6_K exit_code: 124 duration_sec: 1246 
+run: 1 model: Granite-4.2-3B-Q8_0 exit_code: 0 duration_sec: 741 
+run: 1 model: Nanbeige4.2-3B-Q6_K exit_code: 124 duration_sec: 2186 
+run: 1 model: Spark-X2.5-4B-Q6_K exit_code: 124 duration_sec: 1246 
+run: 1 model: Granite-4.2-3B-Q8_0 exit_code: 124 duration_sec: 1016 
+run: 1 model: Nanbeige4.2-3B-Q6_K exit_code: 0 duration_sec: 948 
+run: 1 model: Spark-X2.5-4B-Q6_K exit_code: 124 duration_sec: 1246 
+run: 1 model: Granite-4.2-3B-Q8_0 exit_code: 0 duration_sec: 246 
+run: 1 model: Nanbeige4.2-3B-Q6_K exit_code: 124 duration_sec: 2186 
+run: 1 model: Spark-X2.5-4B-Q6_K exit_code: 0 duration_sec: 518 
+run: 2 model: Granite-4.2-3B-Q8_0 exit_code: 124 duration_sec: 1016 
+run: 2 model: Nanbeige4.2-3B-Q6_K exit_code: 124 duration_sec: 2186 
+run: 2 model: Spark-X2.5-4B-Q6_K exit_code: 124 duration_sec: 1246 
+run: 2 model: Granite-4.2-3B-Q8_0 exit_code: 124 duration_sec: 1016 
+run: 2 model: Nanbeige4.2-3B-Q6_K exit_code: 0 duration_sec: 2070 
+run: 2 model: Spark-X2.5-4B-Q6_K exit_code: 0 duration_sec: 1011 
+run: 2 model: Granite-4.2-3B-Q8_0 exit_code: 124 duration_sec: 1016 
+run: 2 model: Nanbeige4.2-3B-Q6_K exit_code: 0 duration_sec: 1798 
+run: 2 model: Spark-X2.5-4B-Q6_K exit_code: 124 duration_sec: 1246 
+run: 2 model: Granite-4.2-3B-Q8_0 exit_code: 124 duration_sec: 1017 
+run: 2 model: Nanbeige4.2-3B-Q6_K exit_code: 124 duration_sec: 2186 
+run: 2 model: Spark-X2.5-4B-Q6_K exit_code: 124 duration_sec: 1246 
+run: 3 model: Granite-4.2-3B-Q8_0 exit_code: 0 duration_sec: 874 
+run: 3 model: Nanbeige4.2-3B-Q6_K exit_code: 0 duration_sec: 1714 
+run: 3 model: Spark-X2.5-4B-Q6_K exit_code: 0 duration_sec: 1158 
+run: 3 model: Granite-4.2-3B-Q8_0 exit_code: 0 duration_sec: 715 
+run: 3 model: Nanbeige4.2-3B-Q6_K exit_code: 124 duration_sec: 2186 
+run: 3 model: Spark-X2.5-4B-Q6_K exit_code: 0 duration_sec: 1060 
+run: 3 model: Granite-4.2-3B-Q8_0 exit_code: 124 duration_sec: 1016 
+run: 3 model: Nanbeige4.2-3B-Q6_K exit_code: 0 duration_sec: 1508 
+run: 3 model: Spark-X2.5-4B-Q6_K exit_code: 124 duration_sec: 1246 
+run: 3 model: Granite-4.2-3B-Q8_0 exit_code: 124 duration_sec: 1016 
+run: 3 model: Nanbeige4.2-3B-Q6_K exit_code: 0 duration_sec: 602 
+run: 3 model: Spark-X2.5-4B-Q6_K exit_code: 0 duration_sec: 569 

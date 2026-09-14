@@ -1,0 +1,155 @@
+0.00.418.860 I cmn  common_param: common_params_print_info: build 10896 (fa6769818) with Clang 20.1.8 for Windows x86_64
+0.00.418.865 I cmn  common_param: common_params_print_info: verbosity = 4 (adjust with the `-lv N` CLI arg)
+0.00.418.868 I cmn  common_param: device_info:
+0.00.489.512 I cmn  common_param:   - CUDA0   : NVIDIA GeForce GTX 970M (6143 MiB, 5270 MiB free)
+0.00.489.525 I cmn  common_param:   - CPU     : Intel(R) Core(TM) i7-6820HK CPU @ 2.70GHz (24393 MiB, 18777 MiB free)
+0.00.489.607 I cmn  common_param: system_info: n_threads = 4 (n_threads_batch = 4) / 8 | CUDA : ARCHS = 500,610,700,750,800,860,890,900 | USE_GRAPHS = 1 | FA_QUANTS = q4_0-q4_0,q8_0-q8_0,f16-f16,bf16-bf16 | CPU : SSE3 = 1 | SSSE3 = 1 | AVX = 1 | AVX2 = 1 | F16C = 1 | FMA = 1 | BMI2 = 1 | LLAMAFILE = 1 | OPENMP = 1 | REPACK = 1 | 
+0.00.489.690 I srv          init: running without SSL
+0.00.489.784 I srv          init: using 7 threads for HTTP server
+0.00.490.182 W srv  llama_server: -----------------
+0.00.490.188 W srv  llama_server: CORS is set to allow all origins ('*') and no API key is set
+0.00.490.188 W srv  llama_server: this can be a security risk (cross-origin attacks)
+0.00.490.189 W srv  llama_server: more info: https://github.com/ggml-org/llama.cpp/pull/25655
+0.00.490.189 W srv  llama_server: -----------------
+0.00.490.219 I srv         start: binding port with default address family
+0.00.506.996 I srv    load_model: loading model 'C:/Users/zenfi/.cache/huggingface/hub/models--bartowski--Nanbeige_Nanbeige4.2-3B-GGUF/snapshots/17562eefe9752007209148d5f7a6e275fc8d8077/Nanbeige_Nanbeige4.2-3B-Q6_K.gguf'
+0.00.507.018 I srv    load_model: local path 'C:/Users/zenfi/.cache/huggingface/hub/models--bartowski--Nanbeige_Nanbeige4.2-3B-GGUF/snapshots/17562eefe9752007209148d5f7a6e275fc8d8077/Nanbeige_Nanbeige4.2-3B-Q6_K.gguf'
+0.00.507.080 I cmn  common_init_: fitting params to device memory ...
+0.00.507.082 I cmn  common_init_: (for bugs during this step try to reproduce them with -fit off, or provide --verbose logs if the bug only occurs with -fit on)
+0.00.507.282 I common_params_fit_impl: getting device memory data for initial parameters:
+0.00.822.949 I common_memory_breakdown_print: | memory breakdown [MiB] | total   free    self   model   context   compute    unaccounted |
+0.00.822.954 I common_memory_breakdown_print: |   - CUDA0 (GTX 970M)   |  6143 = 5270 + (4638 =  3025 +    1496 +     116) +       -3764 |
+0.00.822.955 I common_memory_breakdown_print: |   - Host               |                  427 =   399 +       0 +      28                |
+0.00.839.555 I common_params_fit_impl: projected to use 4638 MiB of device memory vs. 5270 MiB of free device memory
+0.00.839.585 I common_params_fit_impl: cannot meet free memory target of 1024 MiB, need to reduce device memory by 391 MiB
+0.00.839.586 I common_params_fit_impl: context size set by user to 16384 -> no change
+0.00.839.685 W common_fit_params: failed to fit params to free device memory: n_gpu_layers already set by user to 999, abort
+0.00.839.693 I common_fit_params: fitting params to free memory took 0.33 seconds
+0.00.875.153 I llama_model_loader: loaded meta data with 49 key-value pairs and 201 tensors from C:/Users/zenfi/.cache/huggingface/hub/models--bartowski--Nanbeige_Nanbeige4.2-3B-GGUF/snapshots/17562eefe9752007209148d5f7a6e275fc8d8077/Nanbeige_Nanbeige4.2-3B-Q6_K.gguf (version GGUF V3 (latest))
+0.00.875.188 I llama_model_loader: Dumping metadata keys/values. Note: KV overrides do not apply in this output.
+0.00.875.191 I llama_model_loader: - kv   0:                       general.architecture str              = nanbeige
+0.00.875.192 I llama_model_loader: - kv   1:                               general.type str              = model
+0.00.875.195 I llama_model_loader: - kv   2:                     general.sampling.top_k i32              = 20
+0.00.875.200 I llama_model_loader: - kv   3:                     general.sampling.top_p f32              = 0.950000
+0.00.875.202 I llama_model_loader: - kv   4:                      general.sampling.temp f32              = 0.600000
+0.00.875.203 I llama_model_loader: - kv   5:                               general.name str              = Nanbeige4.2 3B
+0.00.875.204 I llama_model_loader: - kv   6:                           general.basename str              = Nanbeige4.2
+0.00.875.205 I llama_model_loader: - kv   7:                         general.size_label str              = 3B
+0.00.875.206 I llama_model_loader: - kv   8:                            general.license str              = apache-2.0
+0.00.875.207 I llama_model_loader: - kv   9:                   general.base_model.count u32              = 1
+0.00.875.222 I llama_model_loader: - kv  10:                  general.base_model.0.name str              = Nanbeige4.2 3B Base
+0.00.875.223 I llama_model_loader: - kv  11:          general.base_model.0.organization str              = Nanbeige
+0.00.875.227 I llama_model_loader: - kv  12:              general.base_model.0.repo_url str              = https://huggingface.co/Nanbeige/Nanbe...
+0.00.875.237 I llama_model_loader: - kv  13:                               general.tags arr[str,3]       = ["llm", "nanbeige", "text-generation"]
+0.00.875.239 I llama_model_loader: - kv  14:                          general.languages arr[str,2]       = ["en", "zh"]
+0.00.875.241 I llama_model_loader: - kv  15:                       nanbeige.block_count u32              = 22
+0.00.875.241 I llama_model_loader: - kv  16:                    nanbeige.context_length u32              = 262144
+0.00.875.242 I llama_model_loader: - kv  17:                  nanbeige.embedding_length u32              = 3072
+0.00.875.243 I llama_model_loader: - kv  18:               nanbeige.feed_forward_length u32              = 10752
+0.00.875.244 I llama_model_loader: - kv  19:              nanbeige.attention.head_count u32              = 48
+0.00.875.245 I llama_model_loader: - kv  20:           nanbeige.attention.head_count_kv u32              = 8
+0.00.875.247 I llama_model_loader: - kv  21:                    nanbeige.rope.freq_base f32              = 70000000.000000
+0.00.875.249 I llama_model_loader: - kv  22:  nanbeige.attention.layer_norm_rms_epsilon f32              = 0.000010
+0.00.875.250 I llama_model_loader: - kv  23:              nanbeige.attention.key_length u32              = 128
+0.00.875.251 I llama_model_loader: - kv  24:            nanbeige.attention.value_length u32              = 128
+0.00.875.251 I llama_model_loader: - kv  25:                        nanbeige.vocab_size u32              = 166144
+0.00.875.252 I llama_model_loader: - kv  26:              nanbeige.rope.dimension_count u32              = 128
+0.00.875.253 I llama_model_loader: - kv  27:                         nanbeige.num_loops u32              = 2
+0.00.875.254 I llama_model_loader: - kv  28:              nanbeige.skip_loop_final_norm bool             = false
+0.00.875.255 I llama_model_loader: - kv  29:            tokenizer.ggml.add_space_prefix bool             = true
+0.00.875.256 I llama_model_loader: - kv  30:                       tokenizer.ggml.model str              = llama
+0.00.875.257 I llama_model_loader: - kv  31:                         tokenizer.ggml.pre str              = default
+0.00.913.938 I llama_model_loader: - kv  32:                      tokenizer.ggml.tokens arr[str,166144]  = ["<unk>", "<s>", "</s>", "<0x00>", "<...
+0.01.020.996 I llama_model_loader: - kv  33:                      tokenizer.ggml.scores arr[f32,166144]  = [-1000.000000, -1000.000000, -1000.00...
+0.01.034.555 I llama_model_loader: - kv  34:                  tokenizer.ggml.token_type arr[i32,166144]  = [3, 3, 3, 6, 6, 6, 6, 6, 6, 6, 6, 6, ...
+0.01.034.580 I llama_model_loader: - kv  35:                tokenizer.ggml.bos_token_id u32              = 166100
+0.01.034.581 I llama_model_loader: - kv  36:                tokenizer.ggml.eos_token_id u32              = 166101
+0.01.034.582 I llama_model_loader: - kv  37:            tokenizer.ggml.unknown_token_id u32              = 0
+0.01.034.583 I llama_model_loader: - kv  38:            tokenizer.ggml.padding_token_id u32              = 0
+0.01.034.584 I llama_model_loader: - kv  39:               tokenizer.ggml.add_bos_token bool             = true
+0.01.034.585 I llama_model_loader: - kv  40:               tokenizer.ggml.add_sep_token bool             = false
+0.01.034.586 I llama_model_loader: - kv  41:               tokenizer.ggml.add_eos_token bool             = false
+0.01.034.592 I llama_model_loader: - kv  42:                    tokenizer.chat_template str              = \n\n{%- macro visible_text(content) -%}...
+0.01.034.593 I llama_model_loader: - kv  43:               general.quantization_version u32              = 2
+0.01.034.594 I llama_model_loader: - kv  44:                          general.file_type u32              = 18
+0.01.034.597 I llama_model_loader: - kv  45:                      quantize.imatrix.file str              = /models_out/Nanbeige4.2-3B-GGUF/Nanbe...
+0.01.034.598 I llama_model_loader: - kv  46:                   quantize.imatrix.dataset str              = /training_dir/calibration_datav5.txt
+0.01.034.613 I llama_model_loader: - kv  47:             quantize.imatrix.entries_count u32              = 154
+0.01.034.614 I llama_model_loader: - kv  48:              quantize.imatrix.chunks_count u32              = 1725
+0.01.034.615 I llama_model_loader: - type  f32:   45 tensors
+0.01.034.616 I llama_model_loader: - type q8_0:   64 tensors
+0.01.034.617 I llama_model_loader: - type q6_K:   92 tensors
+0.01.034.618 I print_info: file format = GGUF V3 (latest)
+0.01.034.619 I print_info: file type   = Q6_K
+0.01.034.621 I print_info: file size   = 3.34 GiB (6.89 BPW) 
+0.01.034.665 I llama_prepare_model_devices: using device CUDA0 (NVIDIA GeForce GTX 970M) (0000:01:00.0) - 5270 MiB free
+0.01.091.899 I load: 0 unused tokens
+0.01.121.707 I load: printing all EOG tokens:
+0.01.121.720 I load:   - 2 ('</s>')
+0.01.121.741 I load:   - 166101 ('<|im_end|>')
+0.01.121.742 I load:   - 166102 ('<|endoftext|>')
+0.01.122.140 I load: special tokens cache size = 10
+0.01.133.967 I load: token to piece cache size = 1.1122 MB
+0.01.134.001 I print_info: arch                  = nanbeige
+0.01.134.002 I print_info: vocab_only            = 0
+0.01.134.003 I print_info: no_alloc              = 0
+0.01.134.003 I print_info: n_ctx_train           = 262144
+0.01.134.004 I print_info: n_embd_inp            = 3072
+0.01.134.006 I print_info: n_embd                = 3072
+0.01.134.007 I print_info: n_embd_out            = 3072
+0.01.134.007 I print_info: n_layer               = 44
+0.01.134.008 I print_info: n_layer_all           = 44
+0.01.134.018 I print_info: n_head                = 48
+0.01.134.021 I print_info: n_head_kv             = 8
+0.01.134.022 I print_info: n_rot                 = 128
+0.01.134.022 I print_info: n_swa                 = 0
+0.01.134.023 I print_info: is_swa_any            = 0
+0.01.134.023 I print_info: non_causal_type       = 0
+0.01.134.024 I print_info: n_embd_head_k         = 128
+0.01.134.024 I print_info: n_embd_head_v         = 128
+0.01.134.027 I print_info: n_gqa                 = 6
+0.01.134.030 I print_info: n_embd_k_gqa          = 1024
+0.01.134.032 I print_info: n_embd_v_gqa          = 1024
+0.01.134.047 I print_info: f_norm_eps            = 0.0e+00
+0.01.134.049 I print_info: f_norm_rms_eps        = 1.0e-05
+0.01.134.050 I print_info: f_clamp_kqv           = 0.0e+00
+0.01.134.050 I print_info: f_max_alibi_bias      = 0.0e+00
+0.01.134.051 I print_info: f_logit_scale         = 0.0e+00
+0.01.134.051 I print_info: f_attn_scale          = 0.0e+00
+0.01.134.052 I print_info: f_attn_value_scale    = 0.0000
+0.01.134.055 I print_info: n_ff                  = 10752
+0.01.134.055 I print_info: n_expert              = 0
+0.01.134.055 I print_info: n_expert_used         = 0
+0.01.134.056 I print_info: n_expert_groups       = 0
+0.01.134.056 I print_info: n_group_used          = 0
+0.01.134.057 I print_info: causal attn           = 1
+0.01.134.057 I print_info: pooling type          = -1
+0.01.134.058 I print_info: rope type             = 0
+0.01.134.058 I print_info: rope scaling          = linear
+0.01.134.059 I print_info: freq_base_train       = 70000000.0
+0.01.134.060 I print_info: freq_scale_train      = 1
+0.01.134.061 I print_info: n_ctx_orig_yarn       = 262144
+0.01.134.061 I print_info: rope_yarn_log_mul     = 0.0000
+0.01.134.062 I print_info: rope_finetuned        = unknown
+0.01.134.062 I print_info: model type            = ?B
+0.01.134.063 I print_info: model params          = 4.17 B
+0.01.134.064 I print_info: general.name          = Nanbeige4.2 3B
+0.01.134.065 I print_info: vocab type            = SPM
+0.01.134.065 I print_info: n_vocab               = 166144
+0.01.134.066 I print_info: n_merges              = 0
+0.01.134.066 I print_info: BOS token             = 166100 '<|im_start|>'
+0.01.134.067 I print_info: EOS token             = 166101 '<|im_end|>'
+0.01.134.067 I print_info: EOT token             = 166101 '<|im_end|>'
+0.01.134.068 I print_info: UNK token             = 0 '<unk>'
+0.01.134.068 I print_info: PAD token             = 0 '<unk>'
+0.01.134.069 I print_info: LF token              = 13 '<0x0A>'
+0.01.134.070 I print_info: EOG token             = 2 '</s>'
+0.01.134.070 I print_info: EOG token             = 166101 '<|im_end|>'
+0.01.134.071 I print_info: EOG token             = 166102 '<|endoftext|>'
+0.01.134.071 I print_info: max token length      = 72
+0.01.134.110 I load_tensors: loading model tensors, this can take a while... (load_mode = mmap)
+0.01.448.545 I load_tensors: offloading output layer to GPU
+0.01.448.550 I load_tensors: offloading 43 repeating layers to GPU
+0.01.448.551 I load_tensors: offloaded 45/45 layers to GPU
+0.01.448.575 I load_tensors:   CPU_Mapped model buffer size =   399.29 MiB
+0.01.448.576 I load_tensors:        CUDA0 model buffer size =  3025.96 MiB
