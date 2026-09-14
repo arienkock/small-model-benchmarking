@@ -32,7 +32,15 @@ export BENCH_MODELS=/d/llama.cpp/coding-bench/models-round3prime.conf
 export BENCH_PROMPTS=/d/llama.cpp/coding-bench/prompts-smoke.txt
 export BENCH_REPEATS=1
 export BENCH_TOKEN_BUDGET=1500
-export BENCH_MIN_RUN_SEC=240
-export BENCH_MAX_RUN_SEC=420
+# Overridable, and the defaults are a trap worth knowing about. At 240s, a model
+# with a 4096-token reasoning budget decoding at 13 tok/s needs ~315s just to
+# finish thinking: it CANNOT reach a tool call, so the cell proves only that the
+# model loads. Smoke bench-filter-20260914-195800 lost Spark that way (2948
+# thinking_delta events, zero tool calls) and cut Granite off two lines after it
+# hit the ESM write block, leaving the "does it move on?" question unanswered.
+# Raise both to ~900/1200 when the smoke needs to exercise the run, not just the
+# preflight probes.
+export BENCH_MIN_RUN_SEC="${BENCH_MIN_RUN_SEC:-240}"
+export BENCH_MAX_RUN_SEC="${BENCH_MAX_RUN_SEC:-420}"
 export BENCH_DEADLINE="${BENCH_DEADLINE:-tomorrow 07:00}"
 exec ./run-filter-bench.sh
