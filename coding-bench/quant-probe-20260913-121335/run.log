@@ -1,0 +1,124 @@
+[12:13:36] LFM = /c/Users/zenfi/.cache/huggingface/hub/models--LiquidAI--LFM2.5-2.6B-GGUF/snapshots/84022ce711b28455e8c4fc364ce68c00cf995875/LFM2.5-2.6B-Q8_0.gguf
+[12:13:36] MCP8 = /c/Users/zenfi/.cache/huggingface/hub/models--openbmb--MiniCPM5-2B-GGUF/snapshots/c451f4d674096e6e6f1cc5d0abb6794bda638304/MiniCPM5-2B-Q8_0.gguf
+[12:13:36] MCP4 = /c/Users/zenfi/.cache/huggingface/hub/models--openbmb--MiniCPM5-2B-GGUF/snapshots/c451f4d674096e6e6f1cc5d0abb6794bda638304/MiniCPM5-2B-Q4_K_M.gguf
+[12:13:36] GRA = /c/Users/zenfi/.cache/huggingface/hub/models--ibm-granite--granite-4.2-3b-GGUF/snapshots/c40945d71cd90f249a56985e8155551a9188dc30/granite-4.2-3b-Q8_0.gguf
+[12:13:36] SPK = /c/Users/zenfi/.cache/huggingface/hub/models--sizzlebop--Spark-X2.5-4B-GGUF/snapshots/bdb8637b34348fcad38bdcb9ed1a2e4f3739383e/Spark-X2.5-4B-Q6_K.gguf
+[12:13:36] NAN6 = /c/Users/zenfi/.cache/huggingface/hub/models--bartowski--Nanbeige_Nanbeige4.2-3B-GGUF/snapshots/17562eefe9752007209148d5f7a6e275fc8d8077/Nanbeige_Nanbeige4.2-3B-Q6_K.gguf
+[12:13:36] ===== Stage A — E1/E2 main table: pp512 / tg128, all on-disk models =====
+[12:13:36] START A-minicpm5-q8_0
+[12:14:10] DONE  A-minicpm5-q8_0 rc=0
+| model                          |       size |     params | backend    | ngl |            test |                  t/s |
+| ------------------------------ | ---------: | ---------: | ---------- | --: | --------------: | -------------------: |
+| llama ?B Q8_0                  |   2.49 GiB |     2.52 B | CUDA       | 999 |           pp512 |       371.15 ± 24.73 |
+| llama ?B Q8_0                  |   2.49 GiB |     2.52 B | CUDA       | 999 |           tg128 |         28.53 ± 0.02 |
+[12:14:10] START A-minicpm5-q4_k_m
+[12:14:38] DONE  A-minicpm5-q4_k_m rc=0
+| model                          |       size |     params | backend    | ngl |            test |                  t/s |
+| ------------------------------ | ---------: | ---------: | ---------- | --: | --------------: | -------------------: |
+| llama ?B Q4_K - Medium         |   1.45 GiB |     2.52 B | CUDA       | 999 |           pp512 |        375.76 ± 0.40 |
+| llama ?B Q4_K - Medium         |   1.45 GiB |     2.52 B | CUDA       | 999 |           tg128 |         27.02 ± 0.01 |
+[12:14:38] START A-lfm2.5-q8_0
+[12:15:13] DONE  A-lfm2.5-q8_0 rc=0
+| model                          |       size |     params | backend    | ngl |            test |                  t/s |
+| ------------------------------ | ---------: | ---------: | ---------- | --: | --------------: | -------------------: |
+| lfm2 2.6B Q8_0                 |   2.67 GiB |     2.70 B | CUDA       | 999 |           pp512 |        342.05 ± 0.24 |
+| lfm2 2.6B Q8_0                 |   2.67 GiB |     2.70 B | CUDA       | 999 |           tg128 |         26.64 ± 0.02 |
+[12:15:13] START A-granite-q8_0
+[12:16:01] DONE  A-granite-q8_0 rc=0
+| model                          |       size |     params | backend    | ngl |            test |                  t/s |
+| ------------------------------ | ---------: | ---------: | ---------- | --: | --------------: | -------------------: |
+| granite 3B Q8_0                |   3.62 GiB |     3.66 B | CUDA       | 999 |           pp512 |        256.88 ± 0.23 |
+| granite 3B Q8_0                |   3.62 GiB |     3.66 B | CUDA       | 999 |           tg128 |         20.01 ± 0.01 |
+[12:16:01] START A-spark-q6_k
+[12:16:55] DONE  A-spark-q6_k rc=0
+| model                          |       size |     params | backend    | ngl |            test |                  t/s |
+| ------------------------------ | ---------: | ---------: | ---------- | --: | --------------: | -------------------: |
+| spark2_5 ?B Q6_K               |   3.14 GiB |     4.11 B | CUDA       | 999 |           pp512 |        215.25 ± 0.11 |
+| spark2_5 ?B Q6_K               |   3.14 GiB |     4.11 B | CUDA       | 999 |           tg128 |         13.99 ± 0.01 |
+[12:16:56] START A-nanbeige-q6_k
+[12:18:08] DONE  A-nanbeige-q6_k rc=0
+| model                          |       size |     params | backend    | ngl |            test |                  t/s |
+| ------------------------------ | ---------: | ---------: | ---------- | --: | --------------: | -------------------: |
+| nanbeige ?B Q6_K               |   3.34 GiB |     4.17 B | CUDA       | 999 |           pp512 |        128.32 ± 0.13 |
+| nanbeige ?B Q6_K               |   3.34 GiB |     4.17 B | CUDA       | 999 |           tg128 |          9.50 ± 0.03 |
+[12:18:08] ===== Stage B — E3 prefill scaling: does the penalty scale with batch? =====
+[12:18:08] START B-sweep-nanbeige-q6_k
+[12:20:27] DONE  B-sweep-nanbeige-q6_k rc=0
+| model                          |       size |     params | backend    | ngl |            test |                  t/s |
+| ------------------------------ | ---------: | ---------: | ---------- | --: | --------------: | -------------------: |
+| nanbeige ?B Q6_K               |   3.34 GiB |     4.17 B | CUDA       | 999 |           pp128 |         70.27 ± 0.06 |
+| nanbeige ?B Q6_K               |   3.34 GiB |     4.17 B | CUDA       | 999 |           pp512 |        127.75 ± 0.15 |
+| nanbeige ?B Q6_K               |   3.34 GiB |     4.17 B | CUDA       | 999 |          pp2048 |        117.55 ± 0.37 |
+| nanbeige ?B Q6_K               |   3.34 GiB |     4.17 B | CUDA       | 999 |           tg128 |          9.37 ± 0.02 |
+[12:20:27] START B-sweep-spark-q6_k
+[12:21:54] DONE  B-sweep-spark-q6_k rc=0
+| model                          |       size |     params | backend    | ngl |            test |                  t/s |
+| ------------------------------ | ---------: | ---------: | ---------- | --: | --------------: | -------------------: |
+| spark2_5 ?B Q6_K               |   3.14 GiB |     4.11 B | CUDA       | 999 |           pp128 |        129.55 ± 0.03 |
+| spark2_5 ?B Q6_K               |   3.14 GiB |     4.11 B | CUDA       | 999 |           pp512 |        212.13 ± 0.44 |
+| spark2_5 ?B Q6_K               |   3.14 GiB |     4.11 B | CUDA       | 999 |          pp2048 |        198.75 ± 0.27 |
+| spark2_5 ?B Q6_K               |   3.14 GiB |     4.11 B | CUDA       | 999 |           tg128 |         13.84 ± 0.02 |
+[12:21:54] START B-sweep-granite-q8_0
+[12:23:06] DONE  B-sweep-granite-q8_0 rc=0
+| model                          |       size |     params | backend    | ngl |            test |                  t/s |
+| ------------------------------ | ---------: | ---------: | ---------- | --: | --------------: | -------------------: |
+| granite 3B Q8_0                |   3.62 GiB |     3.66 B | CUDA       | 999 |           pp128 |        135.58 ± 0.20 |
+| granite 3B Q8_0                |   3.62 GiB |     3.66 B | CUDA       | 999 |           pp512 |        248.82 ± 0.38 |
+| granite 3B Q8_0                |   3.62 GiB |     3.66 B | CUDA       | 999 |          pp2048 |        227.35 ± 0.16 |
+| granite 3B Q8_0                |   3.62 GiB |     3.66 B | CUDA       | 999 |           tg128 |         19.91 ± 0.00 |
+[12:23:06] ===== Stage C — E3 CPU baseline: confirm GPU offload is real =====
+[12:23:06] START C-cpu-nanbeige-q6_k
+[12:23:30] DONE  C-cpu-nanbeige-q6_k rc=0
+| model                          |       size |     params | backend    | ngl |            test |                  t/s |
+| ------------------------------ | ---------: | ---------: | ---------- | --: | --------------: | -------------------: |
+| nanbeige ?B Q6_K               |   3.34 GiB |     4.17 B | CUDA       |   0 |           pp256 |         88.17 ± 0.12 |
+| nanbeige ?B Q6_K               |   3.34 GiB |     4.17 B | CUDA       |   0 |            tg16 |          2.99 ± 0.03 |
+[12:23:30] START C-cpu-granite-q8_0
+[12:23:45] DONE  C-cpu-granite-q8_0 rc=0
+| model                          |       size |     params | backend    | ngl |            test |                  t/s |
+| ------------------------------ | ---------: | ---------: | ---------- | --: | --------------: | -------------------: |
+| granite 3B Q8_0                |   3.62 GiB |     3.66 B | CUDA       |   0 |           pp256 |        136.09 ± 0.25 |
+| granite 3B Q8_0                |   3.62 GiB |     3.66 B | CUDA       |   0 |            tg16 |          5.22 ± 0.00 |
+[12:23:45] ===== Stage D — at depth, comparable to decode-measure @depth =====
+[12:23:45] START D-depth-minicpm5-q8_0
+[12:24:37] DONE  D-depth-minicpm5-q8_0 rc=0
+| model                          |       size |     params | backend    | ngl |            test |                  t/s |
+| ------------------------------ | ---------: | ---------: | ---------- | --: | --------------: | -------------------: |
+| llama ?B Q8_0                  |   2.49 GiB |     2.52 B | CUDA       | 999 |   pp512 @ d2048 |        312.45 ± 0.11 |
+| llama ?B Q8_0                  |   2.49 GiB |     2.52 B | CUDA       | 999 |   tg128 @ d2048 |         27.18 ± 0.00 |
+[12:24:37] START D-depth-minicpm5-q4_k_m
+[12:25:07] DONE  D-depth-minicpm5-q4_k_m rc=0
+| model                          |       size |     params | backend    | ngl |            test |                  t/s |
+| ------------------------------ | ---------: | ---------: | ---------- | --: | --------------: | -------------------: |
+| llama ?B Q4_K - Medium         |   1.45 GiB |     2.52 B | CUDA       | 999 |   pp512 @ d2048 |        304.70 ± 0.17 |
+| llama ?B Q4_K - Medium         |   1.45 GiB |     2.52 B | CUDA       | 999 |   tg128 @ d2048 |         25.76 ± 0.04 |
+[12:25:08] START D-depth-granite-q8_0
+[12:25:43] DONE  D-depth-granite-q8_0 rc=0
+| model                          |       size |     params | backend    | ngl |            test |                  t/s |
+| ------------------------------ | ---------: | ---------: | ---------- | --: | --------------: | -------------------: |
+| granite 3B Q8_0                |   3.62 GiB |     3.66 B | CUDA       | 999 |   pp512 @ d2048 |        201.54 ± 0.06 |
+| granite 3B Q8_0                |   3.62 GiB |     3.66 B | CUDA       | 999 |   tg128 @ d2048 |         17.70 ± 0.01 |
+[12:25:43] START D-depth-spark-q6_k
+[12:26:24] DONE  D-depth-spark-q6_k rc=0
+| model                          |       size |     params | backend    | ngl |            test |                  t/s |
+| ------------------------------ | ---------: | ---------: | ---------- | --: | --------------: | -------------------: |
+| spark2_5 ?B Q6_K               |   3.14 GiB |     4.11 B | CUDA       | 999 |   pp512 @ d2048 |        190.14 ± 0.30 |
+| spark2_5 ?B Q6_K               |   3.14 GiB |     4.11 B | CUDA       | 999 |   tg128 @ d2048 |         13.59 ± 0.00 |
+[12:26:24] START D-depth-nanbeige-q6_k
+[12:27:30] DONE  D-depth-nanbeige-q6_k rc=0
+| model                          |       size |     params | backend    | ngl |            test |                  t/s |
+| ------------------------------ | ---------: | ---------: | ---------- | --: | --------------: | -------------------: |
+| nanbeige ?B Q6_K               |   3.34 GiB |     4.17 B | CUDA       | 999 |   pp512 @ d2048 |        102.64 ± 0.24 |
+| nanbeige ?B Q6_K               |   3.34 GiB |     4.17 B | CUDA       | 999 |   tg128 @ d2048 |          8.71 ± 0.01 |
+[12:27:30] ===== Stage E — E1 arm B: Nanbeige Q8_0 (downloads ~3.6 GB to D:) =====
+[12:27:30] START E-nanbeige-q8_0
+[12:51:20] DONE  E-nanbeige-q8_0 rc=0
+| model                          |       size |     params | backend    | ngl |            test |                  t/s |
+| ------------------------------ | ---------: | ---------: | ---------- | --: | --------------: | -------------------: |
+| nanbeige ?B Q8_0               |   4.13 GiB |     4.17 B | CUDA       | 999 |           pp128 |         66.48 ± 0.04 |
+| nanbeige ?B Q8_0               |   4.13 GiB |     4.17 B | CUDA       | 999 |           pp512 |        127.45 ± 0.09 |
+| nanbeige ?B Q8_0               |   4.13 GiB |     4.17 B | CUDA       | 999 |          pp2048 |        116.54 ± 0.06 |
+| nanbeige ?B Q8_0               |   4.13 GiB |     4.17 B | CUDA       | 999 |           tg128 |         11.38 ± 0.00 |
+[12:51:20] ===== Collating =====
+[12:51:22] ALL DONE -> coding-bench/quant-probe-20260913-121335/RESULTS.md
+[12:51:22] lock released

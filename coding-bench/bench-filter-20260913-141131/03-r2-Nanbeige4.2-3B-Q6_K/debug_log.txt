@@ -1,0 +1,18 @@
+params={'distance': ['240']}
+distance_str='240' hours_str=None
+hours error: float() argument must be a string or a real number, not 'NoneType'
+params={'distance': ['240']}
+distance_str='240' hours_str=None
+hours error: float() argument must be a string or a real number, not 'NoneType'
+params={'distance': ['240']}
+distance_str='240' hours_str=None
+hours error: float() argument must be a string or a real number, not 'NoneType'
+params={'distance': ['240']}
+distance_str='240' hours_str=None
+hours error: float() argument must be a string or a real number, not 'NoneType'
+params={'distance': ['240'], 'hours': ['5']}
+distance_str='240' hours_str='5'
+params={'distance': ['240'], 'hours': ['5']}
+distance_str='240' hours_str='5'
+params={'distance': ['240'], 'hours': ['0']}
+distance_str='240' hours_str='0'

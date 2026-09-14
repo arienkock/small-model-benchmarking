@@ -1,0 +1,6 @@
+0.00.424.566 I cmn  common_param: common_params_print_info: build 10896 (fa6769818) with Clang 20.1.8 for Windows x86_64
+0.00.424.572 I cmn  common_param: common_params_print_info: verbosity = 4 (adjust with the `-lv N` CLI arg)
+0.00.424.575 I cmn  common_param: device_info:
+0.00.487.588 I cmn  common_param:   - CUDA0   : NVIDIA GeForce GTX 970M (6143 MiB, 5270 MiB free)
+0.00.487.621 I cmn  common_param:   - CPU     : Intel(R) Core(TM) i7-6820HK CPU @ 2.70GHz (24393 MiB, 18814 MiB free)
+0.00.487.717 I cmn  common_param: system_info: n_threads = 4 (n_threads_batch = 4) / 8 | CUDA : ARCHS = 500,610,700,750,800,860,890,900 | USE_GRAPHS = 1 | FA_QUANTS = q4_0-q4_0,q8_0-q8_0,f16-f16,bf16-bf16 | CPU : SSE3 = 1 | SSSE3 = 1 | AVX = 1 | AVX2 = 1 | F16C = 1 | FMA = 1 | BMI2 = 1 | LLAMAFILE = 1 | OPENMP = 1 | REPACK = 1 | 

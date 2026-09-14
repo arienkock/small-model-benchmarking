@@ -1,0 +1,17 @@
+# Filter-round summary — Sun, Sep 13, 2026  2:09:50 PM
+tasks: 3 (full-suite 5, 7, 12)  reasoning_budget: <=4096 (capped at ctx/4)
+repeats: 1 independent runs per (model, task)
+sampling: temp=0.7 top_p=0.95 top_k=40, seed unset
+budget: 1500 generated tokens x 1.35 overhead, clamped to [240s, 420s]
+decode speed: measured per model at 8000-word context depth, not on an empty window
+sandbox: docker (coding-bench-agent:latest), guard extension active (URL-safe)
+context: probed PER MODEL (highest of 16384 12288 8192 4096)
+host: MINGW64_NT-10.0-19045 node v24.11.1 python 3.14.0
+
+Nanbeige4.2-3B-Q6_K: context 16384  decode 7.48 tok/s @depth  budget 270s
+Spark-X2.5-4B-Q6_K: context 16384  decode 13.01 tok/s @depth  budget 240s
+Granite-4.2-3B-Q8_0: context 16384  decode 16.04 tok/s @depth  budget 240s
+
+run: 1 model: Granite-4.2-3B-Q8_0 exit_code: 124 duration_sec: 243 
+run: 1 model: Nanbeige4.2-3B-Q6_K exit_code: 124 duration_sec: 273 
+run: 1 model: Spark-X2.5-4B-Q6_K exit_code: 124 duration_sec: 243 

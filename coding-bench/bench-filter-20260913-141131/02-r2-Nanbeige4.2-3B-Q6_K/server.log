@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/workspace/server.py", line 69, in <module>
+    main()
+  File "/workspace/server.py", line 61, in main
+    server = HTTPServer(("0.0.0.0", 8080))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: TCPServer.__init__() missing 1 required positional argument: 'RequestHandlerClass'

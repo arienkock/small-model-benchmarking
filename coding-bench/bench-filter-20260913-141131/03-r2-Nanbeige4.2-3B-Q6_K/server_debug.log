@@ -1,0 +1,6 @@
+DEBUG params={'distance': ['240']}
+DEBUG distance_str='240' hours_str=None
+DEBUG hours error: float() argument must be a string or a real number, not 'NoneType'
+DEBUG params={'distance': ['240']}
+DEBUG distance_str='240' hours_str=None
+DEBUG hours error: float() argument must be a string or a real number, not 'NoneType'

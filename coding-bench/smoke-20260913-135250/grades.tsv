@@ -1,0 +1,4 @@
+task	rep	model	verdict	detail
+1	1	Granite-4.2-3B-Q8_0	PASS	logic:- self:SELF_PASS  GRADER_OK debounce 
+1	1	Nanbeige4.2-3B-Q6_K	RUN_FAIL	logic:LOGIC_FAIL self:SELF_FAIL  node:assert:152   [logic-run: AssertionError [ERR_ASSERTION]: expected the LATEST args spread as [3,"c"], got [[3,"c"]] (bug 1: early return keeps fir ]
+1	1	Spark-X2.5-4B-Q6_K	MISSING	logic:MISSING self:MISSING  no debounce.ts

@@ -1,0 +1,6 @@
+Nanbeige4.2-3B-Q6_K              turn_boundary=OK|finish_reason=stop
+Nanbeige4.2-3B-Q6_K              tool_calls=OK|emitted 1 tool_call(s), first=write_file
+Spark-X2.5-4B-Q6_K               turn_boundary=OK|finish_reason=stop
+Spark-X2.5-4B-Q6_K               tool_calls=OK|emitted 1 tool_call(s), first=write_file
+Granite-4.2-3B-Q8_0              turn_boundary=OK|finish_reason=stop
+Granite-4.2-3B-Q8_0              tool_calls=OK|emitted 1 tool_call(s), first=write_file

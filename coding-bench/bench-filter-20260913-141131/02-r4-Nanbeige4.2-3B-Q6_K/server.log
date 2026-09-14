@@ -1,0 +1,156 @@
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 45324)
+Traceback (most recent call last):
+  File "/usr/lib/python3.11/socketserver.py", line 317, in _handle_request_noblock
+    self.process_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 348, in process_request
+    self.finish_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 361, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+  File "/usr/lib/python3.11/socketserver.py", line 755, in __init__
+    self.handle()
+  File "/usr/lib/python3.11/http/server.py", line 432, in handle
+    self.handle_one_request()
+  File "/usr/lib/python3.11/http/server.py", line 420, in handle_one_request
+    method()
+  File "/workspace/server.py", line 44, in do_GET
+    allowed, retry_after = self._check_rate_limit()
+                           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/server.py", line 27, in _check_rate_limit
+    ip = self._get_client_ip()
+         ^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/server.py", line 20, in _get_client_ip
+    if self.client_address and self.connection.headers.get('X-Forwarded-For'):
+                               ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'socket' object has no attribute 'headers'
+----------------------------------------
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 45332)
+Traceback (most recent call last):
+  File "/usr/lib/python3.11/socketserver.py", line 317, in _handle_request_noblock
+    self.process_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 348, in process_request
+    self.finish_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 361, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+  File "/usr/lib/python3.11/socketserver.py", line 755, in __init__
+    self.handle()
+  File "/usr/lib/python3.11/http/server.py", line 432, in handle
+    self.handle_one_request()
+  File "/usr/lib/python3.11/http/server.py", line 420, in handle_one_request
+    method()
+  File "/workspace/server.py", line 44, in do_GET
+    allowed, retry_after = self._check_rate_limit()
+                           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/server.py", line 27, in _check_rate_limit
+    ip = self._get_client_ip()
+         ^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/server.py", line 20, in _get_client_ip
+    if self.client_address and self.connection.headers.get('X-Forwarded-For'):
+                               ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'socket' object has no attribute 'headers'
+----------------------------------------
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 45346)
+Traceback (most recent call last):
+  File "/usr/lib/python3.11/socketserver.py", line 317, in _handle_request_noblock
+    self.process_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 348, in process_request
+    self.finish_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 361, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+  File "/usr/lib/python3.11/socketserver.py", line 755, in __init__
+    self.handle()
+  File "/usr/lib/python3.11/http/server.py", line 432, in handle
+    self.handle_one_request()
+  File "/usr/lib/python3.11/http/server.py", line 420, in handle_one_request
+    method()
+  File "/workspace/server.py", line 44, in do_GET
+    allowed, retry_after = self._check_rate_limit()
+                           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/server.py", line 27, in _check_rate_limit
+    ip = self._get_client_ip()
+         ^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/server.py", line 20, in _get_client_ip
+    if self.client_address and self.connection.headers.get('X-Forwarded-For'):
+                               ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'socket' object has no attribute 'headers'
+----------------------------------------
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 45358)
+Traceback (most recent call last):
+  File "/usr/lib/python3.11/socketserver.py", line 317, in _handle_request_noblock
+    self.process_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 348, in process_request
+    self.finish_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 361, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+  File "/usr/lib/python3.11/socketserver.py", line 755, in __init__
+    self.handle()
+  File "/usr/lib/python3.11/http/server.py", line 432, in handle
+    self.handle_one_request()
+  File "/usr/lib/python3.11/http/server.py", line 420, in handle_one_request
+    method()
+  File "/workspace/server.py", line 44, in do_GET
+    allowed, retry_after = self._check_rate_limit()
+                           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/server.py", line 27, in _check_rate_limit
+    ip = self._get_client_ip()
+         ^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/server.py", line 20, in _get_client_ip
+    if self.client_address and self.connection.headers.get('X-Forwarded-For'):
+                               ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'socket' object has no attribute 'headers'
+----------------------------------------
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 45366)
+Traceback (most recent call last):
+  File "/usr/lib/python3.11/socketserver.py", line 317, in _handle_request_noblock
+    self.process_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 348, in process_request
+    self.finish_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 361, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+  File "/usr/lib/python3.11/socketserver.py", line 755, in __init__
+    self.handle()
+  File "/usr/lib/python3.11/http/server.py", line 432, in handle
+    self.handle_one_request()
+  File "/usr/lib/python3.11/http/server.py", line 420, in handle_one_request
+    method()
+  File "/workspace/server.py", line 44, in do_GET
+    allowed, retry_after = self._check_rate_limit()
+                           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/server.py", line 27, in _check_rate_limit
+    ip = self._get_client_ip()
+         ^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/server.py", line 20, in _get_client_ip
+    if self.client_address and self.connection.headers.get('X-Forwarded-For'):
+                               ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'socket' object has no attribute 'headers'
+----------------------------------------
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 45374)
+Traceback (most recent call last):
+  File "/usr/lib/python3.11/socketserver.py", line 317, in _handle_request_noblock
+    self.process_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 348, in process_request
+    self.finish_request(request, client_address)
+  File "/usr/lib/python3.11/socketserver.py", line 361, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+  File "/usr/lib/python3.11/socketserver.py", line 755, in __init__
+    self.handle()
+  File "/usr/lib/python3.11/http/server.py", line 432, in handle
+    self.handle_one_request()
+  File "/usr/lib/python3.11/http/server.py", line 420, in handle_one_request
+    method()
+  File "/workspace/server.py", line 44, in do_GET
+    allowed, retry_after = self._check_rate_limit()
+                           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/server.py", line 27, in _check_rate_limit
+    ip = self._get_client_ip()
+         ^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/server.py", line 20, in _get_client_ip
+    if self.client_address and self.connection.headers.get('X-Forwarded-For'):
+                               ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'socket' object has no attribute 'headers'
+----------------------------------------
