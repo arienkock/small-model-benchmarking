@@ -421,3 +421,71 @@ Items 1-3 are implemented; 4-6 are not.
    components are coin flips. If a decision is needed now, Spark — on the
    strength of 0 packaging deaths and the best verification coverage, not on
    the score.
+
+## 10. Round 3' — the roster for the next run
+
+VibeThinker was dropped from round 4 without the attempt round 3 granted it.
+`round3-recommendation.md:415` ruled "one attempt, then drop" — give it a
+ChatML-tools template via `--chat-template-file`, then decide. `git log -S` over
+`models.conf` shows its line was added once and its `server_args` column has
+been empty ever since, so the attempt was never made. Its three failures to date
+are all the same preflight failure (no tool-call channel in its template, so it
+invents `<script type="text/json">{...}</script>` and pi drops every call) and
+say nothing about its coding. In round 1 its debounce reasoning was largely
+correct and never reached disk.
+
+`models-round3prime.conf` gives it that attempt, pointed at the base model's own
+Qwen2.5 tool-calling template (it is a Qwen2.5-Coder-3B finetune), alongside two
+incumbents. `smoke-round3prime.sh` settles whether the template works before the
+round starts; `round3prime.sh` runs it at 3 repeats.
+
+### 10.1 Granite is the model dropped, on instruction-following
+
+Not on score — §1 stands, no pair separates on the shipped pass rate
+(p >= 0.19), and on the algorithm alone all three tie at 8/12.
+
+The system prompt states the ESM rules verbatim: "never require() or
+module.exports", "require, module, exports, __filename and __dirname DO NOT
+EXIST", plus an exact main-detection snippet to use. Round-4 `.ts` deliverables
+breaking one of those rules:
+
+| model | violations (n=12) | of which fatal |
+|---|---|---|
+| Granite | **8** | 6 |
+| Nanbeige | 1 | 0 |
+| Spark | 0 | 0 |
+
+Fisher: Granite vs Spark **p=0.0013**, vs Nanbeige p=0.0094, vs both pooled
+**p=0.00013** — two to three orders of magnitude stronger than anything in the
+pass-rate table, and the one place round 4 separates cleanly.
+
+It survives the obvious objection. Those rules were added to the system prompt
+in round 2 *for Granite*: `run-filter-bench.sh:648` records that it fixed all
+three seeded debounce bugs in round 1 and still scored below models that fixed
+two, "purely because `process.main === module` throws in ESM", and the exact
+snippet was spelled out in response. Two rounds later it still ships
+`require.main`, `__filename` and `module.exports`, and **all four of its round-4
+scaffolding deaths (§2) are in that list**. A targeted harness fix was applied
+and the model did not respond to it, so there is no further harness change to
+try — which also reframes §2: Granite's gap is not a separable "packaging
+skill", it is not following instructions that are in front of it.
+
+The counter-argument, recorded because it is real: Granite is the best of the
+three at the actual bug-finding task (3/4 on the seeded argument-spread bug
+against Spark's 2/4 and Nanbeige's 1/4) and its algorithm score ties. If the
+question were "which model reasons best about code" it would stay. The question
+this benchmark asks is which model to deploy on this laptop, and a model that
+ignores environment rules written verbatim in its own system prompt is a bad
+deployment however well it reasons.
+
+### 10.2 Sizing
+
+3 repeats, not 4 — this is a qualifying round, and 3 is what round 3 used. At
+`OVERHEAD_FACTOR=1.9`: Nanbeige 3,073s/cell, Spark 1,750s, VibeThinker ~1,629s
+(estimated; it has no measured depth rate, and the harness measures it for
+real). 9 cells each, **~16.1h worst case, ~13.5h expected**. `round3prime.sh`
+refuses to start without `BENCH_DEADLINE` — at 1.9x the guard is the only bound.
+
+Round 3' numbers are **not** comparable to round 4's for any model: the overhead
+factor changed. That is why two incumbents run alongside VibeThinker rather than
+comparing it against round 4's table.
