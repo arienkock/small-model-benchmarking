@@ -439,51 +439,118 @@ Qwen2.5 tool-calling template (it is a Qwen2.5-Coder-3B finetune), alongside two
 incumbents. `smoke-round3prime.sh` settles whether the template works before the
 round starts; `round3prime.sh` runs it at 3 repeats.
 
-### 10.1 Granite is the model dropped, on instruction-following
+### 10.1 Granite stays; Nanbeige is the model dropped
 
-Not on score — §1 stands, no pair separates on the shipped pass rate
-(p >= 0.19), and on the algorithm alone all three tie at 8/12.
+An earlier draft of this section dropped Granite on one number: round-4
+deliverables breaking an ESM rule the system prompt states verbatim — Granite
+8/12 (6 fatal), Nanbeige 1/12, Spark 0/12, Fisher p=0.0013 against Spark. The
+number is right. Reading it as a fact about the model rather than about the
+harness was wrong.
 
-The system prompt states the ESM rules verbatim: "never require() or
-module.exports", "require, module, exports, __filename and __dirname DO NOT
-EXIST", plus an exact main-detection snippet to use. Round-4 `.ts` deliverables
-breaking one of those rules:
+**What Granite actually does.** Of its five packaging deaths:
 
-| model | violations (n=12) | of which fatal |
-|---|---|---|
-| Granite | **8** | 6 |
-| Nanbeige | 1 | 0 |
-| Spark | 0 | 0 |
+| cell | what happened |
+|---|---|
+| 02-r1, 02-r4, 03-r4 | never executed the artifact at all |
+| 02-r2 | executed it, saw red, diagnosed it correctly ("the throttle.ts file needs fixing for ES module syntax"), ran out of budget mid-rewrite |
+| 01-r1 | executed it **twice**, its own run printed "all tests passed", and the grader still failed it |
 
-Fisher: Granite vs Spark **p=0.0013**, vs Nanbeige p=0.0094, vs both pooled
-**p=0.00013** — two to three orders of magnitude stronger than anything in the
-pass-rate table, and the one place round 4 separates cleanly.
+None is a case of seeing a red signal and ignoring it. Granite runs more
+verification commands than either peer (97 vs Nanbeige 72, Spark 48) and has the
+best red-to-green convergence in the round (32 red : 65 green, ending green in
+11 of 12 cells). Its algorithm score ties at 8/12 and it is the best of the
+three at the seeded bug the benchmark was built around (3/4 on the argument
+spread, vs Spark 2/4, Nanbeige 1/4).
 
-It survives the obvious objection. Those rules were added to the system prompt
-in round 2 *for Granite*: `run-filter-bench.sh:648` records that it fixed all
-three seeded debounce bugs in round 1 and still scored below models that fixed
-two, "purely because `process.main === module` throws in ESM", and the exact
-snippet was spelled out in response. Two rounds later it still ships
-`require.main`, `__filename` and `module.exports`, and **all four of its round-4
-scaffolding deaths (§2) are in that list**. A targeted harness fix was applied
-and the model did not respond to it, so there is no further harness change to
-try — which also reframes §2: Granite's gap is not a separable "packaging
-skill", it is not following instructions that are in front of it.
+**01-r1 is the harness's fault outright.** The file ships
+`if (import.meta.main || process.argv[1] === __filename)`. Run directly,
+`import.meta.main` short-circuits the `||` and it prints "all tests passed";
+imported, it evaluates `__filename` and throws. The model verified exactly as
+the prompt instructed (`node debounce.ts`) and **the prescribed check is
+structurally blind to the defect the grader tests for**. Reproduced directly.
 
-The counter-argument, recorded because it is real: Granite is the best of the
-three at the actual bug-finding task (3/4 on the seeded argument-spread bug
-against Spark's 2/4 and Nanbeige's 1/4) and its algorithm score ties. If the
-question were "which model reasons best about code" it would stay. The question
-this benchmark asks is which model to deploy on this laptop, and a model that
-ignores environment rules written verbatim in its own system prompt is a bad
-deployment however well it reasons.
+**And "a targeted fix already failed" does not survive either.** What round 2
+applied was a *sentence in the system prompt*. The harness's strong instrument
+was never pointed at this class: `bench-guard.ts` blocks a forbidden action
+inline with the correction in hand, and across every round **13 of 13 guard
+blocks were followed by a different action** — no model has ever retried a
+blocked one. The weakest available intervention was tried; the strongest was
+never tried. Dropping a model for failing an intervention that was never made
+is not a measurement.
 
-### 10.2 Sizing
+**Both gaps are now closed** (§10.2), so round 3' measures Granite's coding
+rather than its memory of a rule.
+
+**Nanbeige goes instead, on grounds that are not about coding ability:**
+
+1. **Cost.** 21,330s of round 4's 44,355s — 48% of the round for one of three
+   models — and 3,073s per cell at 1.9x against Granite's 1,427s. Dropping it
+   frees ~4.1h at 3 repeats, which is what pays for VibeThinker.
+2. **Its retention was conditional and the condition is discharged.**
+   `round3-recommendation.md:418` kept it explicitly: *"re-run before judging —
+   its 9/15 was scored on a third of its peers' token allowance because of a
+   probe bug. Do not cut it on round 3."* Round 4 was that re-run, on a measured
+   budget, and it came out indistinguishable from both peers (p=0.50 vs Spark,
+   p=0.75 vs Granite). The debt is paid and nothing emerged.
+3. **No best-in-class axis, unlike the other two.** Granite: best at the seeded
+   bug, most verification activity, best convergence. Spark: zero packaging
+   deaths, zero rule violations, best shipped output. Nanbeige: worst on the
+   seeded bug (1/4), middle everywhere else, half the speed, and the only model
+   needing a config workaround to fit at all.
+4. **Its failures are the ones no harness change reaches.** §5.2 (an unquoted
+   `&` that became a phantom bug hunt and shipped as a hardcoded debug path) and
+   §5.5 (a working repro it never diffed against the failing file) are reasoning
+   and discipline, not packaging. There is nothing to hand it that would change
+   the result, so another 9 cells at twice the price buys the least of the three.
+
+Counter-argument, recorded because it is real: Nanbeige is the only model whose
+deployable configuration this roster has actually tuned (q8_0 KV, measured
+headroom), and cutting it leaves that work unused. If a third incumbent is
+wanted later, it is the one to bring back.
+
+### 10.2 The two harness fixes this implies
+
+**Enforce the ESM rules, do not merely state them.** `bench-guard.ts` now blocks
+a `write`/`edit` that introduces `require(`, `require.main`, `module.exports`,
+`exports.x`, `__filename`/`__dirname`, or a named `assert` import **into a .ts
+file**, with the exact correction in the block message. Replayed over round 4 it
+catches 6 of Granite's 12 deliverables at write time, including 4 of its 5
+packaging deaths, 1 of Nanbeige's and 0 of Spark's.
+
+Three properties that make this a measurement rather than a concession:
+
+- It only inspects text being *introduced*, so a model halfway through fixing a
+  violation is never stuck behind it (tested).
+- `.py` files are exempt — they are not ES modules (tested).
+- Every block is counted per cell in `meta.txt` (`signal_guard_blocks`), so a
+  model needing six corrections stays visibly different from one needing none.
+  A silent killed deliverable becomes a counted, corrected one, which is
+  strictly more information than a `LOAD_FAIL`.
+
+This is consistent with the harness's existing position, not a new concession:
+`run-filter-bench.sh:642` already calls the Node/ESM rules "environment facts,
+not task hints… identical for every model, and they advantage none of them", and
+the guard already enforces one such fact (no `npx`) by blocking.
+
+**Tell models the module is imported, not only run.** One line added to the
+system prompt: the module is also imported by a separate file, the exported
+function is what is checked, and a file can run and still fail to import. This
+closes the 01-r1 gap directly. It is a statement of fact about the harness, like
+the rest of that block — not a hint about any task.
+
+The residual risk is a model that loops against the new block instead of
+adapting. The 13/13 record says it will not, but those were bash commands, not
+writes. `smoke-round3prime.sh` uses the debounce task precisely because that is
+where round 4 saw `require.main`/`__filename`, so the smoke run exercises it —
+**if a model re-issues the same write after a block, the message is wrong and
+must be fixed before the real round.**
+
+### 10.3 Sizing
 
 3 repeats, not 4 — this is a qualifying round, and 3 is what round 3 used. At
-`OVERHEAD_FACTOR=1.9`: Nanbeige 3,073s/cell, Spark 1,750s, VibeThinker ~1,629s
+`OVERHEAD_FACTOR=1.9`: Granite 1,427s/cell, Spark 1,750s, VibeThinker ~1,629s
 (estimated; it has no measured depth rate, and the harness measures it for
-real). 9 cells each, **~16.1h worst case, ~13.5h expected**. `round3prime.sh`
+real). 9 cells each, **~12.0h worst case, ~10h expected**. `round3prime.sh`
 refuses to start without `BENCH_DEADLINE` — at 1.9x the guard is the only bound.
 
 Round 3' numbers are **not** comparable to round 4's for any model: the overhead

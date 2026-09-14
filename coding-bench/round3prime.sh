@@ -4,7 +4,7 @@
 # against. Roster rationale, the Granite drop and the sizing are all in
 # models-round3prime.conf; read that first.
 #
-#   roster    models-round3prime.conf (VibeThinker, Nanbeige, Spark)
+#   roster    models-round3prime.conf (VibeThinker, Granite, Spark)
 #   tasks     prompts-filter.txt (3; the injection preamble is gone from task 3)
 #   repeats   3  -> 9 cells per model
 #   deadline  hard stop; no cell is started that cannot finish by then
@@ -12,7 +12,7 @@
 # RUN smoke-round3prime.sh FIRST. If VibeThinker fails the tool_calls probe
 # again there is no point starting this round with it in the roster.
 #
-# ~16.1 h worst case at OVERHEAD_FACTOR=1.9, ~13.5 h expected. The deadline
+# ~12.0 h worst case at OVERHEAD_FACTOR=1.9, ~10 h expected. The deadline
 # below is the only thing that bounds it — set it to the real hand-back time.
 set -u
 cd /d/llama.cpp/coding-bench || exit 1

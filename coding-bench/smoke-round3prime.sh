@@ -17,6 +17,15 @@
 # Also verifies, for all three: the model loads with its per-model server_args,
 # both preflight probes pass, and measure_tok_s returns a NUMBER (the round-3
 # defect that put Nanbeige on a third of its peers' budget).
+#
+# AND the new ESM write-block in bench-guard.ts. The task-1 smoke prompt is the
+# debounce bugfix, which is exactly where round 4 saw require.main/__filename,
+# so Granite is likely to trip it here. What to check afterwards:
+#   grep -c . <run>/*/meta.txt signal_guard_blocks   -> corrections are counted
+#   the transcript after a block                     -> the model must move on,
+#     not re-issue the same write. 13 of 13 blocks in rounds 1-4 were followed
+#     by a different action; if a model loops on this one instead, the block
+#     message is wrong and must be fixed before the real round.
 set -u
 cd /d/llama.cpp/coding-bench || exit 1
 export BENCH_MODELS=/d/llama.cpp/coding-bench/models-round3prime.conf

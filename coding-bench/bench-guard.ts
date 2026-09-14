@@ -120,8 +120,62 @@ export default function (pi: ExtensionAPI) {
 		const tool = event.toolName as string;
 		const input = event.input as any;
 
+		// ---------------------------------------------- ESM rules, enforced --
+		// The system prompt has stated these verbatim since round 2 ("never
+		// require() or module.exports"; "require, module, exports, __filename
+		// and __dirname DO NOT EXIST"). Round 4 measured how well a stated rule
+		// works: Granite broke one in 8 of its 12 .ts deliverables, 6 fatally,
+		// against Nanbeige 1 and Spark 0 (Fisher p=0.0013 vs Spark). Every one
+		// of Granite's four scaffolding deaths is in that list.
+		//
+		// A block is a much stronger instrument than a sentence, and this file
+		// already proves it: across every round, 13 of 13 guard blocks were
+		// followed by a DIFFERENT action. No model has ever retried a blocked
+		// one. So enforce the ESM rules the same way the npx rule is enforced,
+		// at the moment of the mistake and with the exact correction in hand.
+		//
+		// This does not hide the failure — pi records every block, and
+		// signal_guard_blocks in meta.txt counts them per cell. A model that
+		// needs six corrections is visibly different from one that needs none.
+		// It converts a silent killed deliverable into a counted, corrected one,
+		// which is strictly more information than a LOAD_FAIL.
+		const ESM_RULES: Array<[RegExp, string]> = [
+			[/\brequire\s*\(/, 'require() does not exist in an ES module — use `import x from "./x.ts"`'],
+			[/\brequire\s*\.\s*main/, "require.main does not exist in an ES module — for a run-directly check use `import.meta.url === pathToFileURL(process.argv[1]).href`, or just run the self-test unconditionally"],
+			[/\bmodule\s*\.\s*exports/, "module.exports does not exist in an ES module — use `export function f() {}`"],
+			[/(?<![.\w])exports\s*\.\s*\w/, "exports.x does not exist in an ES module — use `export function f() {}`"],
+			[/__filename|__dirname/, "__filename and __dirname do not exist in an ES module — for a run-directly check use `import.meta.url === pathToFileURL(process.argv[1]).href`"],
+			[/import\s*\{[^}]*\bassert\b[^}]*\}\s*from\s*["']node:assert/, 'node:assert has no named export "assert" — import it as a default: `import assert from "node:assert"`'],
+		];
+		// Only .ts deliverables: Python and shell are not ES modules.
+		function esmViolation(text: string): string | null {
+			for (const [re, why] of ESM_RULES) if (re.test(text)) return why;
+			return null;
+		}
+
 		// ------------------------------------------------------ write / edit --
 		if (tool === "write" || tool === "edit") {
+			if (typeof input.path === "string" && /\.ts$/i.test(toPosix(input.path))) {
+				let added = "";
+				if (tool === "write" && typeof input.content === "string") {
+					added = input.content;
+				} else if (Array.isArray(input.edits)) {
+					// Only the text being INTRODUCED. Editing around an existing
+					// violation must not be blocked, or a model that is halfway
+					// through fixing one gets stuck behind it.
+					added = input.edits.map((e: any) => String(e?.newText ?? "")).join("\n");
+				}
+				const why = esmViolation(added);
+				if (why !== null) {
+					return {
+						block: true,
+						reason:
+							`Blocked: ${why}. This file was not written — fix that line and write it again. ` +
+							`Node 24 runs .ts directly as an ES module; the graded module is also IMPORTED by a separate file, ` +
+							`so anything that only works when the file is run directly will fail.`,
+					};
+				}
+			}
 			if (typeof input.path === "string") {
 				const inside = resolveInsideCwd(input.path);
 				if (inside !== null && PROTECTED.test(inside)) {

@@ -657,6 +657,25 @@ fi
 # The exact main-detection snippet and the correct assert import are therefore
 # spelled out below. They are environment facts about how this harness executes
 # TypeScript, identical for every model, and they advantage none of them.
+#
+# 2026-09-14 (round 4 post-mortem): stating them was not enough. Granite broke
+# one of these rules in 8 of its 12 .ts deliverables, 6 fatally, two rounds
+# after they were written down for its benefit. They are now ALSO enforced by
+# bench-guard.ts at write time, which is the instrument that actually works
+# here: 13 of 13 guard blocks across every round were followed by a different
+# action, and no model has ever retried a blocked one. The prompt keeps stating
+# them so a model can get it right without being corrected, and the block
+# catches it when it does not. Blocks are counted per cell in meta.txt
+# (signal_guard_blocks), so needing six corrections stays visible.
+#
+# The import line below closes a gap the harness created. Granite's 01-r1
+# debounce shipped `if (import.meta.main || process.argv[1] === __filename)`.
+# Run directly, import.meta.main short-circuits the || and the file prints
+# "all tests passed"; imported, it evaluates __filename and throws. The model
+# verified exactly as the prompt told it to, and the prescribed check is blind
+# to the defect the grader tests for. Verified by reproduction. Telling models
+# the module is imported as well as run is a statement of fact about the
+# harness, like the rest of this block -- not a hint about any task.
 APPEND_SYSTEM="You are being benchmarked. Work only inside the current working directory. \
 Use relative paths for all file operations and commands (e.g. write server.py, run node todos.ts). Never use absolute paths. \
 Python code must use only the Python standard library. Package installation is disabled: npm, npx and pip install will be refused. \
@@ -673,6 +692,9 @@ import { pathToFileURL } from 'node:url'; \
 if (import.meta.url === pathToFileURL(process.argv[1]).href) { /* self-test here */ } \
 Or simply run the self-test unconditionally at the end of the file — that is acceptable and simpler. \
 Import assert as a DEFAULT import: import assert from 'node:assert'; \
+Your module is also IMPORTED by a separate file, not only run directly, and the exported function is what is checked. \
+Running the file is therefore not enough to prove it works: a file can run and still fail to import. \
+Satisfy yourself that both work before you finish. \
 (there is no named 'assert' export, so import { assert } from 'node:assert' is a SyntaxError). \
 \
 To verify a server, start it in the background with output captured, then read the log if something fails: \
