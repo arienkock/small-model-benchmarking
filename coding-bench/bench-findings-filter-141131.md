@@ -595,8 +595,8 @@ models actually being compared. T5 and T7 have held up anyway; T12 has not.
 
 ### 11.2 T12 out, T4 in
 
-Task 3 is now suite **T4**, the books-server bugfix, taken verbatim from
-`prompts.txt`. Three reasons, in order of weight:
+Task 3 is now suite **T4**, the books-server bugfix, with one deliberate edit
+to its verification line (§11.4). Three reasons, in order of weight:
 
 1. **Its seeded bug is invisible to shallow verification and visible to
    thorough verification.** Verified by running the unmodified server: plain
@@ -639,12 +639,47 @@ Content-Length — the seeded bug"), a correct fix (all three PASS), and a
 plausible half-fix with `Content-Length` off by one (`headers:FAIL`,
 "Content-Length 111, body is 110").
 
-### 11.4 One lever not pulled
+### 11.4 The verification line: "and headers" deleted
 
-T4's prompt ends *"confirm valid JSON with correct status and headers"* — it
-tells the model to check headers. Left as written, for consistency with the
-other two tasks and because rewriting verification instructions is §9 item 4,
-which is still not done. Deleting the two words **"and headers"** would turn
-task 3 into a pure verification-coverage probe: the model would have to decide
-for itself to look, which is exactly what item 4 proposes to measure. That is a
-one-word change and a real decision, so it is flagged rather than taken.
+The suite text ends *"confirm valid JSON with correct status and headers"*.
+Those two words are deleted in `prompts-filter.txt`, so task 3 reads:
+
+> Verify before finishing: run the server, curl /api/books, confirm valid JSON
+> with correct status, then stop the server.
+
+This changes what `books.headers` measures. With "and headers", the prompt hands
+the model the bug and the component measures whether it does as it is told.
+Without them, **the prompt names only checks that PASS on the buggy server** —
+valid JSON, status 200 — so a model that verifies exactly what it was asked to
+verify sees a healthy server. The component now measures whether the model reads
+the code properly or looks beyond the instruction it was given.
+
+It is not a trick: the task still says "find every bug that breaks or degrades
+correct HTTP behavior", so the model is told a bug exists. Only the verification
+line stops pointing at it.
+
+`prompts-filter.txt` and `prompts.txt` now differ on this line **on purpose**.
+Do not "restore" it.
+
+### 11.5 Prediction, and the risk
+
+The risk of removing the hint is that `books.headers` floors at 0/n for
+everyone and discriminates in the opposite direction. Round 4 gives a prior
+against that. No task in round 4 ever asked for `Content-Length`, so whether a
+model set one in its own servers is spontaneous behaviour:
+
+| model | servers setting Content-Length unprompted |
+|---|---|
+| Spark | 5/8 |
+| Nanbeige | 3/8 |
+| Granite | **0/8** |
+
+A range of 5, wider than any component measured in round 4 (the best was 3). So
+the component should separate rather than floor.
+
+Note what that prior also predicts: **Granite is the model most likely to fail
+it**, and for reasons that are *not* harness-amenable — this is a thoroughness
+and knowledge gap, not an ESM packaging rule the guard can block. §10.1 argued
+Granite stays because its round-4 failures were harness artefacts. If it goes
+0/3 on `books.headers` in round 3', that is a real result and the argument for
+keeping it does not cover it. That is the point of running the round.

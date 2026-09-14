@@ -33,7 +33,18 @@
 #           coverage — whether a model executes the thing it is graded on — as
 #           the sharpest axis in the benchmark (62% pass when it did, 14% when
 #           it did not), but could only see it in the transcript. T4 puts that
-#           axis in the grade. It is also the suite's only Python bugfix, and
+#           axis in the grade.
+#
+#           NOT verbatim from prompts.txt. The suite text ends "confirm valid
+#           JSON with correct status and headers"; the two words "and headers"
+#           are deleted here, deliberately. With them, the prompt hands the
+#           model the bug and the component measures whether it does as it is
+#           told. Without them the prompt names only checks that PASS on the
+#           buggy server, so a model that verifies exactly what it was asked to
+#           verify sees a healthy server, and the component measures whether it
+#           reads the code properly or looks beyond the instruction. Keep the
+#           two files in sync deliberately or not at all — do not "restore" this
+#           line from prompts.txt. It is also the suite's only Python bugfix, and
 #           round 4's worst cells across every model were Python server bugs
 #           (self.full_path, parse_qs returning lists, self.connection.headers)
 #           which until now appeared only as self-inflicted damage inside a

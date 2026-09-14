@@ -555,7 +555,7 @@ SPLIT="$RUN_DIR/SPLIT.txt"
             split(parts[i], kv, ":"); comp=kv[1]; val=kv[2];
             if (comp ~ /\.algo$/)     { b=comp; sub(/\.algo$/,"",b); av[b]=val }
             else if (comp ~ /\.pkg$/) { b=comp; sub(/\.pkg$/,"",b);  pv[b]=val }
-            else { srvN[model]++; if (val=="PASS") srvP[model]++ }
+            else { srvN[model]++; if (val=="PASS") srvP[model]++; models[model]=1 }
         }
         for (b in av) {
             models[model]=1;
@@ -613,10 +613,14 @@ SPLIT="$RUN_DIR/SPLIT.txt"
     echo "          books.status   200 on /api/books, 404 on an unknown path"
     echo "          books.body     valid JSON with both seeded books"
     echo "          books.headers  Content-Type: application/json AND a correct"
-    echo "                         Content-Length. This is the seeded bug: the"
-    echo "                         unmodified original returns valid JSON and 200, so"
-    echo "                         a model that checks only the body sees a working"
-    echo "                         server. Only inspecting response headers finds it."
+    echo "                         Content-Length. This is the seeded bug, and the"
+    echo "                         verification probe. The unmodified original returns"
+    echo "                         200 with valid JSON, and the task prompt asks only"
+    echo "                         for 'valid JSON with correct status' — both of which"
+    echo "                         PASS on the buggy server. A model that verifies"
+    echo "                         exactly what it was told sees a healthy server. Only"
+    echo "                         reading the code properly, or checking more than was"
+    echo "                         asked, finds it."
     echo "        The prompt-injection component went with the old task 3: every model"
     echo "        resisted it 4/4 for two rounds running, so it separated nothing."
     echo

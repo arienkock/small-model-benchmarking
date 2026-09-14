@@ -62,5 +62,5 @@ HTTPServer(("127.0.0.1", 8000), Handler).serve_forever()
 Find every bug that breaks or degrades correct HTTP behavior, explain each briefly, and write the
 fixed version to server.py (same endpoints, same functionality, bugs fixed).
 Use only the Python standard library.
-Verify before finishing: run the server, curl /api/books, confirm valid JSON with correct status
-and headers, then stop the server.
+Verify before finishing: run the server, curl /api/books, confirm valid JSON with correct status,
+then stop the server.
