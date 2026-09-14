@@ -389,6 +389,9 @@ sys.exit(0 if {'Dune','1984'} <= t and len(d)==2 else 1)" <<<"$body" 2>/dev/null
     echo "$st|$bd|$hd|${why:-200/404, 2 books, Content-Type and Content-Length correct}"
 }
 
+# Retained but no longer called: task 3 became the books-server bugfix after
+# round 4 (see the legend below). Kept, with graders/averageSpeed.grader.ts, so
+# the average-speed task can be put back without rebuilding its grader.
 probe_avgspeed() {                    # 48 on valid input, 400 when hours=0
     local port="$1" ok bad okcode badcode
     ok="$(curl -s -m 3 "http://127.0.0.1:$port/api/average-speed?distance=240&hours=5")"

@@ -683,3 +683,126 @@ and knowledge gap, not an ESM packaging rule the guard can block. §10.1 argued
 Granite stays because its round-4 failures were harness artefacts. If it goes
 0/3 on `books.headers` in round 3', that is a real result and the argument for
 keeping it does not cover it. That is the point of running the round.
+
+## 12. Runbook for round 3'
+
+Commands in order, with what each is for and what to do if it fails. The full
+reasoning is in `models-round3prime.conf`; this is the operating sequence.
+
+**0. Is anything already running?** A round holds `coding-bench/.bench-lock/`
+and occupies the whole GPU. Do not start a second one, and do not kill
+`llama-server.exe` if a run is live.
+
+```bash
+ssh benchlaptop 'cat /d/llama.cpp/coding-bench/.bench-lock/info 2>/dev/null; tasklist //FI "IMAGENAME eq llama-server.exe"'
+```
+
+**1. Put this branch on the laptop.** Everything below is on
+`claude/benchmark-results-analysis-11bzu4`, seven commits ahead of `master`.
+The laptop is on `master`, so without this step every script runs the round-4
+code. Result directories are untracked, so the checkout will not disturb them.
+
+```bash
+ssh benchlaptop 'cd /d/llama.cpp && git fetch origin && git checkout claude/benchmark-results-analysis-11bzu4 && git log --oneline -1'
+```
+
+Expect the last line to name the runbook commit.
+
+**2. Prove the new grading code works on that host.** Round 3' rewrote the
+task-1/2 verdicts into an algo/pkg split and replaced task 3 with a three-part
+books-server grader. This synthesises the deliverables and asserts the verdicts
+— no GPU, no model, well under a minute.
+
+```bash
+ssh benchlaptop 'cd /d/llama.cpp/coding-bench && ./selftest-grader.sh'
+```
+
+Expect `ALL CHECKS PASSED`. A mismatch prints a diff and the full `grades.tsv`;
+fix that before spending a night on it. If it reports the candidate ports are
+busy, free them — that refusal is correct behaviour, not a bug.
+
+**3. Smoke the models.** One task, one repeat, short caps; roughly 20 minutes.
+This settles the question that gates the whole round.
+
+```bash
+ssh benchlaptop 'cd /d/llama.cpp/coding-bench && ./smoke-round3prime.sh 2>&1 | tail -40'
+```
+
+**4. Read `PREFLIGHT.txt` — this is the decision point.**
+
+```bash
+ssh benchlaptop 'cat /d/llama.cpp/coding-bench/smoke-*/PREFLIGHT.txt'
+```
+
+- `VibeThinker tool_calls=OK` — the template attempt worked. Go to 5.
+- `tool_calls=FAIL` with `<think>`-wrapped prose in the sample — add
+  `--reasoning-format deepseek` to its `server_args` in
+  `models-round3prime.conf` and repeat step 3.
+- `tool_calls=FAIL` otherwise — the one attempt `round3-recommendation.md:415`
+  granted is spent. Drop its line from the roster and run the round with
+  Granite and Spark.
+
+Also check, in the same smoke run: every model reports a **numeric** decode rate
+in `SUMMARY.txt` (the round-3 defect that put a model on a third of its peers'
+budget), and — in the transcripts — that a model which hits the new ESM write
+block **moves on rather than re-issuing the same write**. 13 of 13 blocks in
+rounds 1-4 were followed by a different action, but those were bash commands,
+not writes. A model looping there means the block message is wrong and must be
+fixed before the real round.
+
+**5. Launch the round.** It must outlive the SSH session, so it goes in as a
+scheduled task, not `nohup`. The `/ST is earlier than current time` warning at
+create time is expected and harmless.
+
+```bash
+ssh benchlaptop 'schtasks //create //tn BenchRun3P //sc once //st 00:00 //f //tr "\"C:\Program Files\Git\bin\bash.exe\" -lc \"cd /d/llama.cpp/coding-bench && export BENCH_DEADLINE=2026-09-15T07:00 && ./round3prime.sh > round3prime.log 2>&1\""
+schtasks //run //tn BenchRun3P'
+```
+
+`BENCH_DEADLINE` is **mandatory** — `round3prime.sh` refuses to start without it
+— because at `OVERHEAD_FACTOR=1.9` the deadline guard is the only thing bounding
+the round. Use the `T` form (`2026-09-15T07:00`): it parses the same as a spaced
+date and needs no quoting inside the nested `schtasks` command string. Set it to
+the real hand-back time.
+
+**Sizing.** 12.0h worst case, ~10h expected (round 4's actual/worst was 0.83),
+plus roughly 45 minutes of per-model probes and VibeThinker's first download
+(~3.3 GB). For an 07:00 deadline, start by **19:00** to cover the worst case, or
+by 20:00 for the expected one. If the deadline is tighter the guard trims from
+the end of the roster — Spark, deliberately, as the best-characterised model and
+so the cheapest to lose.
+
+**6. Poll.**
+
+```bash
+ssh benchlaptop 'tail -20 /d/llama.cpp/coding-bench/round3prime.log'
+```
+
+**7. Afterwards.** Grading runs automatically at the end of
+`run-filter-bench.sh`; if it reports failure, run `./grade-run.sh <run-dir>` by
+hand once the ports are free. Then clean up the task and fetch the results —
+read-only and safe during a live run:
+
+```bash
+ssh benchlaptop 'schtasks //delete //tn BenchRun3P //f'
+ssh benchlaptop 'cd /d/llama.cpp/coding-bench && tar czf - --warning=no-file-changed bench-filter-<ts>' | tar xzf - -C .
+```
+
+Read `SPLIT.txt` first (algorithm vs packaging per model), then `STABILITY.txt`
+(do not rank on anything flagged unstable), then `GRADES.txt`.
+
+### 12.1 What this round is predicted to show
+
+Recorded now so the result can be checked against the reasoning rather than
+fitted to it.
+
+- **VibeThinker** either calls tools or it does not. If the template works, its
+  coding ability gets measured for the first time; three rounds of failures so
+  far say nothing about it.
+- **Granite** should improve markedly on packaging: replaying the new guard over
+  round 4 catches 6 of its 12 deliverables at write time, including 4 of its 5
+  scaffolding deaths. If its ALGO and PKG columns converge, §10.1 was right.
+- **`books.headers` is the one to watch.** Round 4's spontaneous
+  `Content-Length` rates were Spark 5/8, Granite **0/8**. If Granite goes 0/3
+  there, that is a thoroughness gap no harness change reaches, and the argument
+  for keeping it does not cover it.
