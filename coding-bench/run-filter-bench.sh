@@ -14,8 +14,9 @@
 #             T7  rate limiter      — Python server + TS module + stateful
 #                                     sliding window + real curl verification.
 #                                     The "can it actually build something" task.
-#             T12 average speed     — simplest full build, plus an embedded
-#                                     prompt-injection attempt to resist.
+#             T12 average speed     — simplest full build. Carried an embedded
+#                                     prompt-injection attempt until round 4;
+#                                     dropped, every model resisted it 4/4.
 #
 # Budget:   7 models x 3 tasks x 15 min cap = 5.25 h worst case, ~2-3 h typical.
 #
@@ -115,7 +116,7 @@ SERVER_START_TIMEOUT=1800   # seconds to wait for download + model load + /healt
 # so spend the saving there instead — 12000 barely touches real work and nearly
 # halves every wall-clock cap.
 TOKEN_BUDGET="${BENCH_TOKEN_BUDGET:-12000}"
-OVERHEAD_FACTOR="${BENCH_OVERHEAD:-1.35}"  # wall clock = decode time x this.
+OVERHEAD_FACTOR="${BENCH_OVERHEAD:-1.9}"   # wall clock = decode time x this.
                             # Was 2.5, justified by "decode is 35-55% of a real
                             # run". Round 3's own server logs disprove that:
                             # summing every prompt-eval and eval line, the GPU is
@@ -125,9 +126,27 @@ OVERHEAD_FACTOR="${BENCH_OVERHEAD:-1.35}"  # wall clock = decode time x this.
                             # buying overhead headroom, it was silently funding
                             # 1.1-1.4x more tokens than TOKEN_BUDGET claims:
                             # models generated 13.7k-16.6k against a nominal
-                            # 12000. Prefill is the real addition (11-16% of
-                            # server time for four of five models), so decode
-                            # time x ~1.2 is the honest figure; 1.35 adds slack.
+                            # 12000. That reasoning set this to 1.35.
+                            #
+                            # 2026-09-14 (round 4, bench-filter-20260913-141131):
+                            # 1.35 is too low, measured END TO END rather than
+                            # inferred from server logs. Per cell, wall clock
+                            # divided by (output_tokens / measured depth rate):
+                            #   Granite  median 1.75x  (min 1.16 max 1.92)
+                            #   Nanbeige median 1.57x  (min 1.06 max 2.47)
+                            #   Spark    median 1.52x  (min 1.04 max 2.39)
+                            # 19 of 36 cells hit the wall clock, and they finished
+                            # on ~8.5k-10k generated tokens, not the nominal
+                            # 12000. The GPU-busy figure is not wrong; it simply
+                            # does not bound this ratio, because DECODE_ONLY
+                            # prices only TOKEN_BUDGET decode tokens while the
+                            # real run also prefills a window that grows every
+                            # turn (and re-prefills it after each compaction).
+                            # The overhead is worst in exactly the cells that
+                            # time out: many short tool calls, each paying a full
+                            # prefill. 1.9x covers the observed median with slack
+                            # and still leaves the wall clock able to catch a
+                            # degenerate loop.
 RUN_TIMEOUT_MIN="${BENCH_MIN_RUN_SEC:-900}"   # never give less than round 1 gave;
                             # overridable so a smoke test can use a short cap
 RUN_TIMEOUT_MAX="${BENCH_MAX_RUN_SEC:-3600}"  # hard ceiling per run (60 min).

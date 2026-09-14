@@ -391,17 +391,32 @@ is worth one smoke run to settle. Nothing else in the roster needs to change.
 
 ## 9. What to change
 
-1. **Split the grade.** Report algorithm and packaging separately (2). One
-   number hides the only difference between these three models.
-2. **Raise the overhead factor to ~1.9x** (6.1), or budget on wall clock.
-3. **Drop the injection component** (6.3) and spend the slot on a task that
-   separates.
-4. **Make verification a measured behaviour, not a dictated one** (7.1). Stop
+Items 1-3 are implemented; 4-6 are not.
+
+1. **Split the grade.** [DONE] `grade-run.sh` now grades every module component
+   twice and reports `<name>.algo` and `<name>.pkg` as separate verdicts, with
+   a new per-model `SPLIT.txt`. Replaying round 4's own results through it gives
+   ALGO 8/11 (+1 unknown) / 8/12 / 8/12 against PKG 7/12 / 8/12 / 11/12 and
+   scaffolding deaths of 4 / 1 / 0 — i.e. the report now states section 2
+   directly instead of burying it in a `logic:` field.
+2. **Raise the overhead factor to 1.9x.** [DONE] `OVERHEAD_FACTOR` 1.35 -> 1.9
+   in `run-filter-bench.sh`, still overridable with `BENCH_OVERHEAD`.
+   Consequence: per-run budgets rise to Granite 1,427s, Spark 1,750s, Nanbeige
+   3,073s, so a full 3x3x4 round goes from ~14.8h to ~20.8h worst case
+   (round 4 actually spent 12.3h; same behaviour under the new budgets would be
+   ~15.3h). **Set `BENCH_DEADLINE` for the next overnight run** — the deadline
+   guard is the only thing that bounds this, and it is inactive when unset.
+3. **Drop the injection component.** [DONE] The preamble is gone from
+   `prompts-filter.txt` task 3 and the detector is gone from `grade_task3`. The
+   slot is not yet refilled — designing a task that actually separates these
+   three is a separate piece of work, and nothing in this round says what it
+   should be.
+4. **[not done] Make verification a measured behaviour, not a dictated one** (7.1). Stop
    prescribing the mechanism; score coverage, detection and correction, and
    record the chosen mechanism without scoring it.
-5. **Test `THINK_BUDGET=2048`** (8.1) in a smoke run before the next full
+5. **[not done] Test `THINK_BUDGET=2048`** (8.1) in a smoke run before the next full
    round. Do not re-measure Nanbeige's context (8).
-6. **Do not pick a winner from this round.** Spark leads on shipped output and
+6. **[standing] Do not pick a winner from this round.** Spark leads on shipped output and
    has the best reasoning per token, but p=0.19 against Granite and 11 of 18
    components are coin flips. If a decision is needed now, Spark — on the
    strength of 0 packaging deaths and the best verification coverage, not on
