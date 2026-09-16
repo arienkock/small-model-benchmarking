@@ -1,15 +1,28 @@
 # SmallCTL agent harness, containerised for use against our llama-server models.
 #
 # The harness is an OpenAI-compatible client, so the container needs no GPU and
-# no model weights — it talks to llama-server over HTTP. Point SMALLCTL_ENDPOINT
-# at that server (see run.sh).
+# no model weights — it talks to llama-server over HTTP.
+#
+# TOOLCHAIN PARITY WITH pi. When this image is used for a harness comparison,
+# the two sandboxes must offer the model the same tools, or the benchmark
+# measures the image instead of the harness. pi's sandbox
+# (coding-bench-agent:latest) is: node v24.21.0, python 3.11, curl, and root.
+# This image matches that. Two of the three filter tasks tell the model to
+# verify with `node <file>.ts`, so a missing node does not read as a failed
+# task — it reads as a stalled harness.
 FROM python:3.12-slim
 
-# git/grep/curl are shelled out to by smallctl's tools; ssh is used by its
-# remote-diagnosis tools and is harmless to have present.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        git ca-certificates curl openssh-client \
+        git ca-certificates curl xz-utils openssh-client \
     && rm -rf /var/lib/apt/lists/*
+
+# Node pinned to the exact version in pi's sandbox.
+ARG NODE_VERSION=24.21.0
+RUN curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" \
+      -o /tmp/node.tar.xz \
+    && tar -xJf /tmp/node.tar.xz -C /usr/local --strip-components=1 \
+    && rm /tmp/node.tar.xz \
+    && node --version
 
 ARG SMALLCTL_REPO=https://github.com/lowspeclabs/SmallCTL
 # Pinned so a rebuild cannot silently change harness behaviour mid-benchmark.
@@ -23,21 +36,14 @@ RUN git clone "$SMALLCTL_REPO" smallctl \
 
 # A coding agent needs a test runner in the image. Without it the model does the
 # right thing -- runs pytest, then tries `pip install pytest` -- and that second
-# step fails as non-root, so the run stalls with the fix applied but unverified.
+# step fails, so the run stalls with the fix applied but unverified.
 RUN pip install --no-cache-dir pytest
 
-# Run as a non-root user whose uid matches the host's default so files written
-# into the mounted workspace stay editable outside the container.
-ARG UID=1000
-ARG GID=1000
-RUN groupadd -g "$GID" agent 2>/dev/null || true \
-    && useradd -m -u "$UID" -g "$GID" agent 2>/dev/null || true \
-    && mkdir -p /work && chown "$UID:$GID" /work
-
-USER $UID:$GID
+# root, like pi's sandbox. As a non-root uid the model cannot install anything,
+# which is itself a behavioural difference between the two harnesses.
+RUN mkdir -p /work
 WORKDIR /work
 
-# Defaults; every one is overridable with -e at run time.
 ENV SMALLCTL_PROVIDER_PROFILE=llamacpp \
     SMALLCTL_API_KEY=local-dev-key \
     SMALLCTL_CHAT_ENDPOINT=/chat/completions \
