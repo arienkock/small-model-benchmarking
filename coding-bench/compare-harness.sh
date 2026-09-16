@@ -78,24 +78,27 @@ awk -F'\t' '
     FNR==NR { pa[$1 SUBSEP $2]=$3; pp[$1 SUBSEP $2]=$4; po[$1 SUBSEP $2]=$5; seen[$1 SUBSEP $2]=1; next }
     { sa[$1 SUBSEP $2]=$3; sp[$1 SUBSEP $2]=$4; so[$1 SUBSEP $2]=$5; seen[$1 SUBSEP $2]=1 }
     END {
-        printf "%-26s %-5s | %-10s %-10s | %-10s %-10s\n", "MODEL", "TASK", "pi algo", "pi pkg", "sctl algo", "sctl pkg"
-        for (i=0;i<92;i++) printf "-"; printf "\n"
+        printf "%-26s %-5s | %-9s %-9s %-9s | %-9s %-9s %-9s\n", "MODEL", "TASK", "pi algo", "pi pkg", "pi other", "sctl algo", "sctl pkg", "sctl other"
+        for (i=0;i<110;i++) printf "-"; printf "\n"
         n=0; for (k in seen) keys[n++]=k
         for (i=0;i<n;i++) for (j=i+1;j<n;j++) if (keys[j]<keys[i]) { t=keys[i]; keys[i]=keys[j]; keys[j]=t }
         for (i=0;i<n;i++) {
             k=keys[i]; split(k, a, SUBSEP); m=a[1]; t=a[2]
-            # Task 3 has no algo/pkg split (books.status/body/headers); show those
-            # counts in the algo column rather than printing a misleading 0/0.
-            pav = (pa[k]=="0/0" || pa[k]=="") ? (po[k]=="" ? "-" : po[k]) : pa[k]
-            sav = (sa[k]=="0/0" || sa[k]=="") ? (so[k]=="" ? "-" : so[k]) : sa[k]
+            # "other" holds every component with no algo/pkg split: the server
+            # check in task 2, and all of task 3. Folding it into algo hid a
+            # PASSING rate-limited server behind an algo count of 0/1.
+            pav = (pa[k]=="0/0" || pa[k]=="") ? "-" : pa[k]
             ppv = (pp[k]=="0/0" || pp[k]=="") ? "-" : pp[k]
+            pov = (po[k]=="0/0" || po[k]=="") ? "-" : po[k]
+            sav = (sa[k]=="0/0" || sa[k]=="") ? "-" : sa[k]
             spv = (sp[k]=="0/0" || sp[k]=="") ? "-" : sp[k]
-            printf "%-26s %-5s | %-10s %-10s | %-10s %-10s\n", m, t, pav, ppv, sav, spv
+            sov = (so[k]=="0/0" || so[k]=="") ? "-" : so[k]
+            printf "%-26s %-5s | %-9s %-9s %-9s | %-9s %-9s %-9s\n", m, t, pav, ppv, pov, sav, spv, sov
         }
     }' "$PI_T" "$SC_T"
 
 echo
-echo "task 3 has no algo/pkg split; its status/body/headers count is shown in the algo column."
+echo "other = components with no algo/pkg split: the task 2 server check, and all of task 3."
 echo "algo = the exported function with the model's own self-test stripped: can it write the code?"
 echo "pkg  = the file exactly as shipped: does it load and run?"
 echo "A model with algo:PASS pkg:FAIL wrote working logic and broke it with its own scaffolding."
