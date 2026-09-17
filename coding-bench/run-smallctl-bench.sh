@@ -24,7 +24,7 @@
 #                Spark 1757s) so both arms get an identical clock. Re-measuring
 #                would introduce a second difference and cost ~15 min of GPU.
 #   context      24576, NOT the pi arm's 16384 -- see CONTEXT PARITY below.
-#   reasoning    1024 server-side, NOT the pi arm's 4096 -- see REASONING BUDGET.
+#   reasoning    512 server-side, NOT the pi arm's 4096 -- see REASONING BUDGET.
 #   sampling     temp 0.7 / top_p 0.95 / top_k 40, seed unset.
 #   toolchain    the smallctl image carries node v24.21.0 + python3 + curl, to
 #                match pi's coding-bench-agent sandbox. Two of the three tasks
@@ -80,7 +80,20 @@
 # disappeared at 512. A reasoning budget the harness cannot consume does not
 # measure the harness; it guarantees an empty cell.
 #
-# At 1024 the model thinks briefly and keeps ~4k of allowance for the answer.
+# 1024 IS NOT LOW ENOUGH EITHER. It carried Granite through tasks 1 and 2, but
+# Spark stalled on every cell: 12 turns, 433 tokens generated, and the model
+# output log classified ALL 433 as thinking tokens with not one content token.
+# The 1024 budget was never even reached -- the stream ends inside the think
+# block. Measured on task 1, same prompt, same everything but the budget:
+#     budget 1024 -> 0 content tokens, no file, reasoning_only_stream_stall
+#     budget  512 -> 460 model tokens vs 443 thinking (17 content), and
+#                    debounce.ts written with 4 file_write + 8 file_read calls
+# This is budget sensitivity, not incapability: Spark drives SmallCTL fine at
+# 512. Lower is safer for every model here, so the whole arm runs at 512 rather
+# than per-model budgets, which would make the models incomparable to each
+# other.
+#
+# At 512 the model thinks briefly and keeps most of the allowance for the answer.
 # Do NOT "fix" this with --reasoning-budget 0: that makes the model leak a raw
 # </think> into visible text ("PONG</think>PONG").
 #
@@ -134,9 +147,16 @@ HOST=0.0.0.0
 API_KEY="sk-bench"
 TEMPERATURE=0.7; TOP_P=0.95; TOP_K=40
 CTX=24576
-THINK=1024
+THINK=512
 RESERVE_COMPLETION=5120
-REPEATS="${BENCH_REPEATS:-2}"
+REPEATS="${BENCH_REPEATS:-1}"
+# Repeats are numbered from here, so a second pass can be run separately and
+# merged: BENCH_REP_START=2 names its workspaces NN-r2-<model>, which is what
+# grade-run.sh already expects for a second repeat.
+REP_START="${BENCH_REP_START:-1}"
+# Restrict the roster to a comma-separated list of aliases. Used to re-run only
+# the models that are worth more cells.
+ONLY_MODELS="${BENCH_MODELS:-}"
 
 # Hard hand-back time. A cell that cannot finish before it is worse than no
 # cell: it burns clock and leaves a torn workspace. Same guard as the pi arm.
@@ -240,9 +260,22 @@ start_server() {
     return 1
 }
 
-TOTAL=$(( ${#MODELS[@]} * ${#PROMPTS[@]} * REPEATS ))
+# Filter the roster BEFORE counting cells, or TOTAL and the deadline guard both
+# reason about models that are not going to run.
+if [[ -n "$ONLY_MODELS" ]]; then
+    KEEP=()
+    for spec in "${MODELS[@]}"; do
+        a="${spec%%|*}"
+        case ",$ONLY_MODELS," in *",$a,"*) KEEP+=("$spec") ;; esac
+    done
+    MODELS=("${KEEP[@]}")
+    (( ${#MODELS[@]} > 0 )) || { log "!! BENCH_MODELS matched nothing — aborting"; exit 2; }
+    log "roster restricted to: $ONLY_MODELS (${#MODELS[@]} model(s))"
+fi
+
 IDX=0
-log "=== SmallCTL arm: ${#MODELS[@]} models x ${#PROMPTS[@]} tasks x $REPEATS reps = $TOTAL cells ==="
+TOTAL=$(( ${#MODELS[@]} * ${#PROMPTS[@]} * REPEATS ))
+log "=== SmallCTL arm: ${#MODELS[@]} models x ${#PROMPTS[@]} tasks x $REPEATS reps (from r$REP_START) = $TOTAL cells ==="
 [[ -n "$DEADLINE_EPOCH" ]] && log "deadline: $DEADLINE"
 
 for mi in "${!MODELS[@]}"; do
@@ -250,7 +283,7 @@ for mi in "${!MODELS[@]}"; do
     log "=== $ALIAS (budget ${BUDGET}s/cell) ==="
     start_server "$REPO" "$FILE" "$ALIAS" || { echo "$ALIAS: server failed" >> "$OUT/SKIPPED.txt"; continue; }
 
-    for REP in $(seq 1 "$REPEATS"); do
+    for REP in $(seq "$REP_START" $(( REP_START + REPEATS - 1 ))); do
         NUM=0
         for PROMPT in "${PROMPTS[@]}"; do
             ((NUM+=1)); ((IDX+=1))
