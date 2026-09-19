@@ -31,78 +31,20 @@
  */
 
 import { spawn, type ChildProcess } from "node:child_process";
-import { existsSync, mkdirSync, openSync, readdirSync, readFileSync } from "node:fs";
-import { homedir, tmpdir } from "node:os";
+import { existsSync, mkdirSync, openSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
 import { createBashToolDefinition, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import {
+	loadRoster,
+	type ModelSpec,
+	PLUGIN_DIR,
+	type Roster,
+	type RosterDefaults,
+	weightsSource,
+} from "../lib/roster.ts";
 
 const PROVIDER = "small-local";
-const PLUGIN_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-
-// --------------------------------------------------------------- roster ---
-
-export interface ModelSpec {
-	alias: string;
-	/** Hugging Face repo id, or the literal "local" (then `file` is a path). */
-	repo: string;
-	file: string;
-	/**
-	 * A copy of the weights already on the serving machine. When it resolves to
-	 * an existing file it is used with -m and nothing is downloaded; otherwise
-	 * the model falls back to repo/file. May contain `*` in a path segment and
-	 * may start with `~` — the Hugging Face cache puts the weights behind a
-	 * snapshot hash that changes whenever the repo is re-fetched.
-	 */
-	localFile?: string;
-	notes?: string;
-	default?: boolean;
-	/** Template filename under ../templates, or an absolute path. */
-	chatTemplate?: string | null;
-	/** Extra llama-server flags for this model only. */
-	serverArgs?: string[];
-	/** Per-model overrides of the roster defaults. */
-	ctx?: number;
-	temp?: number;
-	topP?: number;
-	topK?: number;
-	reasoningBudget?: number;
-}
-
-interface RosterDefaults {
-	port: number;
-	apiKey: string;
-	host: string;
-	ctx: number;
-	temp: number;
-	topP: number;
-	topK: number;
-	reasoningBudget: number;
-	ngl: number;
-	serverArgs: string[];
-	/**
-	 * Where llama.cpp keeps downloaded weights. MUST be a Windows path on the
-	 * bench laptop — this is passed in the environment, and MSYS does not
-	 * translate environment variables the way it translates arguments. Kept in
-	 * step with ../../llama-cache.env, which is the source of truth for the
-	 * shell side; $LLAMA_CACHE in the environment still wins over both.
-	 */
-	llamaCache?: string;
-}
-
-interface Roster {
-	defaults: RosterDefaults;
-	models: ModelSpec[];
-}
-
-export function loadRoster(): Roster {
-	const path = process.env.PI_SMALL_ROSTER ?? join(PLUGIN_DIR, "roster.json");
-	const raw = JSON.parse(readFileSync(path, "utf8")) as Roster;
-	if (!Array.isArray(raw.models) || raw.models.length === 0) {
-		throw new Error(`roster ${path} has no models`);
-	}
-	return raw;
-}
 
 // ---------------------------------------------------------------- state ---
 
@@ -296,46 +238,6 @@ function resolveServerBinary(): string {
 	return "llama-server";
 }
 
-/**
- * Resolve a path that may start with `~` and may contain `*` in any segment.
- * Returns the matching file, or null if nothing matches. When several match,
- * the last in sort order wins, so the choice is at least deterministic.
- */
-export function resolveLocalPath(pattern: string): string | null {
-	let p = pattern.replace(/\\/g, "/");
-	if (p === "~" || p.startsWith("~/")) p = join(homedir(), p.slice(1)).replace(/\\/g, "/");
-	if (!p.includes("*")) return existsSync(p) ? p : null;
-
-	const segments = p.split("/");
-	// An absolute POSIX path starts with an empty segment; a Windows path starts
-	// with the drive. Either way the first segment seeds the search.
-	let candidates = [segments[0] === "" ? "/" : segments[0]];
-	for (const segment of segments.slice(1)) {
-		const next: string[] = [];
-		if (segment.includes("*")) {
-			const re = new RegExp(`^${segment.split("*").map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join(".*")}$`);
-			for (const base of candidates) {
-				let entries: string[];
-				try {
-					entries = readdirSync(base);
-				} catch {
-					continue;
-				}
-				for (const entry of entries) if (re.test(entry)) next.push(join(base, entry));
-			}
-		} else {
-			for (const base of candidates) {
-				const joined = join(base, segment);
-				if (existsSync(joined)) next.push(joined);
-			}
-		}
-		if (next.length === 0) return null;
-		candidates = next;
-	}
-	candidates.sort();
-	return candidates[candidates.length - 1] ?? null;
-}
-
 function resolveTemplate(spec: ModelSpec): string | null {
 	if (!spec.chatTemplate) return null;
 	if (isAbsolute(spec.chatTemplate)) return spec.chatTemplate;
@@ -347,7 +249,7 @@ function buildServerArgs(spec: ModelSpec, d: RosterDefaults, ctx: number, state:
 	// Prefer weights already on this machine. llama-server keeps its own cache,
 	// so -hf would re-download gigabytes that are sitting in the Hugging Face
 	// cache from earlier benchmark rounds.
-	const local = spec.localFile ? resolveLocalPath(spec.localFile) : spec.repo === "local" ? resolveLocalPath(spec.file) : null;
+	const local = weightsSource(spec).local;
 	if (local) {
 		args.push("-m", local);
 	} else if (spec.repo === "local") {
@@ -581,10 +483,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// ------------------------------------------------------------- status --
-	const weightsOf = (spec: ModelSpec): string => {
-		const local = spec.localFile ? resolveLocalPath(spec.localFile) : spec.repo === "local" ? resolveLocalPath(spec.file) : null;
-		return local ?? `${spec.repo}/${spec.file} (llama-server downloads it on first use)`;
-	};
+	const weightsOf = (spec: ModelSpec): string => weightsSource(spec).description;
 
 	const probeLine = (name: string, r?: ProbeResult) =>
 		r === undefined ? `  ${name}: not run` : `  ${name}: ${r.ok ? "OK" : "FAIL"} — ${r.detail}`;
