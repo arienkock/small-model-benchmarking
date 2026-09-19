@@ -6,3 +6,8 @@
 *.jinja   text eol=lf
 *.ts      text eol=lf
 *.py      text eol=lf
+
+# pi-small's entry point has no extension but is a bash script, and its stub
+# server is ESM JavaScript. Same CRLF reasoning as above.
+pi-small/bin/pi-small text eol=lf
+*.mjs     text eol=lf

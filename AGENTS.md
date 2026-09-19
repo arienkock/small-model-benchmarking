@@ -60,3 +60,15 @@ ssh benchlaptop 'cd /d/llama.cpp && git config receive.denyCurrentBranch updateI
 ```
 
 `origin` (GitHub) stays the backup remote.
+
+## pi-small — the small-model agent scaffold
+
+`pi-small/` is a separate thing from the benchmark: a **pi plugin** (plus a thin entry point)
+that gives the local models an agent session of their own, instead of a graded benchmark run.
+pi stays a stock npm install; the plugin owns the model, the llama-server process, the context
+size, the temperature and the tool list. It needs `pi` on PATH on the serving machine, and it
+starts `llama-server` itself — see `pi-small/README.md`.
+
+It will adopt a llama-server already serving the model it wants, and refuses to kill one serving
+anything else, so it is safe to have around while a bench run owns the GPU. It still wants the
+whole card once it does start one, so the usual check applies first.

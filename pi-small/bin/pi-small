@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+#
+# pi-small — the entry point for the small-model agent scaffold.
+#
+# Starts pi with nothing of its own: no built-in tools, no discovered
+# extensions, no skills, no context files, no prompt templates, no themes, and a
+# system prompt stripped to the bone. The only thing loaded is the pi-small
+# plugin next to this script, which then supplies the model, the server, the
+# sampler settings and the one tool (bash) the session gets.
+#
+# Everything here is a pi CLI concern. Anything about WHICH model or HOW it is
+# served belongs in the plugin, not in this file.
+#
+# Env:
+#   PI_SMALL_MODEL          roster alias to start with (default: roster's default)
+#   PI_SMALL_ROSTER         path to roster.json
+#   PI_SMALL_SYSTEM_PROMPT  override the (near-empty) system prompt
+#   PI_SMALL_PI_BIN         pi executable (default: pi on PATH)
+#   PI_SMALL_LLAMA_BIN      llama-server executable (default: ../llama-server[.exe])
+#   PI_SMALL_PORT           port to serve on (default: roster's, 8123)
+#
+set -euo pipefail
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROSTER="${PI_SMALL_ROSTER:-$HERE/roster.json}"
+PI_BIN="${PI_SMALL_PI_BIN:-pi}"
+
+[[ -f "$ROSTER" ]] || { echo "pi-small: roster not found: $ROSTER" >&2; exit 1; }
+command -v "$PI_BIN" >/dev/null 2>&1 || { echo "pi-small: '$PI_BIN' not on PATH (npm i -g @earendil-works/pi-coding-agent)" >&2; exit 1; }
+
+# The startup model has to be named on the command line for pi to resolve a
+# provider/model pair before the session opens; the plugin picks the same one.
+ALIAS="${PI_SMALL_MODEL:-$(node -e '
+  const j = JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8"));
+  const m = j.models.find((x) => x.default) || j.models[0];
+  process.stdout.write(m.alias);
+' "$ROSTER")}"
+
+# pi replaces its default system prompt only when the replacement is non-empty —
+# an empty string falls through to the full coding-agent prompt. A single space
+# is the emptiest prompt that actually replaces it. pi still appends one line,
+# "Current working directory: <cwd>", which cannot be suppressed from outside.
+SYSTEM_PROMPT="${PI_SMALL_SYSTEM_PROMPT:- }"
+
+exec "$PI_BIN" \
+	--no-extensions \
+	--no-skills \
+	--no-prompt-templates \
+	--no-themes \
+	--no-context-files \
+	--no-builtin-tools \
+	--system-prompt "$SYSTEM_PROMPT" \
+	-e "$HERE" \
+	--provider small-local \
+	--model "small-local/$ALIAS" \
+	"$@"

@@ -1,0 +1,24 @@
+{
+	"name": "pi-small",
+	"version": "0.1.0",
+	"private": true,
+	"description": "Pi plugin that owns the local llama-server stack for the small-model agent scaffold",
+	"keywords": ["pi-package"],
+	"type": "module",
+	"pi": {
+		"extensions": ["./extensions"]
+	},
+	"scripts": {
+		"test": "node test/plugin-test.ts",
+		"typecheck": "tsc --noEmit -p tsconfig.json"
+	},
+	"peerDependencies": {
+		"@earendil-works/pi-coding-agent": "*",
+		"typebox": "*"
+	},
+	"devDependencies": {
+		"@earendil-works/pi-coding-agent": "*",
+		"@types/node": "^22.19.19",
+		"typescript": "^5.9.3"
+	}
+}
