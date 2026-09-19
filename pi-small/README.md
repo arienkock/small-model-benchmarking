@@ -226,8 +226,16 @@ the request carried, so `/sm-temp` is visible in the answer itself, and a
 message starting with `!` comes back as a `bash` tool call.
 
     npm install                                     # dev deps for tests/typecheck
+    npm run check                                   # resolve the roster, start nothing
     npm test                                        # drives the plugin end to end
     npm run typecheck
+
+`npm run check` is the pi-small equivalent of `run-filter-bench.sh
+--check-models`: for every model it says whether the weights are on this machine
+and where, or whether a session would fall back to `-hf` and download them. It
+uses the plugin's own resolver, so it cannot drift from what a real session does.
+Run it on the serving machine — on any other box everything reads DOWNLOAD,
+which is correct rather than a failure.
 
 A live session against the stub:
 

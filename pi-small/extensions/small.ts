@@ -42,7 +42,7 @@ const PLUGIN_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
 // --------------------------------------------------------------- roster ---
 
-interface ModelSpec {
+export interface ModelSpec {
 	alias: string;
 	/** Hugging Face repo id, or the literal "local" (then `file` is a path). */
 	repo: string;
@@ -95,7 +95,7 @@ interface Roster {
 	models: ModelSpec[];
 }
 
-function loadRoster(): Roster {
+export function loadRoster(): Roster {
 	const path = process.env.PI_SMALL_ROSTER ?? join(PLUGIN_DIR, "roster.json");
 	const raw = JSON.parse(readFileSync(path, "utf8")) as Roster;
 	if (!Array.isArray(raw.models) || raw.models.length === 0) {
@@ -301,7 +301,7 @@ function resolveServerBinary(): string {
  * Returns the matching file, or null if nothing matches. When several match,
  * the last in sort order wins, so the choice is at least deterministic.
  */
-function resolveLocalPath(pattern: string): string | null {
+export function resolveLocalPath(pattern: string): string | null {
 	let p = pattern.replace(/\\/g, "/");
 	if (p === "~" || p.startsWith("~/")) p = join(homedir(), p.slice(1)).replace(/\\/g, "/");
 	if (!p.includes("*")) return existsSync(p) ? p : null;
