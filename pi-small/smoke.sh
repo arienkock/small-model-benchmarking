@@ -8,13 +8,24 @@
 # executed, so a matching answer is proof of the whole path — server start,
 # template, tool_calls channel, bash execution, result round-trip.
 #
-# Long enough to outlive an SSH session, so launch it through schtasks:
+#   ./smoke.sh              the uncontained entry point (./bin/pi-small)
+#   ./smoke.sh --docker      the containerised one (./pi-small-docker.sh)
+#
+# Both drive the identical prompt and the identical check, which is the point:
+# the sandbox must not change what the scaffold does.
+#
+# Long enough to outlive an SSH session, so launch it through schtasks. Keep the
+# /tr string short -- it is capped at 261 characters, which is why this is a
+# script and not a command line:
 #
 #   schtasks //create //tn PiSmallSmoke //sc once //st 00:00 //f //tr \
-#     "\"C:\Program Files\Git\bin\bash.exe\" -lc \"cd /d/llama.cpp/pi-small && ./smoke.sh > smoke.log 2>&1\""
+#     "\"C:\Program Files\Git\bin\bash.exe\" -lc \"cd /d/llama.cpp/pi-small && ./smoke.sh --docker > smoke-docker.log 2>&1\""
 #   schtasks //run //tn PiSmallSmoke
 #
 set -uo pipefail
+
+DOCKER=0
+[[ "${1:-}" == "--docker" ]] && { DOCKER=1; shift; }
 
 PLUGIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export PI_SMALL_LOG_DIR="${PI_SMALL_LOG_DIR:-$PLUGIN_DIR/.logs}"
@@ -26,6 +37,7 @@ NONCE="pismall-$(date +%s)-$RANDOM"
 echo "$NONCE" > "$WS/secret.txt"
 
 echo "=== pi-small smoke $(date) ==="
+echo "mode:      $( ((DOCKER)) && echo "container (pi-small-docker.sh)" || echo "uncontained (bin/pi-small)" )"
 echo "model:     ${PI_SMALL_MODEL:-<roster default>}"
 echo "workspace: $WS"
 echo "nonce:     $NONCE"
@@ -34,7 +46,13 @@ echo
 PROMPT="There is a file called secret.txt in the current directory. Use the bash tool to read it, then reply with its exact contents and nothing else."
 
 OUT="$WS/pi-output.txt"
-( cd "$WS" && "$PLUGIN_DIR/bin/pi-small" -p "$PROMPT" ) > "$OUT" 2>&1
+if ((DOCKER)); then
+	# --ws makes the smoke workspace the container's /workspace, so secret.txt
+	# is already in the model's working directory.
+	"$PLUGIN_DIR/pi-small-docker.sh" --ws "$WS" -- -p "$PROMPT" > "$OUT" 2>&1
+else
+	( cd "$WS" && "$PLUGIN_DIR/bin/pi-small" -p "$PROMPT" ) > "$OUT" 2>&1
+fi
 rc=$?
 
 echo "--- pi output -----------------------------------------------------------"
