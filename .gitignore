@@ -25,9 +25,9 @@ coding-bench/bench-filter-*/**/package-lock.json
 # pi-small runtime junk
 pi-small/.logs/
 pi-small/.smoke-ws/
-pi-small/smoke.log
+# every log the scripts produce: smoke.log, smoke-docker.log, build.log, ...
+pi-small/*.log
 
 # cache migration log (one-off, on the serving machine)
 cache-move.log
-pi-small/smoke-*.log
 pi-small/workspace/
