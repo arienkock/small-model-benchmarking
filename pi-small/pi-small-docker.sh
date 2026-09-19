@@ -88,7 +88,18 @@ towin() { cygpath -w "$1" 2>/dev/null || echo "$1"; }
 # Invoked through `bash` rather than directly: the entry point comes in over a
 # bind mount from a Windows filesystem, which has no execute bit to honour.
 
-exec env MSYS_NO_PATHCONV=1 docker run --rm -it \
+# -it only when there really is a terminal. Under schtasks, CI, or any pipe
+# there is not, and `docker run -it` fails outright with "the input device is
+# not a TTY" — so a one-shot `-- -p "..."` would break for the least obvious
+# reason. Without a TTY, stdin is /dev/null so pi gets EOF instead of blocking.
+TTY_ARGS=()
+if [[ -t 0 && -t 1 ]]; then
+	TTY_ARGS=(-it)
+else
+	exec < /dev/null
+fi
+
+exec env MSYS_NO_PATHCONV=1 docker run --rm ${TTY_ARGS[@]+"${TTY_ARGS[@]}"} \
 	--name "pi-small-$$" \
 	-v "$(towin "$WS"):/workspace" \
 	-v "$(towin "$HERE"):/opt/pi-small:ro" \
