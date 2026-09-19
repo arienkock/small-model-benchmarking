@@ -21,3 +21,8 @@ coding-bench/bench-coding-*/**/package-lock.json
 coding-bench/smoke-test/**/package-lock.json
 benchmark*/**/package-lock.json
 coding-bench/bench-filter-*/**/package-lock.json
+
+# pi-small runtime junk
+pi-small/.logs/
+pi-small/.smoke-ws/
+pi-small/smoke.log
