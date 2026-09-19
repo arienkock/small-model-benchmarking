@@ -31,8 +31,8 @@
  */
 
 import { spawn, type ChildProcess } from "node:child_process";
-import { existsSync, mkdirSync, openSync, readFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { existsSync, mkdirSync, openSync, readdirSync, readFileSync } from "node:fs";
+import { homedir, tmpdir } from "node:os";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createBashToolDefinition, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
@@ -47,6 +47,14 @@ interface ModelSpec {
 	/** Hugging Face repo id, or the literal "local" (then `file` is a path). */
 	repo: string;
 	file: string;
+	/**
+	 * A copy of the weights already on the serving machine. When it resolves to
+	 * an existing file it is used with -m and nothing is downloaded; otherwise
+	 * the model falls back to repo/file. May contain `*` in a path segment and
+	 * may start with `~` — the Hugging Face cache puts the weights behind a
+	 * snapshot hash that changes whenever the repo is re-fetched.
+	 */
+	localFile?: string;
 	notes?: string;
 	default?: boolean;
 	/** Template filename under ../templates, or an absolute path. */
@@ -280,6 +288,46 @@ function resolveServerBinary(): string {
 	return "llama-server";
 }
 
+/**
+ * Resolve a path that may start with `~` and may contain `*` in any segment.
+ * Returns the matching file, or null if nothing matches. When several match,
+ * the last in sort order wins, so the choice is at least deterministic.
+ */
+function resolveLocalPath(pattern: string): string | null {
+	let p = pattern.replace(/\\/g, "/");
+	if (p === "~" || p.startsWith("~/")) p = join(homedir(), p.slice(1)).replace(/\\/g, "/");
+	if (!p.includes("*")) return existsSync(p) ? p : null;
+
+	const segments = p.split("/");
+	// An absolute POSIX path starts with an empty segment; a Windows path starts
+	// with the drive. Either way the first segment seeds the search.
+	let candidates = [segments[0] === "" ? "/" : segments[0]];
+	for (const segment of segments.slice(1)) {
+		const next: string[] = [];
+		if (segment.includes("*")) {
+			const re = new RegExp(`^${segment.split("*").map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join(".*")}$`);
+			for (const base of candidates) {
+				let entries: string[];
+				try {
+					entries = readdirSync(base);
+				} catch {
+					continue;
+				}
+				for (const entry of entries) if (re.test(entry)) next.push(join(base, entry));
+			}
+		} else {
+			for (const base of candidates) {
+				const joined = join(base, segment);
+				if (existsSync(joined)) next.push(joined);
+			}
+		}
+		if (next.length === 0) return null;
+		candidates = next;
+	}
+	candidates.sort();
+	return candidates[candidates.length - 1] ?? null;
+}
+
 function resolveTemplate(spec: ModelSpec): string | null {
 	if (!spec.chatTemplate) return null;
 	if (isAbsolute(spec.chatTemplate)) return spec.chatTemplate;
@@ -288,8 +336,14 @@ function resolveTemplate(spec: ModelSpec): string | null {
 
 function buildServerArgs(spec: ModelSpec, d: RosterDefaults, ctx: number, state: ServerState): string[] {
 	const args: string[] = [];
-	if (spec.repo === "local") {
-		args.push("-m", spec.file);
+	// Prefer weights already on this machine. llama-server keeps its own cache,
+	// so -hf would re-download gigabytes that are sitting in the Hugging Face
+	// cache from earlier benchmark rounds.
+	const local = spec.localFile ? resolveLocalPath(spec.localFile) : spec.repo === "local" ? resolveLocalPath(spec.file) : null;
+	if (local) {
+		args.push("-m", local);
+	} else if (spec.repo === "local") {
+		throw new Error(`${spec.alias}: repo is "local" but no file matched ${spec.file}`);
 	} else {
 		args.push("-hf", spec.repo, "-hff", spec.file);
 	}
@@ -511,6 +565,11 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// ------------------------------------------------------------- status --
+	const weightsOf = (spec: ModelSpec): string => {
+		const local = spec.localFile ? resolveLocalPath(spec.localFile) : spec.repo === "local" ? resolveLocalPath(spec.file) : null;
+		return local ?? `${spec.repo}/${spec.file} (llama-server downloads it on first use)`;
+	};
+
 	const probeLine = (name: string, r?: ProbeResult) =>
 		r === undefined ? `  ${name}: not run` : `  ${name}: ${r.ok ? "OK" : "FAIL"} — ${r.detail}`;
 
@@ -520,6 +579,7 @@ export default function (pi: ExtensionAPI) {
 		const lines = [
 			`model:   ${s.spec.alias}`,
 			`server:  ${where} on ${d.host}:${d.port}`,
+			`weights: ${weightsOf(s.spec)}`,
 			`context: ${s.servedCtx}${s.servedCtx !== s.requestedCtx ? ` (asked for ${s.requestedCtx})` : ""}`,
 			`sampler: temp=${s.temp} top_p=${s.topP} top_k=${s.topK}`,
 			`template: ${s.spec.chatTemplate ?? "embedded in the GGUF (--jinja)"}`,

@@ -1,6 +1,5 @@
 {
-	"_readme": "The roster pi-small serves. See README.md. Field meanings mirror coding-bench/models.conf: repo is a Hugging Face repo id (llama-server downloads it with -hf/-hff), or the literal 'local' in which case 'file' is a path on the serving machine. 'serverArgs' are extra llama-server flags for THIS model only — that is where a model's tool-call template correction goes.",
-
+	"_readme": "The roster pi-small serves. See README.md. Field meanings mirror coding-bench/models.conf: repo is a Hugging Face repo id (llama-server downloads it with -hf/-hff), or the literal 'local' in which case 'file' is a path on the serving machine. 'localFile' is a copy already on the serving machine and wins when it resolves (it may use ~ and a * segment); the bench laptop has all three in its Hugging Face cache, and llama-server keeps a SEPARATE cache, so without this every model would re-download. 'serverArgs' are extra llama-server flags for THIS model only -- that is where a model's tool-call template correction goes.",
 	"defaults": {
 		"port": 8123,
 		"apiKey": "sk-bench",
@@ -13,12 +12,12 @@
 		"ngl": 999,
 		"serverArgs": []
 	},
-
 	"models": [
 		{
 			"alias": "Spark-X2.5-4B-Q6_K",
 			"repo": "sizzlebop/Spark-X2.5-4B-GGUF",
 			"file": "Spark-X2.5-4B-Q6_K.gguf",
+			"localFile": "~/.cache/huggingface/hub/models--sizzlebop--Spark-X2.5-4B-GGUF/snapshots/*/Spark-X2.5-4B-Q6_K.gguf",
 			"default": true,
 			"notes": "No official Q6_K; third-party build. Round 3' PKG 6/6, probed response headers 3/3. Its embedded template carries a working tool-call channel — no override needed.",
 			"chatTemplate": null,
@@ -28,6 +27,7 @@
 			"alias": "Granite-4.2-3B-Q8_0",
 			"repo": "ibm-granite/granite-4.2-3b-GGUF",
 			"file": "granite-4.2-3b-Q8_0.gguf",
+			"localFile": "~/.cache/huggingface/hub/models--ibm-granite--granite-4.2-3b-GGUF/snapshots/*/granite-4.2-3b-Q8_0.gguf",
 			"notes": "Official IBM GGUF. Best algorithm column of round 3', cheapest cells, but the 3B skips IBM's agentic-RL block — thin on verification. Embedded template handles tools.",
 			"chatTemplate": null,
 			"serverArgs": []
@@ -36,6 +36,7 @@
 			"alias": "Nanbeige4.2-3B-Q6_K",
 			"repo": "bartowski/Nanbeige_Nanbeige4.2-3B-GGUF",
 			"file": "Nanbeige_Nanbeige4.2-3B-Q6_K.gguf",
+			"localFile": "~/.cache/huggingface/hub/models--bartowski--Nanbeige_Nanbeige4.2-3B-GGUF/snapshots/*/Nanbeige_Nanbeige4.2-3B-Q6_K.gguf",
 			"notes": "No official GGUF. Slowest of the three (~3073s/cell in round 3').",
 			"chatTemplate": null,
 			"serverArgs": []

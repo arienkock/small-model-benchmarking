@@ -108,6 +108,15 @@ the literal `local`, in which case `file` is a path on the serving machine.
 `defaults` sets the port, API key, context, sampler and reasoning budget; any
 model may override them.
 
+`localFile` is the one addition. llama-server keeps its **own** cache, separate
+from the Hugging Face one, so `-hf` on a model you already downloaded re-fetches
+the whole thing — about 10 GB for this roster. When `localFile` resolves to an
+existing file it is used with `-m` and nothing is downloaded; otherwise the
+model falls back to `repo`/`file`. It may start with `~` and may contain `*` in
+a path segment, because the HF cache hides the weights behind a snapshot hash
+that changes whenever the repo is re-fetched. `/sm-status` prints which of the
+two is actually in use.
+
 ## Running it
 
 On the bench laptop, where `llama-server.exe` and the GPU are:
