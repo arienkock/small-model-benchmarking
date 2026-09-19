@@ -41,6 +41,34 @@
 			"notes": "No official GGUF. Slowest of the three (~3073s/cell in round 3').",
 			"chatTemplate": null,
 			"serverArgs": []
+		},
+		{
+			"alias": "LFM2.5-2.6B-Q8_0",
+			"repo": "LiquidAI/LFM2.5-2.6B-GGUF",
+			"file": "LFM2.5-2.6B-Q8_0.gguf",
+			"localFile": "D:/llama-cache/models--LiquidAI--LFM2.5-2.6B-GGUF/snapshots/*/LFM2.5-2.6B-Q8_0.gguf",
+			"notes": "Round-1 incumbent baseline; smallest and fastest on the roster. In the 143308 run it overwrote the task prompt file in two separate tasks — the benchmark added a guard for that, pi-small has none, so give it a scratch working directory.",
+			"chatTemplate": null,
+			"serverArgs": []
+		},
+		{
+			"alias": "MiniCPM5-2B-Q8_0",
+			"repo": "openbmb/MiniCPM5-2B-GGUF",
+			"file": "MiniCPM5-2B-Q8_0.gguf",
+			"localFile": "D:/llama-cache/models--openbmb--MiniCPM5-2B-GGUF/snapshots/*/MiniCPM5-2B-Q8_0.gguf",
+			"notes": "Round-1 incumbent baseline. In the 143308 run it reached for npm install and npx ts-node, and started servers in the foreground until the time budget died. The benchmark blocks both with a guard extension; pi-small deliberately does not.",
+			"chatTemplate": null,
+			"serverArgs": []
+		},
+		{
+			"alias": "Apertus-4B-Instruct-v1.1-Q8_0",
+			"repo": "NonMiFrega/Apertus-v1.1-4B-Instruct-Q8_0-GGUF",
+			"file": "apertus-v1.1-4b-instruct-q8_0.gguf",
+			"localFile": "D:/llama-cache/models--NonMiFrega--Apertus-v1.1-4B-Instruct-Q8_0-GGUF/snapshots/*/apertus-v1.1-4b-instruct-q8_0.gguf",
+			"ctx": 4096,
+			"notes": "EXPECT turn_boundary TO FAIL at startup, and that is the point of the probe: this GGUF's special_eos_id is not in special_eog_ids, so generation never stops and the model role-plays both sides of the conversation (2938 tokens of it, three times, in filter round 1). To actually use it, put an --override-kv for the EOS token id in serverArgs. Trained context is 4096.",
+			"chatTemplate": null,
+			"serverArgs": []
 		}
 	]
 }

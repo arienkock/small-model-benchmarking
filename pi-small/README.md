@@ -7,7 +7,7 @@ lives in this directory and moves on its own schedule.
 
     bin/pi-small        the entry point: pi with nothing of its own
     extensions/small.ts the plugin: model, server, sampler, tools
-    roster.json         the three models, and their per-model server flags
+    roster.json         the models, and their per-model server flags
     templates/          chat templates, for models whose GGUF ships a bad one
     test/               stub llama-server + a test that drives the plugin
 
@@ -79,7 +79,7 @@ it wrongly — which looks exactly like a stupid model once you are three turns
 into a session. Three layers handle it:
 
 1. **`--jinja` is always on**, so llama-server uses the template embedded in the
-   GGUF. That is the right answer for all three models currently on the roster.
+   GGUF. That is the right answer for every model on the roster except Apertus.
 2. **Per-model overrides in `roster.json`** when it is not:
    - `chatTemplate` — a filename under `templates/` (or an absolute path),
      passed as `--chat-template-file`
@@ -113,6 +113,36 @@ with `-m` when it resolves, falling back to `repo`/`file` when it does not. It
 may start with `~` and may contain `*` in a path segment, because the cache
 hides the weights behind a snapshot hash. `/sm-status` prints which of the two
 is in use.
+
+### What is on the roster
+
+Everything the benchmark has used, minus VibeThinker — which has no tool-calling
+capability at all and so cannot drive an agent loop (see
+`coding-bench/models.conf`). Spark is the default.
+
+| model | note |
+|---|---|
+| `Spark-X2.5-4B-Q6_K` | default; best verification behaviour of the roster |
+| `Granite-4.2-3B-Q8_0` | strong algorithms, thin on verification |
+| `Nanbeige4.2-3B-Q6_K` | slowest of the three 3-4B models |
+| `LFM2.5-2.6B-Q8_0` | smallest and fastest |
+| `MiniCPM5-2B-Q8_0` | reaches for npm/npx and foreground servers |
+| `Apertus-4B-Instruct-v1.1-Q8_0` | **expect `turn_boundary` to fail** — see below |
+
+Being on this roster is not an endorsement: Granite is dropped from the *graded*
+benchmark roster and Apertus is packaged wrongly. This is the set the scaffold
+can serve, which is a different question from what a round should score.
+
+Apertus is worth keeping precisely because it is broken: its `special_eos_id` is
+not in `special_eog_ids`, so it never stops and role-plays both sides of the
+conversation. It is the one model on the roster that demonstrates what a failed
+`turn_boundary` probe looks like before you waste a session on it.
+
+**There is no guard extension here.** The benchmark wraps its agent in
+`bench-guard.ts`, which confines writes to the workspace, protects the task
+file, and blocks package installs. pi-small has only `bash`, unguarded, by
+design — so run it in a scratch directory. LFM2.5 overwrote the task prompt in
+two separate benchmark tasks, and MiniCPM5 went looking for `npm install`.
 
 ### Where the weights actually live
 
