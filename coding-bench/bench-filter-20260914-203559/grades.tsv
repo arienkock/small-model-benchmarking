@@ -1,0 +1,19 @@
+task	rep	model	verdict	detail
+1	1	Granite-4.2-3B-Q8_0	debounce.algo:PASS debounce.pkg:PASS	shipped:PASS logic:- self:SELF_PASS  GRADER_OK debounce 
+1	1	Spark-X2.5-4B-Q6_K	debounce.algo:PASS debounce.pkg:FAIL	shipped:RUN_FAIL logic:PASS self:SELF_FAIL      import assert from 'node:assert';   [scaffolding-only failure: the algorithm passes]
+1	2	Granite-4.2-3B-Q8_0	debounce.algo:PASS debounce.pkg:PASS	shipped:PASS logic:- self:SELF_FAIL  GRADER_OK debounce 
+1	2	Spark-X2.5-4B-Q6_K	debounce.algo:PASS debounce.pkg:PASS	shipped:PASS logic:- self:SELF_PASS  GRADER_OK debounce 
+1	3	Granite-4.2-3B-Q8_0	debounce.algo:PASS debounce.pkg:PASS	shipped:PASS logic:- self:SELF_PASS  GRADER_OK debounce 
+1	3	Spark-X2.5-4B-Q6_K	debounce.algo:FAIL debounce.pkg:PASS	shipped:LOGIC_FAIL logic:LOGIC_FAIL self:SELF_SILENT  AssertionError [ERR_ASSERTION]: expected exactly 1 call after the burst, got 3 (bug 3: timer nulled synchronously, so no 
+2	1	Granite-4.2-3B-Q8_0	throttle.algo:PASS throttle.pkg:PASS server:PASS	shipped:PASS logic:-  port 8000: 5x200 then 429 with Retry-After ; throttle: GRADER_OK throttle  
+2	1	Spark-X2.5-4B-Q6_K	throttle.algo:PASS throttle.pkg:PASS server:PASS	shipped:PASS logic:-  port 8000: 5x200 then 429 with Retry-After ; throttle: GRADER_OK throttle  
+2	2	Granite-4.2-3B-Q8_0	throttle.algo:UNKNOWN throttle.pkg:FAIL server:PASS	shipped:LOAD_FAIL logic:LOAD_FAIL  port 8000: 5x200 then 429 with Retry-After ; throttle: TypeError: Assignment to constant variable.  
+2	2	Spark-X2.5-4B-Q6_K	throttle.algo:PASS throttle.pkg:PASS server:PARTIAL	shipped:PASS logic:-  port 8000: 429 on the 6th but no Retry-After header ; throttle: GRADER_OK throttle  
+2	3	Granite-4.2-3B-Q8_0	throttle.algo:PASS throttle.pkg:PASS server:PASS	shipped:PASS logic:-  port 8000: 5x200 then 429 with Retry-After ; throttle: GRADER_OK throttle  
+2	3	Spark-X2.5-4B-Q6_K	throttle.algo:PASS throttle.pkg:PASS server:PASS	shipped:PASS logic:-  port 8000: 5x200 then 429 with Retry-After ; throttle: GRADER_OK throttle  
+3	1	Granite-4.2-3B-Q8_0	books.status:PASS books.body:PASS books.headers:PASS	port 8000: 200/404, 2 books, Content-Type and Content-Length correct 
+3	1	Spark-X2.5-4B-Q6_K	books.status:PASS books.body:PASS books.headers:PASS	port 8000: 200/404, 2 books, Content-Type and Content-Length correct 
+3	2	Granite-4.2-3B-Q8_0	books.status:PASS books.body:PASS books.headers:FAIL	port 8000:  headers(no Content-Length — the seeded bug) 
+3	2	Spark-X2.5-4B-Q6_K	books.status:PASS books.body:PASS books.headers:PASS	port 8000: 200/404, 2 books, Content-Type and Content-Length correct 
+3	3	Granite-4.2-3B-Q8_0	books.status:PASS books.body:PASS books.headers:FAIL	port 8000:  headers(no Content-Length — the seeded bug) 
+3	3	Spark-X2.5-4B-Q6_K	books.status:PASS books.body:PASS books.headers:PASS	port 8000: 200/404, 2 books, Content-Type and Content-Length correct 

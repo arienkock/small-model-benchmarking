@@ -1,0 +1,26 @@
+# Cross-repeat stability — Tue, Sep 15, 2026  1:32:49 AM
+# PASS count per component, over the repeats present in this run dir.
+# n/n or 0/n = a real signal. Anything in between = the cell is a coin flip
+# and must not be used to rank models.
+
+# algo:UNKNOWN cells are excluded from the denominator, not scored as
+# failures — the file would not load even stripped, so the grader never
+# called the function. They are reported separately as (+N unknown).
+
+MODEL                          COMPONENT                PASS/N
+Granite-4.2-3B-Q8_0            t1.debounce.algo           3/3
+Granite-4.2-3B-Q8_0            t1.debounce.pkg            3/3
+Granite-4.2-3B-Q8_0            t2.server                  3/3
+Granite-4.2-3B-Q8_0            t2.throttle.algo           2/2  (+1 unknown)
+Granite-4.2-3B-Q8_0            t2.throttle.pkg            2/3   <-- unstable
+Granite-4.2-3B-Q8_0            t3.books.body              3/3
+Granite-4.2-3B-Q8_0            t3.books.headers           1/3   <-- unstable
+Granite-4.2-3B-Q8_0            t3.books.status            3/3
+Spark-X2.5-4B-Q6_K             t1.debounce.algo           2/3   <-- unstable
+Spark-X2.5-4B-Q6_K             t1.debounce.pkg            2/3   <-- unstable
+Spark-X2.5-4B-Q6_K             t2.server                  2/3   <-- unstable
+Spark-X2.5-4B-Q6_K             t2.throttle.algo           3/3
+Spark-X2.5-4B-Q6_K             t2.throttle.pkg            3/3
+Spark-X2.5-4B-Q6_K             t3.books.body              3/3
+Spark-X2.5-4B-Q6_K             t3.books.headers           3/3
+Spark-X2.5-4B-Q6_K             t3.books.status            3/3

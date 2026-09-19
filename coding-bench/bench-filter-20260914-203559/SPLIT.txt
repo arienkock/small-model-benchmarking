@@ -1,0 +1,21 @@
+# Algorithm vs packaging — Tue, Sep 15, 2026  1:32:49 AM
+#
+# ALGO = the exported function, graded with the model's own self-test
+#        block stripped. Can it write the code?
+# PKG  = the file exactly as the model shipped it. Does it load and run?
+# DEATHS = components with algo:PASS and pkg:FAIL — a correct algorithm
+#        that its own scaffolding stopped anyone from importing.
+# SERVER = every Python-server component (t2.server plus task 3's
+#        books.status / books.body / books.headers). No algo/pkg split
+#        applies: a server either behaves or it does not.
+#
+# MISSING counts as a failure in both columns. algo:UNKNOWN is excluded
+# from the ALGO denominator and shown separately.
+
+MODEL                                  ALGO          PKG   DEATHS       SERVER
+Granite-4.2-3B-Q8_0                    5/5          5/6         0        10/12   (1 algo UNKNOWN)
+Spark-X2.5-4B-Q6_K                     5/6          5/6         1        11/12
+
+A model whose ALGO and PKG columns match is limited by what it can work
+out. A model with DEATHS > 0 is losing work it had already done, which is
+a different problem with a different fix — do not read the two as one score.
