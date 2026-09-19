@@ -6,10 +6,82 @@ install and can be updated whenever; everything specific to this experiment
 lives in this directory and moves on its own schedule.
 
     bin/pi-small        the entry point: pi with nothing of its own
+    pi-small-docker.sh  the same thing, sandboxed  <- use this one
+    serve.mjs           starts llama-server on the host, for the container
     extensions/small.ts the plugin: model, server, sampler, tools
+    lib/roster.ts       roster + path/flag logic, with no dependency on pi
     roster.json         the models, and their per-model server flags
+    docker/             the sandbox image
     templates/          chat templates, for models whose GGUF ships a bad one
     test/               stub llama-server + a test that drives the plugin
+
+## Running it in a container (the normal way)
+
+The models get `bash` with no guard extension. Two of the ones on the roster
+have form — LFM2.5 overwrote the task prompt in two benchmark tasks, MiniCPM5
+went looking for `npm install` — so the benchmark's answer applies here too: run
+pi in a Linux sandbox whose only writable host path is the workspace.
+
+    ./pi-small-docker.sh                          # roster default, interactive
+    ./pi-small-docker.sh --model LFM2.5-2.6B-Q8_0
+    ./pi-small-docker.sh --ws ./scratch           # a different workspace
+    ./pi-small-docker.sh -- -p "list the files"   # args after -- go to pi
+
+It builds the image on first use, makes sure the model is served on the host,
+and drops you into a session. The **workspace persists** — it is a host
+directory mounted read-write at `/workspace`, and pi's own state (sessions,
+history) lives in `workspace/.home`, so a session survives the container. The
+plugin itself is mounted **read-only**, so a model cannot edit the thing that
+constrains it.
+
+### What runs where
+
+| | host | container |
+|---|---|---|
+| llama-server, GPU, weights | yes | no |
+| pi, the plugin, `bash` | no | yes |
+| who picks the model | `serve.mjs` | follows the host |
+
+`llama-server` cannot run in the container — it needs the GPU and the weights,
+both on the Windows host — so the container reaches it over
+`host.docker.internal`, exactly as the benchmark does. `serve.mjs` starts it
+with the *same* `buildServerArgs` the plugin uses, so a containerised session is
+served precisely what a local one would be.
+
+    node serve.mjs                        # the roster default
+    node serve.mjs Granite-4.2-3B-Q8_0    # a specific model
+    node serve.mjs LFM2.5-2.6B-Q8_0 --ctx 8192
+    node serve.mjs --status | --restart | --stop
+
+It binds `0.0.0.0`, because `host.docker.internal` does not arrive on loopback.
+That exposes the endpoint to the LAN, which is why the API key is always set;
+pass `--host 127.0.0.1` for a local-only server. Like the plugin, it refuses to
+kill a server it did not start — a benchmark run may own it.
+
+### Remote mode
+
+Inside the container the plugin cannot own the `llama-server` *process*, so it
+says so rather than failing oddly. It keeps everything request-level and gives
+up everything process-level:
+
+| | local | in the container |
+|---|---|---|
+| model, context, start/stop | plugin | **host** (`serve.mjs`) |
+| temperature, probes, tools, prompt | plugin | plugin |
+
+It attaches to whatever the host is serving — taking the alias from
+`/v1/models` and the real context from `/props`, so the host is the source of
+truth — and still runs both template probes. `/sm-temp` and `/sm-probe` work
+normally. `/sm-model`, `/sm-ctx` and `/sm-restart` print the exact host command
+to run instead. Remote mode turns on with `PI_SMALL_REMOTE=1`, or whenever the
+configured host is not loopback.
+
+### Running it uncontained
+
+`./bin/pi-small` still works and is the right thing when you are iterating on
+the plugin itself: the model stays under its own management, `/sm-model` works,
+and there is no image to rebuild. Just do not point it at a directory you care
+about.
 
 ## What the entry point does
 
@@ -141,8 +213,9 @@ conversation. It is the one model on the roster that demonstrates what a failed
 **There is no guard extension here.** The benchmark wraps its agent in
 `bench-guard.ts`, which confines writes to the workspace, protects the task
 file, and blocks package installs. pi-small has only `bash`, unguarded, by
-design — so run it in a scratch directory. LFM2.5 overwrote the task prompt in
-two separate benchmark tasks, and MiniCPM5 went looking for `npm install`.
+design. The container is the containment instead — see *Running it in a
+container* above, and prefer `./pi-small-docker.sh` over `./bin/pi-small` for
+anything but plugin development.
 
 ### Where the weights actually live
 

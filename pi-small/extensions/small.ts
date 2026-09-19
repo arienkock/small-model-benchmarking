@@ -33,9 +33,10 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { existsSync, mkdirSync, openSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, isAbsolute, join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { createBashToolDefinition, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import {
+	buildServerArgs,
 	loadRoster,
 	type ModelSpec,
 	PLUGIN_DIR,
@@ -238,47 +239,6 @@ function resolveServerBinary(): string {
 	return "llama-server";
 }
 
-function resolveTemplate(spec: ModelSpec): string | null {
-	if (!spec.chatTemplate) return null;
-	if (isAbsolute(spec.chatTemplate)) return spec.chatTemplate;
-	return join(PLUGIN_DIR, "templates", spec.chatTemplate);
-}
-
-function buildServerArgs(spec: ModelSpec, d: RosterDefaults, ctx: number, state: ServerState): string[] {
-	const args: string[] = [];
-	// Prefer weights already on this machine. llama-server keeps its own cache,
-	// so -hf would re-download gigabytes that are sitting in the Hugging Face
-	// cache from earlier benchmark rounds.
-	const local = weightsSource(spec).local;
-	if (local) {
-		args.push("-m", local);
-	} else if (spec.repo === "local") {
-		throw new Error(`${spec.alias}: repo is "local" but no file matched ${spec.file}`);
-	} else {
-		args.push("-hf", spec.repo, "-hff", spec.file);
-	}
-	// A reasoning budget as large as the window leaves no room for the prompt or
-	// the answer; the bench caps it at a quarter of the context and so do we.
-	const wanted = spec.reasoningBudget ?? d.reasoningBudget;
-	const think = Math.min(wanted, Math.floor(ctx / 4));
-	args.push(
-		"--alias", spec.alias,
-		"--jinja",
-		"-c", String(ctx),
-		"-ngl", String(d.ngl),
-		"--parallel", "1",
-		"--reasoning-budget", String(think),
-		"--temp", String(state.temp),
-		"--top-p", String(state.topP),
-		"--top-k", String(state.topK),
-	);
-	const template = resolveTemplate(spec);
-	if (template) args.push("--chat-template-file", template);
-	args.push(...(d.serverArgs ?? []), ...(spec.serverArgs ?? []));
-	args.push("--api-key", d.apiKey, "--host", d.host, "--port", String(d.port));
-	return args;
-}
-
 function logDir(): string {
 	const dir = process.env.PI_SMALL_LOG_DIR ?? join(tmpdir(), "pi-small");
 	mkdirSync(dir, { recursive: true });
@@ -288,9 +248,18 @@ function logDir(): string {
 class ServerManager {
 	state: ServerState;
 	private d: RosterDefaults;
+	/**
+	 * True when llama-server is somewhere this process cannot reach as a
+	 * process — the containerised session, where the server runs on the Windows
+	 * host and we talk to it through host.docker.internal. In that mode the
+	 * plugin owns the sampler and the session, but NOT the process: the host
+	 * decides which model is loaded, and we follow it.
+	 */
+	readonly remote: boolean;
 
-	constructor(spec: ModelSpec, d: RosterDefaults) {
+	constructor(spec: ModelSpec, d: RosterDefaults, remote: boolean) {
 		this.d = d;
+		this.remote = remote;
 		this.state = new ServerState(spec, d);
 	}
 
@@ -307,6 +276,8 @@ class ServerManager {
 	 */
 	async start(spec: ModelSpec, ctx: number, notify: (msg: string) => void): Promise<void> {
 		await this.stop();
+
+		if (this.remote) return this.attachRemote(notify);
 
 		const existing = await probeEndpoint(this.d);
 		if (existing.alive) {
@@ -386,6 +357,37 @@ class ServerManager {
 		await this.runProbes();
 	}
 
+	/**
+	 * Follow whatever the host is serving. The container cannot start, stop or
+	 * switch the model, so the served alias is the truth and the roster entry is
+	 * only used for its notes and per-model settings when one matches.
+	 */
+	private async attachRemote(notify: (msg: string) => void): Promise<void> {
+		const existing = await probeEndpoint(this.d);
+		if (!existing.alive) {
+			throw new Error(
+				`no llama-server answering on ${this.d.host}:${this.d.port}. ` +
+					`This session cannot start one — it is running in a container and the server lives on the host. ` +
+					`Start it there with: node serve.mjs <model>`,
+			);
+		}
+		const alias = existing.alias ?? "unknown-model";
+		const known = this.rosterSpec?.(alias);
+		const spec: ModelSpec = known ?? { alias, repo: "unknown", file: "unknown" };
+		this.state = new ServerState(spec, this.d);
+		this.state.adopted = true;
+		this.state.requestedCtx = existing.ctx ?? this.d.ctx;
+		this.state.servedCtx = existing.ctx ?? this.d.ctx;
+		notify(
+			`attached to llama-server on ${this.d.host}:${this.d.port} serving ${alias} (ctx ${this.state.servedCtx})` +
+				(known ? "" : " — not a roster model, so its notes and per-model flags are unknown"),
+		);
+		await this.runProbes();
+	}
+
+	/** Injected by the extension so attachRemote can name what it found. */
+	rosterSpec?: (alias: string) => ModelSpec | undefined;
+
 	async runProbes(): Promise<void> {
 		this.state.probes.turnBoundary = await probeTurnBoundary(this.d);
 		this.state.probes.toolCalls = await probeToolCalls(this.d);
@@ -393,6 +395,7 @@ class ServerManager {
 
 	/** Kill the server, but only if we are the ones who started it. */
 	async stop(): Promise<void> {
+		if (this.remote) return;
 		const proc = this.state.proc;
 		this.state.proc = null;
 		this.state.adopted = false;
@@ -425,7 +428,15 @@ export default function (pi: ExtensionAPI) {
 	const requested = process.env.PI_SMALL_MODEL;
 	const initial = (requested ? byAlias(requested) : undefined) ?? roster.models.find((m) => m.default) ?? roster.models[0];
 
-	const mgr = new ServerManager(initial, d);
+	// Remote mode: the server is not a process this pi can manage. Explicit via
+	// PI_SMALL_REMOTE, and inferred whenever the host is not loopback, which is
+	// the containerised case (host.docker.internal).
+	const remote =
+		process.env.PI_SMALL_REMOTE === "1" ||
+		!["127.0.0.1", "localhost", "::1"].includes(d.host);
+
+	const mgr = new ServerManager(initial, d, remote);
+	mgr.rosterSpec = byAlias;
 
 	// ---------------------------------------------------------- provider --
 	// Registered during the factory so `--provider small-local --model
@@ -483,6 +494,11 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// ------------------------------------------------------------- status --
+	const hostControlHint = (cmd: string): string =>
+		`This session runs in a container; llama-server is a process on the host and pi cannot touch it. ` +
+		`Run this on the host, in /d/llama.cpp/pi-small, then reconnect:\n    ${cmd}\n` +
+		`(/sm-temp and /sm-probe still work from here — they are request-level, not process-level.)`;
+
 	const weightsOf = (spec: ModelSpec): string => weightsSource(spec).description;
 
 	const probeLine = (name: string, r?: ProbeResult) =>
@@ -490,11 +506,17 @@ export default function (pi: ExtensionAPI) {
 
 	const statusText = (): string => {
 		const s = mgr.state;
-		const where = s.adopted ? "adopted (not ours to kill)" : s.proc ? `pid ${s.proc.pid}` : "not running";
+		const where = mgr.remote
+			? "on the host — this session cannot start, stop or switch it"
+			: s.adopted
+				? "adopted (not ours to kill)"
+				: s.proc
+					? `pid ${s.proc.pid}`
+					: "not running";
 		const lines = [
 			`model:   ${s.spec.alias}`,
 			`server:  ${where} on ${d.host}:${d.port}`,
-			`weights: ${weightsOf(s.spec)}`,
+			`weights: ${mgr.remote ? "managed on the host" : weightsOf(s.spec)}`,
 			`cache:   ${d.llamaCache ?? "LLAMA_CACHE unset — llama.cpp will use ~/.cache/huggingface/hub"}`,
 			`context: ${s.servedCtx}${s.servedCtx !== s.requestedCtx ? ` (asked for ${s.requestedCtx})` : ""}`,
 			`sampler: temp=${s.temp} top_p=${s.topP} top_k=${s.topK}`,
@@ -573,6 +595,10 @@ export default function (pi: ExtensionAPI) {
 				ctx.ui.notify(`unknown model "${alias}". Roster: ${roster.models.map((m) => m.alias).join(", ")}`, "error");
 				return;
 			}
+			if (mgr.remote) {
+				ctx.ui.notify(hostControlHint(`node serve.mjs ${alias}`), "warn");
+				return;
+			}
 			await switchTo(spec, spec.ctx ?? d.ctx, ctx);
 		},
 	});
@@ -583,6 +609,10 @@ export default function (pi: ExtensionAPI) {
 			const n = Number(args.trim());
 			if (!Number.isFinite(n) || n < 1024) {
 				ctx.ui.notify(`usage: /sm-ctx <tokens>  (current: ${mgr.state.servedCtx})`, "error");
+				return;
+			}
+			if (mgr.remote) {
+				ctx.ui.notify(hostControlHint(`node serve.mjs ${mgr.state.spec.alias} --ctx ${Math.floor(n)}`), "warn");
 				return;
 			}
 			await switchTo(mgr.state.spec, Math.floor(n), ctx);
@@ -616,6 +646,10 @@ export default function (pi: ExtensionAPI) {
 	pi.registerCommand("sm-restart", {
 		description: "Restart llama-server with the current model and settings",
 		handler: async (_args: string, ctx: any) => {
+			if (mgr.remote) {
+				ctx.ui.notify(hostControlHint(`node serve.mjs ${mgr.state.spec.alias} --restart`), "warn");
+				return;
+			}
 			await switchTo(mgr.state.spec, mgr.state.requestedCtx, ctx);
 		},
 	});

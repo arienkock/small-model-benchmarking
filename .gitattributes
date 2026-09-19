@@ -11,3 +11,5 @@
 # server is ESM JavaScript. Same CRLF reasoning as above.
 pi-small/bin/pi-small text eol=lf
 *.mjs     text eol=lf
+pi-small/pi-small-docker.sh text eol=lf
+pi-small/docker/Dockerfile  text eol=lf

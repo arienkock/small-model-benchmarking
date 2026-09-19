@@ -30,3 +30,4 @@ pi-small/smoke.log
 # cache migration log (one-off, on the serving machine)
 cache-move.log
 pi-small/smoke-*.log
+pi-small/workspace/

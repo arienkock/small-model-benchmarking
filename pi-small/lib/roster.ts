@@ -15,7 +15,7 @@
 
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 /** The pi-small package root, one level up from this file's directory. */
@@ -131,4 +131,66 @@ export function weightsSource(spec: ModelSpec): { local: string | null; descript
 		local,
 		description: local ?? `${spec.repo}/${spec.file} (llama-server downloads it on first use)`,
 	};
+}
+
+/** Absolute path of a model's chat template override, or null for the GGUF's own. */
+export function resolveTemplate(spec: ModelSpec): string | null {
+	if (!spec.chatTemplate) return null;
+	if (isAbsolute(spec.chatTemplate)) return spec.chatTemplate;
+	return join(PLUGIN_DIR, "templates", spec.chatTemplate);
+}
+
+export interface Sampler {
+	temp: number;
+	topP: number;
+	topK: number;
+}
+
+/**
+ * The full llama-server command line for a model. Pure, and shared by the
+ * plugin (which spawns it locally) and serve.mjs (which starts it on the host
+ * for the containerised session), so the two can never drift apart.
+ *
+ * `hostOverride` exists for exactly that second case: a container reaches the
+ * server through host.docker.internal, which means the server has to be bound
+ * to 0.0.0.0 rather than the roster's loopback default.
+ */
+export function buildServerArgs(
+	spec: ModelSpec,
+	d: RosterDefaults,
+	ctx: number,
+	sampler: Sampler,
+	hostOverride?: string,
+): string[] {
+	const args: string[] = [];
+	// Prefer weights already on this machine, so -hf never re-fetches something
+	// the cache already holds.
+	const local = weightsSource(spec).local;
+	if (local) {
+		args.push("-m", local);
+	} else if (spec.repo === "local") {
+		throw new Error(`${spec.alias}: repo is "local" but no file matched ${spec.file}`);
+	} else {
+		args.push("-hf", spec.repo, "-hff", spec.file);
+	}
+	// A reasoning budget as large as the window leaves no room for the prompt or
+	// the answer; the bench caps it at a quarter of the context and so do we.
+	const wanted = spec.reasoningBudget ?? d.reasoningBudget;
+	const think = Math.min(wanted, Math.floor(ctx / 4));
+	args.push(
+		"--alias", spec.alias,
+		"--jinja",
+		"-c", String(ctx),
+		"-ngl", String(d.ngl),
+		"--parallel", "1",
+		"--reasoning-budget", String(think),
+		"--temp", String(sampler.temp),
+		"--top-p", String(sampler.topP),
+		"--top-k", String(sampler.topK),
+	);
+	const template = resolveTemplate(spec);
+	if (template) args.push("--chat-template-file", template);
+	args.push(...(d.serverArgs ?? []), ...(spec.serverArgs ?? []));
+	args.push("--api-key", d.apiKey, "--host", hostOverride ?? d.host, "--port", String(d.port));
+	return args;
 }
