@@ -80,6 +80,14 @@ interface RosterDefaults {
 	reasoningBudget: number;
 	ngl: number;
 	serverArgs: string[];
+	/**
+	 * Where llama.cpp keeps downloaded weights. MUST be a Windows path on the
+	 * bench laptop — this is passed in the environment, and MSYS does not
+	 * translate environment variables the way it translates arguments. Kept in
+	 * step with ../../llama-cache.env, which is the source of truth for the
+	 * shell side; $LLAMA_CACHE in the environment still wins over both.
+	 */
+	llamaCache?: string;
 }
 
 interface Roster {
@@ -429,11 +437,17 @@ class ServerManager {
 		state.logPath = join(logDir(), `llama-${spec.alias}-${stamp}.log`);
 		const fd = openSync(state.logPath, "a");
 
+		// Set the cache root explicitly rather than inheriting whatever the shell
+		// happened to have. An unset LLAMA_CACHE sends llama.cpp to
+		// ~/.cache/huggingface/hub on C:, and it re-downloads the whole roster
+		// there without saying anything.
+		const cacheRoot = this.d.llamaCache;
 		notify(`starting llama-server: ${spec.alias} at ctx ${ctx} (log: ${state.logPath})`);
 		const proc = spawn(bin, args, {
 			cwd: dirname(resolve(bin)),
 			stdio: ["ignore", fd, fd],
 			windowsHide: true,
+			env: cacheRoot ? { ...process.env, LLAMA_CACHE: cacheRoot } : process.env,
 		});
 		state.proc = proc;
 		this.state = state;
@@ -501,6 +515,8 @@ export default function (pi: ExtensionAPI) {
 		port: Number(process.env.PI_SMALL_PORT ?? roster.defaults.port),
 		host: process.env.PI_SMALL_HOST ?? roster.defaults.host,
 		apiKey: process.env.PI_SMALL_API_KEY ?? roster.defaults.apiKey,
+		// An inherited LLAMA_CACHE wins: whoever set it meant it.
+		llamaCache: process.env.LLAMA_CACHE ?? roster.defaults.llamaCache,
 	};
 
 	const byAlias = (alias: string) => roster.models.find((m) => m.alias === alias);
@@ -580,6 +596,7 @@ export default function (pi: ExtensionAPI) {
 			`model:   ${s.spec.alias}`,
 			`server:  ${where} on ${d.host}:${d.port}`,
 			`weights: ${weightsOf(s.spec)}`,
+			`cache:   ${d.llamaCache ?? "LLAMA_CACHE unset — llama.cpp will use ~/.cache/huggingface/hub"}`,
 			`context: ${s.servedCtx}${s.servedCtx !== s.requestedCtx ? ` (asked for ${s.requestedCtx})` : ""}`,
 			`sampler: temp=${s.temp} top_p=${s.topP} top_k=${s.topK}`,
 			`template: ${s.spec.chatTemplate ?? "embedded in the GGUF (--jinja)"}`,

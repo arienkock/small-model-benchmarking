@@ -27,6 +27,13 @@ way:
 
 These live on the laptop at `/d/llama.cpp/smallctl-container/`.
 
+## The model cache
+
+`start-server.sh` sources `../llama-cache.env`, which sets `LLAMA_CACHE` to the
+cache on `D:`. Do not start `llama-server` for this experiment without it — with
+`LLAMA_CACHE` unset, llama.cpp uses `~/.cache/huggingface/hub` on `C:` instead
+and re-downloads the model. See the repo `AGENTS.md`.
+
 ## Running it
 
 Long steps must outlive the SSH session, so build and multi-turn runs go through

@@ -22,6 +22,10 @@ cd /d/llama.cpp || exit 1
 OUT="coding-bench/quant-probe-f3-$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$OUT"
 LB=./llama-bench.exe
+# The model cache lives on D:, not C:. Single source of truth — see the file
+# itself for why this must be set explicitly.
+source "/d/llama.cpp/llama-cache.env"
+
 LS=./llama-server.exe
 HUB=/c/Users/zenfi/.cache/huggingface/hub
 export LLAMA_CACHE=/d/llama-cache

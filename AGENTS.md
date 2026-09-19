@@ -7,6 +7,39 @@ host's quirks). Everything below is about the benchmark repo itself.
 - Repo lives at **`/d/llama.cpp`** on that host. `llama-server.exe` and the GPU are there;
   the pi agent runs in Docker and reaches the server via `host.docker.internal`.
 
+## The model cache: `D:`, and `LLAMA_CACHE` must be set
+
+**Never let llama-server run with `LLAMA_CACHE` unset.** Source
+[`llama-cache.env`](llama-cache.env) — the single source of truth — from
+anything that starts a server; every launcher in this repo already does, and
+`pi-small` sets it on the process it spawns. Do not hardcode the path anywhere
+else.
+
+```bash
+source "$SCRIPT_DIR/../llama-cache.env"   # exports LLAMA_CACHE=D:/llama-cache
+```
+
+Established on the laptop 2026-09-19, because the old note here was wrong and
+the mistake is expensive:
+
+- llama.cpp `0.4.0-dev` (build 10896) caches `-hf` downloads in the **Hugging
+  Face hub layout**, `models--<org>--<repo>/{blobs,refs,snapshots}` — not in
+  `~/.cache/llama.cpp`, which does not exist on that machine. The `models--`
+  string is a literal in `llama-common.dll`; no HF tooling is installed.
+- The root is `$LLAMA_CACHE`, else `$HF_HOME/hub`, else
+  `$XDG_CACHE_HOME/huggingface/hub`, else `~/.cache/huggingface/hub`.
+- **This is why models have "re-downloaded themselves".** Two roots have been in
+  use here at different times. Anything that changes the server process's
+  environment — a scheduled task under a different account, a container,
+  cmd.exe instead of Git Bash — silently points it at an empty cache and it
+  fetches the whole roster again, leaving the old copy on disk.
+- `-hf` on a model that *is* in the active cache does not re-download.
+- It must be a **Windows** path (`D:/llama-cache`). MSYS translates command-line
+  arguments, not environment variables, so `/d/llama-cache` would not resolve
+  for `llama-server.exe`.
+
+`migrate-llama-cache.sh` moved the roster off `C:` (which was at 93%).
+
 ## Before running anything
 
 A run holds `coding-bench/.bench-lock/` and occupies essentially the whole GPU for hours (the

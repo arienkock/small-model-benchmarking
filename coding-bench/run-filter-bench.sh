@@ -99,6 +99,10 @@ set -u
 
 # ---------------------------------------------------------------- config ---
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# The model cache lives on D:, not C:. Single source of truth — see the file
+# itself for why this must be set explicitly.
+source "$SCRIPT_DIR/../llama-cache.env"
+
 LLAMA_SERVER="$SCRIPT_DIR/../llama-server.exe"
 PI_IMAGE="coding-bench-agent:latest"
 EXTENSION="$SCRIPT_DIR/provider-extension.ts"

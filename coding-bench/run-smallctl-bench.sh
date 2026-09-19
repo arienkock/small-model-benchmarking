@@ -140,6 +140,10 @@ set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 
+# The model cache lives on D:, not C:. Single source of truth — see the file
+# itself for why this must be set explicitly.
+source "$SCRIPT_DIR/../llama-cache.env"
+
 LLAMA_SERVER="$SCRIPT_DIR/../llama-server.exe"
 IMAGE="${IMAGE:-smallctl:pinned}"
 PORT=8123

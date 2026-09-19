@@ -116,16 +116,27 @@ is in use.
 
 ### Where the weights actually live
 
-Verified on the bench laptop 2026-09-19, because this is easy to get wrong and
-`coding-bench/models.conf` still documents the older behaviour:
+Verified on the bench laptop 2026-09-19, because this is easy to get wrong —
+`coding-bench/models.conf` documented the older behaviour until this was
+checked:
 
 **There is one copy of each model, not two.** This llama.cpp build (`0.4.0-dev`,
 build 10896) downloads `-hf` models into the **Hugging Face hub cache layout**
-itself — `~/.cache/huggingface/hub/models--<org>--<repo>/{blobs,refs,snapshots}`
-— and reads from it on later runs. The `models--` path is a literal inside
-`llama-common.dll`; no `huggingface_hub`, `hf` CLI or Python HF tooling is
-installed on that machine. There is no `~/.cache/llama.cpp` and no GGUF anywhere
-outside that cache. Total: 24 GB for seven models, on `C:`, which is at 93%.
+itself — `models--<org>--<repo>/{blobs,refs,snapshots}` — and reads from it on
+later runs. The `models--` path is a literal inside `llama-common.dll`; no
+`huggingface_hub`, `hf` CLI or Python HF tooling is installed on that machine.
+There is no `~/.cache/llama.cpp` and no GGUF outside the cache.
+
+**The cache lives at `D:/llama-cache`, and `LLAMA_CACHE` must be set to it.**
+The root is `$LLAMA_CACHE`, else `$HF_HOME/hub`, else
+`$XDG_CACHE_HOME/huggingface/hub`, else `~/.cache/huggingface/hub` — that last
+one is on `C:`, which was at 93% before the roster was moved off it.
+[`../llama-cache.env`](../llama-cache.env) is the single source of truth for the
+shell side; this plugin sets `LLAMA_CACHE` explicitly on the process it spawns,
+from `defaults.llamaCache` in `roster.json`, with an inherited `LLAMA_CACHE`
+winning over it. `/sm-status` prints the root in use. It must be a **Windows**
+path: this goes through the environment, and MSYS does not translate
+environment variables the way it translates arguments.
 
 So `-hf` on an already-cached model does **not** re-download: in
 `bench-filter-20260914-203559` llama-server was listening 6.4 s after start with
@@ -139,11 +150,13 @@ weights under a comparison.
 
 Known ways weights get re-fetched despite being "already downloaded":
 
-- **The cache root moves.** It is `$LLAMA_CACHE`, else `$HF_HOME`, else
-  `$XDG_CACHE_HOME`, else `~/.cache/huggingface` — so anything that changes
-  `HOME` for the server process (a scheduled task under a different account, a
-  container, cmd.exe vs MSYS) points it at an empty cache and it downloads
-  everything again, leaving the old copy untouched.
+- **The cache root moves.** Anything that changes the server process's
+  environment — a scheduled task under a different account, a container,
+  cmd.exe vs MSYS, or simply an unset `LLAMA_CACHE` — points it at a different
+  root and it downloads everything again, leaving the old copy on disk. Two
+  roots have been in use on the laptop at different times; this is the
+  mechanism behind the re-downloads, and why `LLAMA_CACHE` is now set from one
+  file rather than assumed.
 - **A llama.cpp upgrade that changes the scheme.** Older builds used flat files
   under `~/.cache/llama.cpp`; this one uses the HF layout. Crossing that change
   re-downloads every model once and orphans the old directory.
@@ -169,6 +182,7 @@ directories, the same place `run-filter-bench.sh` looks). Environment:
     PI_SMALL_PI_BIN         pi executable (default: pi on PATH)
     PI_SMALL_LLAMA_BIN      llama-server executable
     PI_SMALL_PORT / _HOST / _API_KEY
+    LLAMA_CACHE             model cache root; wins over roster defaults.llamaCache
     PI_SMALL_LOG_DIR        where llama-server logs go (default: tmp/pi-small)
     PI_SMALL_START_TIMEOUT  seconds to wait for a load (default 900; the first
                             use of a model also downloads it)

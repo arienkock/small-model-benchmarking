@@ -45,17 +45,28 @@ full run refuses to start unless all models resolve, so a wrong repo id costs
 two minutes rather than a night.
 
 **No Hugging Face tooling is needed on the benchmark machine.** `llama-server`
-downloads models itself with `-hf <repo> -hff <file>`, caching them under
-`$LLAMA_CACHE` (default `~/.cache/llama.cpp`). `-hff` pins the exact filename,
-so the quant can never be guessed wrong (e.g. `Q6_K` vs `Q6_K_L`). Preflight
-only does a `curl` against the HF API to confirm each repo/file exists before
-the run starts — no install, no download. Export `HF_TOKEN` for gated repos.
+downloads models itself with `-hf <repo> -hff <file>`. `-hff` pins the exact
+filename, so the quant can never be guessed wrong (e.g. `Q6_K` vs `Q6_K_L`).
+Preflight only does a `curl` against the HF API to confirm each repo/file exists
+before the run starts — no install, no download. Export `HF_TOKEN` for gated
+repos.
+
+**The cache lives on `D:`, and `LLAMA_CACHE` must be set.** See
+[`../llama-cache.env`](../llama-cache.env), which every launcher sources — do
+not hardcode the path anywhere else. The short version: this llama.cpp build
+caches in the *Hugging Face hub* layout (`models--<org>--<repo>/…`), **not** in
+`~/.cache/llama.cpp` as this file used to claim, and with `LLAMA_CACHE` unset it
+lands in `~/.cache/huggingface/hub` on a nearly-full `C:`. Both roots have been
+in use here at different times, which is the actual reason models have
+"re-downloaded themselves" with nobody deleting anything — the server was
+looking in the other one.
 
 For GGUFs already on the machine, set the repo field to the literal word
 `local` and the third field to a path; it is loaded with `-m` and never
-downloaded. The path may contain globs, which matters for HF cache paths that
-embed a revision hash (`.../snapshots/*/model.gguf`). This avoids re-fetching
-several GB into llama.cpp's separate cache.
+downloaded. The path may contain globs, which matters for cache paths that
+embed a revision hash (`.../snapshots/*/model.gguf`). Note this does **not**
+save a download for a model already in the cache — `-hf` reuses it — but it does
+skip the HF API round-trip and pin a run to the snapshot already on disk.
 
 If your llama.cpp is too old to have the built-in downloader, `-hf` will be
 rejected — use `local` entries for everything.

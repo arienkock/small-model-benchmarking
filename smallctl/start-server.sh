@@ -4,6 +4,10 @@
 set -uo pipefail
 cd /d/llama.cpp
 
+# The model cache lives on D:, not C:. Single source of truth — see the file
+# itself for why this must be set explicitly.
+source "/d/llama.cpp/llama-cache.env"
+
 ALIAS="${ALIAS:-Spark-X2.5-4B-Q6_K}"
 REPO="${REPO:-sizzlebop/Spark-X2.5-4B-GGUF}"
 FILE="${FILE:-Spark-X2.5-4B-Q6_K.gguf}"
