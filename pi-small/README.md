@@ -108,14 +108,50 @@ the literal `local`, in which case `file` is a path on the serving machine.
 `defaults` sets the port, API key, context, sampler and reasoning budget; any
 model may override them.
 
-`localFile` is the one addition. llama-server keeps its **own** cache, separate
-from the Hugging Face one, so `-hf` on a model you already downloaded re-fetches
-the whole thing — about 10 GB for this roster. When `localFile` resolves to an
-existing file it is used with `-m` and nothing is downloaded; otherwise the
-model falls back to `repo`/`file`. It may start with `~` and may contain `*` in
-a path segment, because the HF cache hides the weights behind a snapshot hash
-that changes whenever the repo is re-fetched. `/sm-status` prints which of the
-two is actually in use.
+`localFile` is the one addition: a copy already on the serving machine, used
+with `-m` when it resolves, falling back to `repo`/`file` when it does not. It
+may start with `~` and may contain `*` in a path segment, because the cache
+hides the weights behind a snapshot hash. `/sm-status` prints which of the two
+is in use.
+
+### Where the weights actually live
+
+Verified on the bench laptop 2026-09-19, because this is easy to get wrong and
+`coding-bench/models.conf` still documents the older behaviour:
+
+**There is one copy of each model, not two.** This llama.cpp build (`0.4.0-dev`,
+build 10896) downloads `-hf` models into the **Hugging Face hub cache layout**
+itself — `~/.cache/huggingface/hub/models--<org>--<repo>/{blobs,refs,snapshots}`
+— and reads from it on later runs. The `models--` path is a literal inside
+`llama-common.dll`; no `huggingface_hub`, `hf` CLI or Python HF tooling is
+installed on that machine. There is no `~/.cache/llama.cpp` and no GGUF anywhere
+outside that cache. Total: 24 GB for seven models, on `C:`, which is at 93%.
+
+So `-hf` on an already-cached model does **not** re-download: in
+`bench-filter-20260914-203559` llama-server was listening 6.4 s after start with
+`-hf sizzlebop/Spark-X2.5-4B-GGUF`.
+
+`localFile` therefore does not save a download. What it does buy is worth
+keeping anyway: it skips the Hugging Face API round-trip that resolves a repo's
+current `main`, and it pins the run to the exact snapshot already on disk, so a
+third-party quant being re-uploaded mid-experiment cannot silently swap the
+weights under a comparison.
+
+Known ways weights get re-fetched despite being "already downloaded":
+
+- **The cache root moves.** It is `$LLAMA_CACHE`, else `$HF_HOME`, else
+  `$XDG_CACHE_HOME`, else `~/.cache/huggingface` — so anything that changes
+  `HOME` for the server process (a scheduled task under a different account, a
+  container, cmd.exe vs MSYS) points it at an empty cache and it downloads
+  everything again, leaving the old copy untouched.
+- **A llama.cpp upgrade that changes the scheme.** Older builds used flat files
+  under `~/.cache/llama.cpp`; this one uses the HF layout. Crossing that change
+  re-downloads every model once and orphans the old directory.
+- **The quant file itself is re-uploaded.** Snapshots are keyed by commit and
+  blobs by etag, so a README-only commit re-links the existing blob, but a
+  re-uploaded `.gguf` is a genuine new download. Third-party quants
+  (`sizzlebop`, `bartowski`) do get re-cut.
+- **Disk-pressure cleanup.** `C:` has ~8.5 GB free with 24 GB of models on it.
 
 ## Running it
 
