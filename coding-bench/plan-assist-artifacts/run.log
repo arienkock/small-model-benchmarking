@@ -1,0 +1,143 @@
+[19:13:17] === plan-assist: 3 repeats x {vtplan, selfplan} on filter T1 (debounce) ===
+[19:13:17] out=/d/llama.cpp/coding-bench/plan-assist-20260915-191317
+[19:13:20]   starting Spark-X2.5-4B-Q6_K (ctx=16384) --reasoning-budget 4096 --temp 0.7 --top-p 0.95 --top-k 40
+[19:14:05]     ready in 24s
+[19:14:05] PHASE 1 explore rep 1
+[19:44:08]     exit=124  1803s
+[19:44:08]     !! no findings.md — retrying explore r1 ONCE
+[20:14:11]     exit=124  1803s
+[20:14:11]     findings-r1.md: 2880 chars
+[20:14:11] PHASE 1 explore rep 2
+[20:44:14]     exit=124  1802s
+[20:44:14]     !! no findings.md — retrying explore r2 ONCE
+[21:14:17]     exit=124  1802s
+[21:14:17]     !! FATAL for rep 2: no findings after 2 attempts — skipping this repeat entirely
+[21:14:18] PHASE 1 explore rep 3
+[21:44:21]     exit=124  1802s
+[21:44:21]     !! no findings.md — retrying explore r3 ONCE
+[22:14:24]     exit=124  1803s
+[22:14:24]     findings-r3.md: 2025 chars
+[22:14:24] PHASE 2a selfplan rep 1
+[22:22:30]     plan -> 5508 chars (finish=stop tokens=5541)
+[22:22:30] PHASE 2a SKIP rep 2 (abandoned)
+[22:22:30] PHASE 2a selfplan rep 3
+[22:29:54]     plan -> 4415 chars (finish=stop tokens=5135)
+[22:29:58]   starting VibeThinker-plan (ctx=32768) --reasoning-budget -1 --temp 1.0 --top-p 0.95 --top-k 0
+[22:30:06]     ready in 8s
+[22:30:06] PHASE 2b vtplan rep 1
+[22:32:03]     plan -> 3122 chars (finish=stop tokens=2179)
+[22:32:04] PHASE 2b SKIP rep 2 (abandoned)
+[22:32:04] PHASE 2b vtplan rep 3
+[22:35:26]     plan -> 2870 chars (finish=stop tokens=3814)
+[22:35:30]   starting Spark-X2.5-4B-Q6_K (ctx=16384) --reasoning-budget 4096 --temp 0.7 --top-p 0.95 --top-k 40
+[22:35:35]     ready in 6s
+[22:35:35] PHASE 3 execute vtplan rep 1
+[23:05:38]     exit=124  1803s
+[23:05:38] PHASE 3 execute selfplan rep 1
+[23:35:41]     exit=124  1803s
+[23:35:41] PHASE 3 SKIP vtplan r2 (no plan)
+[23:35:41] PHASE 3 SKIP selfplan r2 (no plan)
+[23:35:41] PHASE 3 execute vtplan rep 3
+[00:05:45]     exit=124  1802s
+[00:05:45] PHASE 3 execute selfplan rep 3
+[00:35:48]     exit=124  1802s
+[00:35:51] === running grader ===
+  graded 01-r1-Spark-selfplan
+  graded 01-r1-Spark-vtplan
+  graded 01-r3-Spark-selfplan
+  graded 01-r3-Spark-vtplan
+# Objective grades — Wed, Sep 16, 2026 12:36:04 AM
+# Produced by executing each deliverable, not by matching strings in the transcript.
+# host MINGW64_NT-10.0-19045, node v24.11.1, python 3.14.0
+# SELF_* results are platform-dependent (a debounce self-test that prints on
+# macOS stays silent on Windows), so compare them only within one host.
+
+task  rep  model           verdict                                     detail
+1     1    Spark-selfplan  debounce.algo:MISSING debounce.pkg:MISSING  shipped:MISSING logic:MISSING self:MISSING  no debounce.ts
+1     1    Spark-vtplan    debounce.algo:UNKNOWN debounce.pkg:FAIL     shipped:LOAD_FAIL logic:LOAD_FAIL self:SELF_FAIL  TypeError: CreateListFromArrayLike called on non-object 
+1     3    Spark-selfplan  debounce.algo:PASS debounce.pkg:PASS        shipped:PASS logic:- self:SELF_FAIL  GRADER_OK debounce 
+1     3    Spark-vtplan    debounce.algo:MISSING debounce.pkg:MISSING  shipped:MISSING logic:MISSING self:MISSING  no debounce.ts
+
+Every module component is graded TWICE and reported as two verdicts:
+  <name>.algo = the exported function, self-test block stripped. Can it
+                write the code?  PASS | FAIL | UNKNOWN | MISSING
+  <name>.pkg  = the file exactly as shipped. Does it load and run?
+                PASS | FAIL | MISSING
+algo:PASS + pkg:FAIL is a correct algorithm killed by its own scaffolding.
+algo:UNKNOWN means the file will not load even stripped, so the grader
+        never called the function and has no evidence either way — it is
+        not a quiet FAIL. See SPLIT.txt for the per-model totals.
+
+task 1  debounce = the exported debounce() graded against the 3 seeded bugs;
+        self:   SELF_PASS/SELF_SILENT/SELF_FAIL = what the model's OWN file printed.
+        A model can be SELF_PASS and algo:FAIL — that is a false pass, and the
+        whole reason this script exists.
+task 2  throttle = exported throttle(); server = 6 curls, want 5x200 then 429+Retry-After.
+task 3  (suite T4, the books-server bugfix; replaced the average-speed task
+        after round 4, where avgSpeed had saturated at 3/4, 4/4, 4/4). One
+        deliverable, server.py, three components — no algo/pkg split, since
+        there is no TypeScript module in this task:
+          books.status   200 on /api/books, 404 on an unknown path
+          books.body     valid JSON with both seeded books
+          books.headers  Content-Type: application/json AND a correct
+                         Content-Length. This is the seeded bug, and the
+                         verification probe. The unmodified original returns
+                         200 with valid JSON, and the task prompt asks only
+                         for 'valid JSON with correct status' — both of which
+                         PASS on the buggy server. A model that verifies
+                         exactly what it was told sees a healthy server. Only
+                         reading the code properly, or checking more than was
+                         asked, finds it.
+        The prompt-injection component went with the old task 3: every model
+        resisted it 4/4 for two rounds running, so it separated nothing.
+
+shipped:/logic: in the detail column are the raw underlying results.
+PASS logic works | LOGIC_FAIL imports but is wrong | LOAD_FAIL will not import
+RUN_FAIL nonzero exit | MISSING deliverable absent | SERVER_DIED crashed on startup
+HANG module never returned within 30s (unsettled promise / blocked import)
+server verdicts name the port the server actually opened; the grader
+        discovers it instead of probing a fixed list.
+
+See SPLIT.txt for algorithm vs packaging per model, and STABILITY.txt for the
+PASS-count-per-component across repeats. Do not rank models on a component
+flagged unstable there.
+
+# Algorithm vs packaging — Wed, Sep 16, 2026 12:36:04 AM
+#
+# ALGO = the exported function, graded with the model's own self-test
+#        block stripped. Can it write the code?
+# PKG  = the file exactly as the model shipped it. Does it load and run?
+# DEATHS = components with algo:PASS and pkg:FAIL — a correct algorithm
+#        that its own scaffolding stopped anyone from importing.
+# SERVER = every Python-server component (t2.server plus task 3's
+#        books.status / books.body / books.headers). No algo/pkg split
+#        applies: a server either behaves or it does not.
+#
+# MISSING counts as a failure in both columns. algo:UNKNOWN is excluded
+# from the ALGO denominator and shown separately.
+
+MODEL                                  ALGO          PKG   DEATHS       SERVER
+Spark-selfplan                         1/2          1/2         0         0/0 
+Spark-vtplan                           0/1          0/2         0         0/0    (1 algo UNKNOWN)
+
+A model whose ALGO and PKG columns match is limited by what it can work
+out. A model with DEATHS > 0 is losing work it had already done, which is
+a different problem with a different fix — do not read the two as one score.
+
+# Cross-repeat stability — Wed, Sep 16, 2026 12:36:04 AM
+# PASS count per component, over the repeats present in this run dir.
+# n/n or 0/n = a real signal. Anything in between = the cell is a coin flip
+# and must not be used to rank models.
+
+# algo:UNKNOWN cells are excluded from the denominator, not scored as
+# failures — the file would not load even stripped, so the grader never
+# called the function. They are reported separately as (+N unknown).
+
+MODEL                          COMPONENT                PASS/N
+Spark-selfplan                 t1.debounce.algo           1/2   <-- unstable
+Spark-selfplan                 t1.debounce.pkg            1/2   <-- unstable
+Spark-vtplan                   t1.debounce.algo           0/1  (+1 unknown)
+Spark-vtplan                   t1.debounce.pkg            0/2
+
+Wrote /d/llama.cpp/coding-bench/plan-assist-20260915-191317/GRADES.txt, /d/llama.cpp/coding-bench/plan-assist-20260915-191317/grades.tsv, /d/llama.cpp/coding-bench/plan-assist-20260915-191317/SPLIT.txt and /d/llama.cpp/coding-bench/plan-assist-20260915-191317/STABILITY.txt
+[00:36:05] === DONE. Results: /d/llama.cpp/coding-bench/plan-assist-20260915-191317 ===

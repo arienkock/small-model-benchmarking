@@ -1,0 +1,22 @@
+[
+ {
+  "model": "granite",
+  "n": 1,
+  "verdict": "BROKEN/OVERSPEC",
+  "catches": [
+   "only-bug1",
+   "only-bug2",
+   "only-bug3"
+  ]
+ },
+ {
+  "model": "spark",
+  "n": 1,
+  "verdict": "BROKEN/OVERSPEC",
+  "catches": [
+   "only-bug1",
+   "only-bug2",
+   "only-bug3"
+  ]
+ }
+]
