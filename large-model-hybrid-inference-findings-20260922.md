@@ -124,3 +124,122 @@ Open follow-ups if this gets revisited: a finer `--n-cpu-moe` sweep around
 repeats (variance was ~20% here); whether Bonsai 2's PQ2_0 kernel benefits
 from `-b`/`-ub` batch-size tuning; whether PrismML ships or plans an x86
 AVX2 kernel for PTQ1_0 to match PQ2_0's.
+
+## Update 2026-09-22: Granite 4.2 30B and Qwen3-Coder-30B-A3B
+
+Two more candidates, picked to fill gaps the first round left open: a
+genuinely **dense** model (Granite — no MoE trick available, tests plain
+`-ngl` layer-split offload) and a **coding-specialized MoE sibling** of
+Qwen3.6 (Qwen3-Coder, to see whether task-specific tuning beats the newer
+general model on this hardware). Weights cached under `D:\models\` as
+before. Downloads hit a genuinely bad stretch of home-network congestion
+mid-run (general, non-HF-specific — verified with an independent Cloudflare
+speed test) that dropped combined throughput to ~0.4 MB/s for a while; no
+tooling fix for that, just waited it out, then a mesh-network AP switch on
+the user's end brought speeds back up to 30-50 MB/s. Also caught and killed
+one `llama-bench` process that hung (near-zero CPU/memory, no progress) after
+a sibling config had already CUDA-OOM'd — not every stall in this stack
+resolves itself.
+
+### Granite 4.2 30B (dense, Q4_K_M, 16.50 GiB, 29.28B params)
+
+Dense models don't get the MoE expert-offload trick — every token passes
+through every layer regardless of where it lives, so the only lever is how
+many whole layers sit on GPU vs. CPU. Swept `-ngl`:
+
+| ngl | pp512 (t/s) | tg128 (t/s) | note |
+|---:|---:|---:|---|
+| 0 (CPU only) | 22.8-23.5 | 1.19-1.21 | |
+| **10 (best)** | **23.9-24.0** | **1.18-1.19** | |
+| 20 | 8.6-8.7 | 1.23-1.26 | pp512 collapses for a marginal tg gain |
+| 30 | — | — | **CUDA OOM crash** (`ggml-cuda.cu:108: CUDA error`) |
+| 40, 999 | — | — | also CUDA OOM |
+
+The ceiling for this GPU with this model is between 20 and 30 layers before
+it hard-crashes (not just slows down — an actual out-of-memory error).
+Thread count (4 vs. 8) changes almost nothing at any `ngl` (generation stays
+within 1.18-1.26 t/s across the board) — this workload is memory-bandwidth-
+bound on the CPU side, not compute-bound, so more threads don't help once
+you're waiting on RAM reads. **Best practical config: `-ngl 10 -t 8`**
+(pp512 ≈ 24 t/s, tg128 ≈ 1.19 t/s) — `ngl 20`'s tg bump (+0.05-0.07 t/s) isn't
+worth pp512 dropping by nearly 3x for agentic use, where prompt/context
+ingestion speed matters too.
+
+**Context headroom** (verbose-logged, not estimated): at `-ngl 10 -c 4096`,
+weights split as 13.8 GiB CPU-resident / 2.7 GiB GPU-resident, KV cache
+880 MiB CPU + 144 MiB GPU (~0.25 MiB/token), compute buffers ~257 MiB —
+**~14.7 GiB of 24 GiB system RAM used**, leaving roughly 9 GiB of headroom
+before OS overhead. That headroom is not free to spend carelessly, though:
+a separate run at `-c 8192` (same `-ngl 10`) **collapsed to 0.0 tok/s
+generation** (prompt processing also fell from ~24 to 2.9 t/s) — caught 372 MB
+free system RAM during that run. The KV-cache math alone doesn't fully
+explain a jump that large (8192 ctx should only add roughly 800 MB over the
+4096 case), so this is likely a load-time memory spike rather than steady-
+state pressure, but the empirical result stands: **treat 8192 context as
+unsafe at `-ngl 10` on this machine until someone retests it directly** —
+4096 is confirmed fine.
+
+### Qwen3-Coder-30B-A3B-Instruct (MoE, Q4_K_M, 17.28 GiB, 30.53B total / ~3B active)
+
+Same `--n-cpu-moe` sweep methodology as Qwen3.6. Full data (`-ngl 999`,
+8 threads):
+
+| n-cpu-moe | pp512 (t/s) | tg128 (t/s) |
+|---:|---:|---:|
+| 999 (all CPU) | 26.1 ± 4.4 | 5.76 ± 0.57 |
+| 36 | 77.7 ± 0.3 | 12.59 ± 0.01 |
+| **34 (best)** | **70.8 ± 1.3** | **12.83 ± 0.02** |
+| 32 | 15.2 | 10.60 |
+| 30 | 15.3 | 10.78 |
+| 28 | 9.2 ± 5.6 (anomaly) | 7.60 ± 0.44 |
+| 24 | 13.0 | 8.01 |
+| 16 | 14.0 | 7.64 |
+| 8 | 61.7 ± 4.7 | 7.24 |
+
+Same non-monotonic pattern seen with Qwen3.6 (a dip at 28, here, rather than
+24) — real measurements, not noise, but the underlying cause is still
+unexplained. **`--n-cpu-moe 34` is the true joint optimum**: unlike Qwen3.6,
+where the best generation speed (`ncmoe 32`) and best prompt speed
+(`ncmoe 48`) landed at different settings, here one config wins on both
+axes simultaneously. Thread sweep at `ncmoe 34`: t=8 gets pp512 ≈ 70-75 t/s
+(t=4/6 collapse to ~20 t/s — a huge gap), while tg128 varies 10.4-12.8 t/s
+across repeated runs at t=8 (same ~20% run-to-run variance documented for
+Qwen3.6) — **t=8 is unambiguously correct** despite that tg noise, because
+of the pp512 gap. **Best practical config: `-ngl 999 --n-cpu-moe 34 -t 8`**
+(pp512 ≈ 71-78 t/s, tg128 ≈ 10-13 t/s).
+
+**Context headroom**: at `ncmoe 34 -c 4096`, weights split as 12.02 GiB
+CPU-resident / 5.63 GiB GPU-resident (VRAM is basically maxed — weights alone
+are 5.63 GiB of the 6.0 GiB card), KV cache landed **entirely on GPU** this
+time (384 MiB, no CPU KV buffer at all — different from Granite, where KV
+split across both). System RAM footprint is much lighter than Granite's
+(~12 GiB vs. ~14.7 GiB) because most of the "big" part of this model lives in
+VRAM, not RAM — but that also means **headroom here is GPU-VRAM-constrained,
+not RAM-constrained**: weights + KV + compute buffer (5.63 + 0.375 + 0.22 ≈
+6.2 GiB) already exceeds the card's 6.0 GiB nominal capacity, surviving only
+because the driver reports `VMM: yes` (unified/managed memory allowing
+graceful oversubscription). Growing context further will eat into VRAM
+first, not system RAM — untested how gracefully that degrades past 4096.
+
+### Updated bottom line across all four models tested
+
+| model | type | best config | best tg128 (t/s) | RAM headroom picture |
+|---|---|---|---:|---|
+| Qwen3-Coder-30B-A3B | MoE | `ncmoe 34 -t 8` | 10-13 | RAM-light (~12 GiB), VRAM-tight |
+| Qwen3.6-35B-A3B | MoE | `ncmoe 32 -t 8` | 10-14 | not measured this precisely |
+| Granite 4.2 30B | dense | `ngl 10 -t 8` | ~1.2 | RAM-heavy (~14.7 GiB), ~9 GiB headroom, unsafe past 4096 ctx |
+| Ternary Bonsai 2 27B | ternary | PQ2_0 CPU, `-t 8` | ~2.0 | not measured this precisely |
+
+The MoE models remain the clear winners for agentic coding on this hardware
+— both land in the 10-14 tok/s range, roughly **8-10x faster than the best
+dense option (Granite, ~1.2 tok/s)**. The dense-model result confirms the
+theory from the first round: without an MoE-style trick to keep most
+compute on a small active-parameter subset, a 30B-class model on a 6 GiB
+card is bottlenecked by CPU RAM bandwidth for nearly its whole weight set,
+and no amount of thread or `-ngl` tuning fixes that short of the GPU holding
+the whole model (which this hardware cannot do at this size/quant). Between
+the two MoE options, Qwen3-Coder's 34-config is a genuine joint optimum
+(best pp *and* tg together) while Qwen3.6's best pp and best tg configs
+disagree (`ncmoe 48` vs `32`) — worth keeping both configs handy depending on
+whether a given task is prompt-heavy (large context ingestion) or
+generation-heavy.
