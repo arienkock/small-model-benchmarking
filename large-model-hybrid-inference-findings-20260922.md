@@ -221,25 +221,70 @@ because the driver reports `VMM: yes` (unified/managed memory allowing
 graceful oversubscription). Growing context further will eat into VRAM
 first, not system RAM — untested how gracefully that degrades past 4096.
 
-### Updated bottom line across all four models tested
+### Bonus: Qwen3.8-27B-UD-IQ4_XS (dense, 13.26 GiB, 27.32B params)
 
-| model | type | best config | best tg128 (t/s) | RAM headroom picture |
+Added as a third candidate mid-session — this is the **same base model**
+PrismML ternarized into Bonsai 2 27B, at a conventional IQ4_XS quant
+instead, specifically to answer "does ternary compression actually win on
+this hardware, or does a normal quant of the same base model beat it on
+both speed and quality?" Same `-ngl` sweep approach as Granite:
+
+| ngl | pp512 (t/s) | tg128 (t/s) | note |
+|---:|---:|---:|---|
+| 0 (CPU only) | 22.5 | 1.08 | |
+| 10 | 25.9 | 1.22 | |
+| **20 (best)** | **26.4** | **1.38-1.39** | good on both axes |
+| 24 | 5.5 | 1.47 | pp512 collapses for a small tg gain, same pattern as Granite's ngl 20 |
+| 26, 28, 30 | — | — | CUDA OOM |
+
+Unlike Granite, this one improves *monotonically* from ngl 0→10→20 (smaller
+per-layer footprint than Granite's 16.5 GiB total, so more layers fit
+before VRAM contention kicks in) — no anomalous dip until right at the
+OOM boundary. Thread sweep at `ngl 20` confirms t=8 best (tg128 1.38 vs.
+1.24 at t=4). **Best practical config: `-ngl 20 -t 8`**
+(pp512 ≈ 26.4 t/s, tg128 ≈ 1.38-1.39 t/s).
+
+**Context headroom** at `ngl 20 -c 4096`: weights split 8.54 GiB CPU / 4.40
+GiB GPU, KV cache 176 MiB CPU + 80 MiB GPU, compute buffers ~227 MiB —
+**~8.74 GiB system RAM** and **~4.67 GiB VRAM** used. This is by far the
+lightest footprint of the three models measured this round: **~15.3 GiB RAM
+headroom and ~1.47 GiB VRAM headroom** left over, vs. Granite's tight ~9 GiB
+RAM / near-zero VRAM slack or Qwen3-Coder's maxed VRAM. Smaller total size
+buys real breathing room, not just at idle — this is the only one of the
+three where both RAM and VRAM have comfortable slack simultaneously.
+
+**Answering the original question**: at ~1.38 tok/s this normal-quant dense
+version is meaningfully *slower* than Bonsai 2's ternary PQ2_0 CPU path
+(~2.0 tok/s, see above) despite getting real GPU offload that Bonsai
+categorically cannot use on this card. So for this specific base model on
+this specific hardware, **ternary compression does win on speed** — the
+~9x size reduction (13.26 GiB → 5.9-7.25 GiB) apparently matters more here
+than "gets to use the GPU at all," because both are still fundamentally
+bottlenecked by how much weight data has to move per token, and PQ2_0
+simply has less of it to move. Neither is fast in absolute terms; both are
+firmly behind the two MoE models.
+
+### Updated bottom line across all five models tested
+
+| model | type | best config | best tg128 (t/s) | headroom picture |
 |---|---|---|---:|---|
 | Qwen3-Coder-30B-A3B | MoE | `ncmoe 34 -t 8` | 10-13 | RAM-light (~12 GiB), VRAM-tight |
 | Qwen3.6-35B-A3B | MoE | `ncmoe 32 -t 8` | 10-14 | not measured this precisely |
-| Granite 4.2 30B | dense | `ngl 10 -t 8` | ~1.2 | RAM-heavy (~14.7 GiB), ~9 GiB headroom, unsafe past 4096 ctx |
 | Ternary Bonsai 2 27B | ternary | PQ2_0 CPU, `-t 8` | ~2.0 | not measured this precisely |
+| Qwen3.8-27B (dense, same base as Bonsai) | dense | `ngl 20 -t 8` | ~1.38 | lightest footprint: ~15.3 GiB RAM + ~1.5 GiB VRAM headroom |
+| Granite 4.2 30B | dense | `ngl 10 -t 8` | ~1.2 | RAM-heavy (~14.7 GiB), ~9 GiB headroom, unsafe past 4096 ctx |
 
 The MoE models remain the clear winners for agentic coding on this hardware
-— both land in the 10-14 tok/s range, roughly **8-10x faster than the best
-dense option (Granite, ~1.2 tok/s)**. The dense-model result confirms the
-theory from the first round: without an MoE-style trick to keep most
-compute on a small active-parameter subset, a 30B-class model on a 6 GiB
-card is bottlenecked by CPU RAM bandwidth for nearly its whole weight set,
-and no amount of thread or `-ngl` tuning fixes that short of the GPU holding
-the whole model (which this hardware cannot do at this size/quant). Between
-the two MoE options, Qwen3-Coder's 34-config is a genuine joint optimum
-(best pp *and* tg together) while Qwen3.6's best pp and best tg configs
-disagree (`ncmoe 48` vs `32`) — worth keeping both configs handy depending on
-whether a given task is prompt-heavy (large context ingestion) or
-generation-heavy.
+— both land in the 10-14 tok/s range, roughly **7-10x faster than either
+dense option**. The dense-model results confirm the theory from the first
+round: without an MoE-style trick to keep most compute on a small
+active-parameter subset, a ~27-30B-class model on a 6 GiB card is
+bottlenecked by CPU RAM bandwidth for nearly its whole weight set, and no
+amount of thread or `-ngl` tuning fixes that short of the GPU holding the
+whole model (which this hardware cannot do at this size/quant) — Qwen3.8-27B
+being smaller helps its headroom and lets it inch ahead of Granite on speed,
+but it's still in the same tier, not a different one. Between the two MoE
+options, Qwen3-Coder's 34-config is a genuine joint optimum (best pp *and*
+tg together) while Qwen3.6's best pp and best tg configs disagree (`ncmoe
+48` vs `32`) — worth keeping both configs handy depending on whether a given
+task is prompt-heavy (large context ingestion) or generation-heavy.
