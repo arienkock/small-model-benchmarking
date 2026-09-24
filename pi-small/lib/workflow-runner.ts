@@ -129,7 +129,7 @@ export async function runWorkflow(env: WorkflowEnv, opts: RunOptions): Promise<W
 	let state = opts.state ?? initialState(opts.task, opts.preexistingCode, opts.profile);
 	env.saveState(state);
 	let counter = 0;
-	const models = opts.models?.length ? opts.models : undefined;
+	const models = opts.models?.length ? opts.models : cfg.models?.length ? cfg.models : undefined;
 	let modelIdx = 0;
 
 	for (let step = nextStep(state); step; step = nextStep(state)) {
@@ -242,5 +242,5 @@ async function judge(
 	// fresh container; report_done only says the model thinks it is finished.
 	const check = await env.runCheck(dir, checkSpec);
 	if (check.ok) return { ok: true, value: { summary: out?.value?.summary ?? out?.args?.summary ?? null, reported: !!out }, check };
-	return { ok: false, detail: describeCheck(check) + timeout, check };
+	return { ok: false, detail: describeCheck(check, cfg.feedback) + timeout, check };
 }

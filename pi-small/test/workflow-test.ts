@@ -282,14 +282,24 @@ await test("runner: a failed coding attempt is retried fresh with the check outp
 	assert.equal(s.status, "completed");
 	const impl = f.prompts.filter((p) => p.step.includes("implement-T1"));
 	assert.deepEqual(impl.map((p) => p.step.replace(/^\d+-/, "")), ["implement-T1-a1", "implement-T1-a2"]);
-	assert.match(impl[1].prompt, /## A previous attempt at this step failed[\s\S]*AssertionError: 3 != 2/);
+	assert.match(impl[1].prompt, /## A previous attempt at this step failed\n\nThe harness checks did NOT pass:\n- the test suite failed\n\nThe files/);
+	assert.doesNotMatch(impl[1].prompt, /AssertionError/, "minimal feedback (the default): the verdict, not the output");
 	assert.match(impl[1].prompt, /still in \/workspace/);
+	const g = fakeEnv((dir) => (dir.name.includes("implement-T1-a1") ? { out: good.done, check: { ok: false, problems: ["the test suite failed"], tests: { rc: 1, tail: "AssertionError: 3 != 2" } } } : { out: answerFor(dir.name) }));
+	await runWorkflow(g.env, { config: mergeConfig(cfg, { feedback: "output" }), task: "x", profile: PROFILE, preexistingCode: false });
+	assert.match(g.prompts.find((p) => p.step.includes("implement-T1-a2"))!.prompt, /AssertionError: 3 != 2/, "feedback: output adds the tail");
+});
+
+await test("runner: a rotation can come from the config", async () => {
+	const f = fakeEnv((dir) => (dir.name.includes("breakdown-a1") ? {} : { out: answerFor(dir.name) }));
+	await runWorkflow(f.env, { config: mergeConfig(cfg, { models: ["A", "B"] }), task: "x", profile: PROFILE, preexistingCode: false });
+	assert.deepEqual(f.prompts.slice(0, 3).map((p) => p.model), ["A", "A", "B"]);
 });
 
 await test("runner: the retry feedback is saved, so a resumed run retries with it", async () => {
 	const failing = { out: good.done, check: { ok: false, problems: ["the test suite failed"], tests: { rc: 1, failures: [{ test: "test_get", error: "AssertionError: 404 != 200" }] } } };
 	const f = fakeEnv((dir) => (dir.name.includes("implement-T1") ? failing : { out: answerFor(dir.name) }));
-	const s = await runWorkflow(f.env, { config: mergeConfig(cfg, { attempts: { implement: 1 } }), task: "x", profile: PROFILE, preexistingCode: false });
+	const s = await runWorkflow(f.env, { config: mergeConfig(cfg, { attempts: { implement: 1 }, feedback: "failures" }), task: "x", profile: PROFILE, preexistingCode: false });
 	assert.equal(s.status, "failed");
 	assert.equal(s.retry?.step, "implement-T1");
 	assert.match(s.retry!.feedback, /Failing tests:\n- test_get: AssertionError: 404 != 200/);
@@ -585,7 +595,7 @@ await test("tool: report_done refuses while check.py fails, accepts once it pass
 	process.chdir(ws);
 	try {
 		const t = buildWorkflowTool(step);
-		await assert.rejects(t.execute("1", { summary: "done" }), /did NOT pass[\s\S]*AssertionError: 3 != 4[\s\S]*1 of 3 tries/);
+		await assert.rejects(t.execute("1", { summary: "done" }), /did NOT pass:\n- the test suite failed \(`python3 -m unittest discover -s tests -v` exited 1\)\.\n\nFix these, run the tests, and call report_done again\. \(1 of 3 tries/);
 		writeFileSync(join(ws, "tests/test_mod.py"), TEST());
 		const r = await t.execute("2", { summary: "fixed" });
 		assert.equal(r.terminate, true);

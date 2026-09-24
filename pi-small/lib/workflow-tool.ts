@@ -185,7 +185,7 @@ export function buildWorkflowTool(step: StepFile) {
 						record(false, { value: v.value, check });
 						return stop("Recorded, but the checks still fail; this step ends here.");
 					}
-					throw new Error(`${describeCheck(check)}\n\nFix these, run the tests, and call report_done again. (${refusals} of ${limit} tries used.)`);
+					throw new Error(`${describeCheck(check, step.config.feedback)}\n\nFix these, run the tests, and call report_done again. (${refusals} of ${limit} tries used.)`);
 				}
 			}
 			record(true, { value: v.value, check: check ?? null });

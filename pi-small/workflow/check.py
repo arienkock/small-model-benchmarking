@@ -166,7 +166,7 @@ def main():
         rc, out = run(c["command"], ws, 120)
         checks.append({"name": c["name"], "ok": rc == 0, "tail": tail(out, 20)})
         if rc != 0:
-            problems.append(f'the "{c["name"]}" check failed' + (" (timed out)." if rc is None else "."))
+            problems.append(f'the "{c["name"]}" check failed' + (" (timed out)" if rc is None else "") + f" (`{c['command']}`).")
 
     report = {"ok": not problems, "problems": problems, "checks": checks}
     if tests is not None:

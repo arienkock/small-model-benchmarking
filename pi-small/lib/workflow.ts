@@ -101,6 +101,18 @@ export interface WorkflowConfig {
 	 * 85 minutes generating (2026-09-24).
 	 */
 	systemPrompt: string;
+	/**
+	 * How much of a failed check the model is told, in a retry prompt and when
+	 * report_done refuses:
+	 *   minimal   what failed and the command to see why ("the test suite failed
+	 *             (`cmd` exited 1)"); nothing from the output. The model has to run
+	 *             the tests itself rather than guess from a fragment of an error.
+	 *   failures  plus one line per failing test (the task's failurePattern)
+	 *   output    plus the last lines of the output
+	 */
+	feedback: "minimal" | "failures" | "output";
+	/** A model rotation (roster aliases): every failed session moves to the next. --models overrides it. */
+	models?: string[];
 }
 
 export const TERSE_STYLE =
@@ -119,6 +131,7 @@ export const DEFAULT_CONFIG: WorkflowConfig = {
 	stepTimeoutMin: 15,
 	testTimeoutSec: 60,
 	systemPrompt: TERSE_STYLE,
+	feedback: "minimal",
 };
 
 export function mergeConfig(base: WorkflowConfig, over: any): WorkflowConfig {
@@ -583,12 +596,13 @@ export interface CheckReport {
 	checks?: Array<{ name: string; ok: boolean; tail?: string }>;
 }
 
-/** A check report, as feedback a model can act on. */
-export function describeCheck(r: CheckReport): string {
+/** A check report, as feedback a model can act on; `level` is WorkflowConfig.feedback. */
+export function describeCheck(r: CheckReport, level: WorkflowConfig["feedback"] = "failures"): string {
 	if (r.ok) return `All checks passed${r.tests?.count != null ? ` (${r.tests.count} tests ran)` : ""}.`;
 	const lines = ["The harness checks did NOT pass:", ...r.problems.map((p) => `- ${p}`)];
+	if (level === "minimal") return lines.join("\n");
 	const failures = r.tests?.failures ?? [];
-	if (failures.length && !r.tests?.timedOut) {
+	if (level === "failures" && failures.length && !r.tests?.timedOut) {
 		// Tests failing the same way are one line: seven "Connection refused" lines say no more than one.
 		const byError = new Map<string, string[]>();
 		for (const f of failures) byError.set(f.error, [...(byError.get(f.error) ?? []), f.test]);
