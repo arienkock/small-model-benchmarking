@@ -42,9 +42,17 @@ export interface CommandGuard {
 	message: string;
 }
 
-/** bash's own options, plus the guard list this plugin adds on top. */
+/** bash's own options, plus what this plugin adds on top: guards and a default timeout. */
 export interface BashToolConfig extends BashToolOptions {
 	commandGuards?: CommandGuard[];
+	/**
+	 * Seconds a command may run when the model does not pass its own `timeout`.
+	 * pi's bash has none by default, so one command that never returns — a server
+	 * started with `&` whose output pipe stays open — blocks the session until its
+	 * limit: Granite-4.2-3B lost 36 of a session's 40 minutes that way on
+	 * 2026-09-24. A model that needs longer can still ask for it per call.
+	 */
+	defaultTimeoutSec?: number;
 }
 
 function shQuote(s: string): string {
@@ -53,7 +61,7 @@ function shQuote(s: string): string {
 
 /** Turn `commandGuards` into a spawnHook that refuses a matching command instead of running it. */
 function withGuards(options: BashToolConfig): BashToolOptions {
-	const { commandGuards, spawnHook, ...rest } = options;
+	const { commandGuards, spawnHook, defaultTimeoutSec: _timeout, ...rest } = options;
 	if (!commandGuards || commandGuards.length === 0) return options;
 	const compiled = commandGuards.map((g) => ({ re: new RegExp(g.pattern, g.flags ?? "i"), message: g.message }));
 	const hook = (context: BashSpawnContext): BashSpawnContext => {
@@ -64,10 +72,20 @@ function withGuards(options: BashToolConfig): BashToolOptions {
 	return { ...rest, spawnHook: hook };
 }
 
+/** Give every bash call a timeout unless the model chose one itself. */
+function withDefaultTimeout(def: ToolDefinition<any, any, any>, seconds: number | undefined): ToolDefinition<any, any, any> {
+	if (!seconds) return def;
+	return {
+		...def,
+		execute: (id: string, params: any, ...rest: any[]) =>
+			(def.execute as any)(id, params && params.timeout === undefined ? { ...params, timeout: seconds } : params, ...rest),
+	};
+}
+
 type ToolBuilder = (cwd: string, options: any) => ToolDefinition<any, any, any>;
 
 const TOOL_BUILDERS: Record<string, ToolBuilder> = {
-	bash: (cwd, options) => createBashToolDefinition(cwd, withGuards(options as BashToolConfig)),
+	bash: (cwd, options) => withDefaultTimeout(createBashToolDefinition(cwd, withGuards(options as BashToolConfig)), (options as BashToolConfig).defaultTimeoutSec),
 	read: (cwd, options) => createReadToolDefinition(cwd, options),
 	write: (cwd, options) => createWriteToolDefinition(cwd, options),
 	edit: (cwd, options) => createEditToolDefinition(cwd, options),

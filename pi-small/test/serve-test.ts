@@ -18,7 +18,8 @@ import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { buildServerArgs, compareProps, quoteForCmdShell, requiredReserveTokens, resolveSampler, thinkingKwargs, validateSpec } from "../lib/roster.ts";
+import { buildServerArgs, compareProps, quoteForCmdShell, requiredReserveTokens, resolveSampler, resolveToolOptions, thinkingKwargs, validateSpec } from "../lib/roster.ts";
+import { buildTool } from "../lib/tools.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SERVE = resolve(HERE, "..", "serve.mjs");
@@ -385,6 +386,24 @@ try {
 	assert.equal(gArgs[gArgs.indexOf("--chat-template-kwargs") + 1], '{"enable_thinking":true,"reasoning_effort":"low"}');
 	assert.equal(gArgs[gArgs.indexOf("--reasoning-budget") + 1], "2048");
 	pass("Granite's reasoning_effort reaches the server command line with thinking on, and nowhere with it off");
+
+	// --- per-model toolOptions merge over the defaults; bash gets a default timeout ---
+	const minicpm = roster.models.find((m: any) => m.alias === "MiniCPM5-2B-Q8_0")!;
+	const mOpts = resolveToolOptions(minicpm, roster.defaults, "bash") as any;
+	assert.equal(mOpts.defaultTimeoutSec, 120, "MiniCPM5's own bash options must not drop the roster-wide timeout");
+	assert.ok(Array.isArray(mOpts.commandGuards) && mOpts.commandGuards.length > 0, "and its guards stay");
+	assert.equal((resolveToolOptions(granite, roster.defaults, "bash") as any).defaultTimeoutSec, 120);
+	const bash = buildTool("bash", tmpdir(), { defaultTimeoutSec: 1 });
+	const t0 = Date.now();
+	const hung = await (bash.execute as any)("t1", { command: "sleep 30" }, undefined, undefined, undefined).then(
+		(r: any) => JSON.stringify(r.content),
+		(e: any) => String(e?.message ?? e),
+	);
+	assert.ok(Date.now() - t0 < 15_000, `a command with no timeout of its own is stopped by the default (took ${Date.now() - t0} ms): ${hung}`);
+	assert.match(hung, /timed out|timeout/i);
+	const own = await (bash.execute as any)("t2", { command: "sleep 2; echo done", timeout: 10 }, undefined, undefined, undefined);
+	assert.match(JSON.stringify(own.content), /done/, "a model's own longer timeout wins over the default");
+	pass("tool options merge over the roster defaults, and bash calls get a 120 s timeout unless the model sets one");
 
 	console.log(`\n${passed.length} checks passed. Logs: ${LOGS}`);
 } finally {

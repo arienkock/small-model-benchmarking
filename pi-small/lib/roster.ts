@@ -133,10 +133,12 @@ export interface ModelSpec {
 	tools?: string[];
 	/**
 	 * Per-kind tool options for this model, keyed by kind name (e.g. `bash`).
-	 * Each kind's options fully override `defaults.toolOptions` for that same
-	 * kind; kinds not mentioned here still fall back to the default. This is
-	 * where a guard or a tool variation for ONE model lives, e.g.
-	 * `{ bash: { commandGuards: [...] } }` — see roster.json's MiniCPM5 entry.
+	 * Merged field by field over `defaults.toolOptions` for that kind: a field
+	 * set here wins, a field not set here keeps the default. (It used to replace
+	 * the kind's defaults wholesale, which would have silently dropped a roster-wide
+	 * setting such as bash `defaultTimeoutSec` for MiniCPM5, the one model with
+	 * its own bash options.) This is where a guard or a tool variation for ONE
+	 * model lives, e.g. `{ bash: { commandGuards: [...] } }` — see MiniCPM5.
 	 */
 	toolOptions?: Record<string, Record<string, unknown>>;
 	/**
@@ -266,7 +268,7 @@ export function resolveTools(spec: ModelSpec, d: RosterDefaults): string[] {
 
 /** This model's options for one tool kind: its own, else the roster default for that kind, else none. */
 export function resolveToolOptions(spec: ModelSpec, d: RosterDefaults, kind: string): Record<string, unknown> {
-	return spec.toolOptions?.[kind] ?? d.toolOptions[kind] ?? {};
+	return { ...(d.toolOptions[kind] ?? {}), ...(spec.toolOptions?.[kind] ?? {}) };
 }
 
 /** This model's system-prompt override, if any: its own, else the roster default, else unset. */
