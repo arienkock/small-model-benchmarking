@@ -588,7 +588,12 @@ export function describeCheck(r: CheckReport): string {
 	if (r.ok) return `All checks passed${r.tests?.count != null ? ` (${r.tests.count} tests ran)` : ""}.`;
 	const lines = ["The harness checks did NOT pass:", ...r.problems.map((p) => `- ${p}`)];
 	const failures = r.tests?.failures ?? [];
-	if (failures.length && !r.tests?.timedOut) lines.push("", "Failing tests:", ...failures.map((f) => `- ${f.test}: ${f.error}`));
+	if (failures.length && !r.tests?.timedOut) {
+		// Tests failing the same way are one line: seven "Connection refused" lines say no more than one.
+		const byError = new Map<string, string[]>();
+		for (const f of failures) byError.set(f.error, [...(byError.get(f.error) ?? []), f.test]);
+		lines.push("", "Failing tests:", ...[...byError].map(([error, tests]) => `- ${tests.length > 2 ? `${tests.slice(0, 2).join(", ")} and ${tests.length - 2} more` : tests.join(", ")}: ${error || "(no error line)"}`));
+	}
 	else if (r.tests?.tail && (r.tests.rc !== 0 || r.tests.timedOut)) lines.push("", "Last lines of the test run:", "```", r.tests.tail.trim(), "```");
 	for (const c of r.checks ?? []) if (!c.ok && c.tail) lines.push("", `Output of the "${c.name}" check:`, "```", c.tail.trim(), "```");
 	return lines.join("\n");

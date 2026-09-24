@@ -463,6 +463,9 @@ await test("check.py + describeCheck: a failure pattern turns the output into on
 	const text = describeCheck(r);
 	assert.match(text, /Failing tests:\n- test_crash: ValueError: bad input\n- test_S1_adds: AssertionError: 3 != 4/);
 	assert.doesNotMatch(text, /Traceback/);
+	const same = (test: string) => ({ test, error: "URLError: Connection refused" });
+	const grouped = describeCheck({ ok: false, problems: ["the test suite failed"], tests: { rc: 1, failures: [same("t1"), same("t2"), same("t3"), { test: "t4", error: "KeyError: id" }] } });
+	assert.match(grouped, /- t1, t2 and 1 more: URLError: Connection refused\n- t4: KeyError: id/);
 });
 
 await test("check.py: with a count pattern, a suite that runs nothing fails", () => {
