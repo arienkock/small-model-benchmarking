@@ -7,9 +7,10 @@ Prints one JSON object (CheckReport in ../lib/workflow.ts) and exits 0 when ever
 check passed, 1 otherwise. It knows no language or test framework; the spec
 says how to run the tests (see CheckSpec). Checks, none of them trusting the model:
 
-  tokens   every required scenario token (S3, T2_S1, I2) appears in some test file
+  files    some test file exists
   suite    `testCommand` exits 0 within `testTimeoutSec` (and, with
-           `testCountPattern`, reports more than zero tests)
+           `testCountPattern`, runs at least `minTests` tests — one per
+           scenario; how they are named is up to the model)
   checks   each task-specific command in `checks` exits 0
 """
 import fnmatch
@@ -47,14 +48,6 @@ def test_files(ws, globs):
         elif re.search(r"test|spec", rel, re.I):
             files.append(rel)
     return files
-
-
-def token_regex(token):
-    """S3 must not match inside T2_S3 or S30; T2_S1 not inside T2_S10."""
-    guard = r"(?<![A-Za-z0-9])"
-    if re.fullmatch(r"S\d+", token):
-        guard += r"(?<!T\d_)(?<!T\d\d_)"
-    return re.compile(guard + re.escape(token) + r"(?![A-Za-z0-9])")
 
 
 def kill_tree(p):
@@ -98,6 +91,42 @@ def tail(text, n=40):
     return "\n".join(text.strip().splitlines()[-n:])
 
 
+SEPARATOR = re.compile(r"[=\-_*~#.]{5,}")
+
+
+def failures(out, pattern):
+    """The failing tests, from the task's `failurePattern` (it knows the test
+    framework; this does not). Group 1 is the test's name. Group 2, when the
+    pattern has one and it matched, is the error, from the same line (pytest's
+    `FAILED t.py::test_x - AssertionError: …`). Otherwise the error is the last
+    non-blank line of the block under the match, which ends at the next match
+    or a separator line (unittest's ====, ----). No pattern, nothing found:
+    [] and the feedback falls back to the tail of the output."""
+    if not pattern:
+        return []
+    rx = re.compile(pattern)
+    found, cur = [], None
+    for line in out.splitlines():
+        m = rx.search(line)
+        if m:
+            inline = m.group(2) if rx.groups >= 2 else None
+            cur = {"test": m.group(1), "error": (inline or "").strip()[:300]}
+            found.append(cur)
+            if inline:
+                cur = None
+            continue
+        if cur is None:
+            continue
+        s = line.strip()
+        if SEPARATOR.fullmatch(s):
+            if cur["error"]:
+                cur = None
+        elif s:
+            cur["error"] = s[:300]
+    seen = set()
+    return [f for f in found if not (f["test"] in seen or seen.add(f["test"]))][:20]
+
+
 def main():
     spec = json.load(open(sys.argv[1]))
     ws = sys.argv[2] if len(sys.argv) > 2 else "/workspace"
@@ -105,16 +134,10 @@ def main():
     timeout = int(spec.get("testTimeoutSec", 300))
 
     files = test_files(ws, spec.get("testFiles") or [])
-    texts = [open(os.path.join(ws, f), encoding="utf-8", errors="replace").read() for f in files]
-    missing = [t for t in spec.get("requiredTokens", []) if not any(token_regex(t).search(x) for x in texts)]
     if not files:
         where = ", ".join(spec["testFiles"]) if spec.get("testFiles") else 'a path containing "test" or "spec"'
         problems.append(f"no test files found (looked for {where}).")
-    elif missing:
-        problems.append(
-            "no test is named for scenario(s) " + ", ".join(missing)
-            + f" — put the id in the test's name, e.g. test_{missing[0]}_<what>."
-        )
+    min_tests = int(spec.get("minTests", 0))
 
     tests = None
     command = (spec.get("testCommand") or "").strip()
@@ -127,12 +150,16 @@ def main():
             m = re.search(spec["testCountPattern"], out, re.M)
             count = int(m.group(1)) if m else 0
         tests = {"rc": rc, "timedOut": rc is None, "count": count, "tail": tail(out)}
+        if rc is not None and rc != 0:
+            tests["failures"] = failures(out, spec.get("failurePattern"))
         if rc is None:
             problems.append(f"the test suite did not finish within {timeout} seconds (a server left running, or a test waiting forever?).")
         elif rc != 0:
             problems.append(f"the test suite failed (`{command}` exited {rc}).")
         elif count == 0:
             problems.append(f"the test suite ran no tests (`{command}`).")
+        if rc is not None and count is not None and 0 < count < min_tests:
+            problems.append(f"{count} tests ran, but there are {min_tests} scenarios so far: write a test for each one.")
 
     checks = []
     for c in spec.get("checks", []):
@@ -141,7 +168,7 @@ def main():
         if rc != 0:
             problems.append(f'the "{c["name"]}" check failed' + (" (timed out)." if rc is None else "."))
 
-    report = {"ok": not problems, "problems": problems, "missingTokens": missing, "checks": checks}
+    report = {"ok": not problems, "problems": problems, "checks": checks}
     if tests is not None:
         report["tests"] = tests
     print(json.dumps(report))

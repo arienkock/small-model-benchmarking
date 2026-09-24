@@ -46,11 +46,11 @@ launch it with `schtasks` (see the repo's CLAUDE.md), not `nohup`.
 | `scenarios` | write verification scenarios for the whole task: happy paths and unhappy paths, each falsifiable (given / when / then) | `submit_scenarios` | at least 3 happy and 3 unhappy, at most 16, every field present |
 | `breakdown` | split the task into 2-6 ordered implementation tasks, each with files and the scenario ids it covers; plus a `test_command` when the task has none | `submit_breakdown` | count, relative paths, every scenario covered by some task, a test command if one was asked for |
 | `task_plan` Tk | for each task: its own scenarios, plus the implementation logic | `submit_task_plan` | at least 1 happy and 1 unhappy, logic present |
-| `implement` Tk | write the code and a test per scenario | `report_done` | `check.py`: every scenario id so far appears in a test file, the test command passes, the task's own checks pass |
-| `integrate` Tk | when earlier work exists: integration tests through the real entry points | `report_done` | as above, plus the `I<k>` token in some test |
+| `implement` Tk | write the code and a test per scenario | `report_done` | `check.py`: the test command passes, with at least one test per scenario so far, and the task's own checks pass |
+| `integrate` Tk | when earlier work exists: integration tests through the real entry points | `report_done` | as above, plus at least one more test |
 
 Every task is planned before any code is written. After the last task, one
-final `check.py` run covers every scenario id. Then the task's grader, if it has
+final `check.py` run covers the whole suite. Then the task's grader, if it has
 one, tests the result independently. The model never sees the grader.
 
 Everything the steps produce is merged into the **spec** (`spec.md` in the run
@@ -94,11 +94,17 @@ directory). Each fresh session gets the parts of the spec it needs, rendered by
   next model, cycling, until the task is done or the deadline passes. The
   plugin asks `proxy.mjs` for the switch (`POST /pi-small/model`) before the
   next session starts. Requests wait while the switch is in progress.
-- **Scenario to test traceability is mechanical, and language-agnostic.** The
-  id of scenario `T2.S1`, written `T2_S1`, must appear in some test file, for
-  example `def test_T2_S1_…` or `it("T2_S1: …")`. This is a plain-text search
-  with guards, so `S1` is not satisfied by `T2_S1` or `S10`. The required ids
-  are cumulative, so deleting an earlier task's tests fails the check.
+- **A test per scenario, named however the model likes.** Every scenario is in
+  the prompt as something to test. The check counts: the suite must run at least
+  as many tests as there are scenarios so far, which is cumulative, so deleting
+  earlier tests fails. The count comes from the task's `testCountPattern`. Until
+  2026-09-24 each test also had to carry its scenario id in its name
+  (`test_T2_S1_…`). That rule tripped every model in the rotation run: tests
+  named `test_T1_S1` for whole-task scenario `S1` were never renamed across
+  four retries, while the models worked on the failing code instead.
+- **Retry feedback is short.** It lists the problems, then one line per
+  failing test with its error when the task has a `failurePattern`. Otherwise
+  it shows the last 40 lines of output.
 
 **A terse response style for every session.** The workflow config's
 `systemPrompt` (default `TERSE_STYLE` in `lib/workflow.ts`) is appended to the

@@ -142,16 +142,31 @@ export interface TaskProfile {
 	 */
 	testCommand?: string;
 	/**
-	 * Globs (relative to /workspace) of the files that hold tests, where scenario
-	 * ids are looked for. Unset: any file whose path contains "test" or "spec".
+	 * Globs (relative to /workspace) of the files that hold tests; at least one
+	 * must exist. Unset: any file whose path contains "test" or "spec".
 	 */
 	testFiles?: string[];
 	/**
 	 * Optional regex over the test output whose first group is the number of
 	 * tests that ran ("^Ran (\\d+) tests?" for unittest). When set, a run that
 	 * matches 0 — or does not match at all — fails: an empty suite is not a pass.
+	 * It is also how "a test per scenario" is checked: the count must reach the
+	 * number of scenarios so far. Tests may be named anything.
 	 */
 	testCountPattern?: string;
+	/**
+	 * Optional regex over the test output matching one line per failing test.
+	 * Group 1 is the test's name; an optional group 2 is its error on the same
+	 * line. Without group 2 the error is the last line of the block under the
+	 * match. Examples:
+	 *   unittest  "^(?:FAIL|ERROR): (\\S+)"
+	 *   pytest -rf  "^FAILED (\\S+) - (.*)"
+	 * A framework that prints errors above the test's name (go test) or ends
+	 * each block with a stack trace (jest) is better left without a pattern.
+	 * Retry feedback then lists each failing test with its error instead of
+	 * the tail of the output; when nothing matches it falls back to the tail.
+	 */
+	failurePattern?: string;
 	/** Task-specific rules shown to the model in every coding step (layout, framework, constraints). */
 	conventions?: string;
 	/** Task-specific checks: shell commands run from /workspace after the suite; exit 0 = pass. */
@@ -178,7 +193,7 @@ export function taskDefinitionErrors(def: any): string[] {
 	const errors: string[] = [];
 	if (!def || typeof def !== "object") return ["task.json must be a JSON object"];
 	if (typeof def.prompt !== "string" || !def.prompt) errors.push('"prompt" (the task text file) is required');
-	for (const k of ["testCommand", "testCountPattern", "conventions", "grader", "seed"]) {
+	for (const k of ["testCommand", "testCountPattern", "failurePattern", "conventions", "grader", "seed"]) {
 		if (def[k] !== undefined && typeof def[k] !== "string") errors.push(`"${k}" must be a string`);
 	}
 	if (def.testFiles !== undefined && !(Array.isArray(def.testFiles) && def.testFiles.every((g: unknown) => typeof g === "string"))) {
@@ -192,6 +207,14 @@ export function taskDefinitionErrors(def: any): string[] {
 			errors.push(`"testCountPattern" is not a valid regex: ${e.message}`);
 		}
 	}
+	if (typeof def.failurePattern === "string") {
+		try {
+			if (!/\((?!\?)/.test(def.failurePattern)) errors.push('"failurePattern" needs a capture group for the test name');
+			new RegExp(def.failurePattern);
+		} catch (e: any) {
+			errors.push(`"failurePattern" is not a valid regex: ${e.message}`);
+		}
+	}
 	if (def.checks !== undefined && !(Array.isArray(def.checks) && def.checks.every((c: any) => c && typeof c.name === "string" && typeof c.command === "string"))) {
 		errors.push('"checks" must be a list of {"name", "command"}');
 	}
@@ -199,8 +222,8 @@ export function taskDefinitionErrors(def: any): string[] {
 }
 
 export function profileOf(def: TaskDefinition): TaskProfile {
-	const { testCommand, testFiles, testCountPattern, conventions, checks } = def;
-	return { testCommand, testFiles, testCountPattern, conventions, checks };
+	const { testCommand, testFiles, testCountPattern, failurePattern, conventions, checks } = def;
+	return { testCommand, testFiles, testCountPattern, failurePattern, conventions, checks };
 }
 
 export interface WorkflowState {
@@ -217,6 +240,8 @@ export interface WorkflowState {
 	preexistingCode: boolean;
 	scenarios: Scenario[];
 	tasks: WfTask[];
+	/** The feedback for the next attempt at `step`, kept so --resume retries with it. */
+	retry?: { step: string; feedback: string };
 }
 
 export function initialState(task: string, preexistingCode: boolean, profile: TaskProfile = {}): WorkflowState {
@@ -238,8 +263,9 @@ export interface CheckSpec {
 	testTimeoutSec: number;
 	testFiles?: string[];
 	testCountPattern?: string;
-	/** Scenario tokens ("S3", "T2_S1", "I2") that must each appear in some test file. */
-	requiredTokens: string[];
+	failurePattern?: string;
+	/** Scenarios so far (plus one per integration step): the suite must run at least this many tests. */
+	minTests: number;
 	checks: Array<{ name: string; command: string }>;
 }
 
@@ -502,12 +528,13 @@ export function taskFinished(state: WorkflowState, t: WfTask): boolean {
 	return t.status === "integrated" || (t.status === "implemented" && !needsIntegration(state, t.id));
 }
 
-// -------------------------------------------------------- test-id tokens --
+// ------------------------------------------------- what the tests must cover --
 
 /**
- * "S3" -> "S3", "T2.S1" -> "T2_S1": the token a test's name must carry. Plain
- * text, so it works in any language: `def test_T2_S1_x`, `it("T2_S1: x")`,
- * `fn t2_s1_x` would not (case matters), `#[test] fn test_T2_S1_x` would.
+ * "S3" -> "S3", "T2.S1" -> "T2_S1". Tests are no longer required to carry these
+ * in their names: that rule tripped every model in the 2026-09-24 rotation run
+ * (tests named test_T1_S1 for whole-task scenario S1, never renamed in four
+ * retries). The ids now only count the tests the suite must run.
  */
 export const testToken = (id: string): string => id.replace(/\./g, "_");
 
@@ -515,9 +542,9 @@ export const testToken = (id: string): string => id.replace(/\./g, "_");
 export const integrationToken = (taskId: string): string => `I${taskId.replace(/^T/, "")}`;
 
 /**
- * Every token the test files must carry once task `taskId`'s `kind` step is
- * done. Cumulative — earlier tasks' scenarios and integration tests included —
- * so deleting an earlier test fails the check.
+ * Every scenario (plus one per integration step) that needs a test once task
+ * `taskId`'s `kind` step is done. Cumulative — earlier tasks' included — so
+ * deleting earlier tests fails the check. CheckSpec.minTests is its length.
  */
 export function requiredTokensThrough(state: WorkflowState, taskId: string, kind: "implement" | "integrate" = "implement"): string[] {
 	const tokens: string[] = [];
@@ -536,7 +563,8 @@ export function checkSpecFor(state: WorkflowState, kind: "implement" | "integrat
 		testTimeoutSec: cfg.testTimeoutSec,
 		testFiles: state.profile.testFiles,
 		testCountPattern: state.profile.testCountPattern,
-		requiredTokens: requiredTokensThrough(state, taskId, kind),
+		failurePattern: state.profile.failurePattern,
+		minTests: requiredTokensThrough(state, taskId, kind).length,
 		checks: state.profile.checks ?? [],
 	};
 }
@@ -551,8 +579,7 @@ export function finalCheckSpec(state: WorkflowState, cfg: WorkflowConfig): Check
 export interface CheckReport {
 	ok: boolean;
 	problems: string[];
-	tests?: { rc: number | null; timedOut?: boolean; count?: number | null; tail?: string };
-	missingTokens?: string[];
+	tests?: { rc: number | null; timedOut?: boolean; count?: number | null; tail?: string; failures?: Array<{ test: string; error: string }> };
 	checks?: Array<{ name: string; ok: boolean; tail?: string }>;
 }
 
@@ -560,7 +587,9 @@ export interface CheckReport {
 export function describeCheck(r: CheckReport): string {
 	if (r.ok) return `All checks passed${r.tests?.count != null ? ` (${r.tests.count} tests ran)` : ""}.`;
 	const lines = ["The harness checks did NOT pass:", ...r.problems.map((p) => `- ${p}`)];
-	if (r.tests?.tail && (r.tests.rc !== 0 || r.tests.timedOut)) lines.push("", "Last lines of the test run:", "```", r.tests.tail.trim(), "```");
+	const failures = r.tests?.failures ?? [];
+	if (failures.length && !r.tests?.timedOut) lines.push("", "Failing tests:", ...failures.map((f) => `- ${f.test}: ${f.error}`));
+	else if (r.tests?.tail && (r.tests.rc !== 0 || r.tests.timedOut)) lines.push("", "Last lines of the test run:", "```", r.tests.tail.trim(), "```");
 	for (const c of r.checks ?? []) if (!c.ok && c.tail) lines.push("", `Output of the "${c.name}" check:`, "```", c.tail.trim(), "```");
 	return lines.join("\n");
 }
@@ -629,8 +658,6 @@ const CODING_RULES = (state: WorkflowState, cfg: WorkflowConfig) =>
 		"Rules:",
 		"- Work in /workspace.",
 		`- Every scenario needs an automated test that proves it. ${testFilesRule(state)}`,
-		"- Put the scenario id in the test's name, with the dot written as an underscore: scenario T2.S1 needs a test named like `test_T2_S1_<what>` " +
-			'(or "T2_S1: <what>" where tests are named with strings); whole-task scenario S4 needs one named like `test_S4_<what>`.',
 		`- The harness runs the whole test suite from /workspace with: \`${state.testCommand}\`. It must pass and finish within ${cfg.testTimeoutSec} seconds; run it yourself before you finish, ` +
 			`with the bash tool's timeout set to ${cfg.testTimeoutSec}.`,
 		"- Tests must clean up whatever they start (servers, background processes, temporary files).",
@@ -712,12 +739,11 @@ export function buildPrompt(state: WorkflowState, step: NextStep, cfg: WorkflowC
 		case "integrate": {
 			const t = state.tasks.find((x) => x.id === step.taskId)!;
 			const earlier = state.tasks.slice(0, state.tasks.indexOf(t)).map((x) => x.id);
-			const tok = integrationToken(step.taskId!);
 			parts.push(
 				`Task ${step.taskId} is implemented and its tests pass. Now write integration tests that exercise ${step.taskId} together with ` +
 					(earlier.length ? `the earlier tasks (${earlier.join(", ")})` : "the code that already existed in the workspace") +
 					" through the real entry points of the finished program, the way a user of it would, rather than by calling its internals. " +
-					`Put ${tok} in the name of every integration test (for example \`test_${tok}_<what>\`). If an integration test finds a bug, fix the code.`,
+					"If an integration test finds a bug, fix the code.",
 				"",
 				CODING_RULES(state, cfg),
 				"",

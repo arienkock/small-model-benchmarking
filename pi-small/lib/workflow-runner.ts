@@ -136,7 +136,8 @@ export async function runWorkflow(env: WorkflowEnv, opts: RunOptions): Promise<W
 		const toolset = STEP_TOOLSET[step.kind];
 		const maxAttempts = toolset === "planning" ? cfg.attempts.planning : cfg.attempts[step.kind as "implement" | "integrate"];
 		const checkSpec: CheckSpec | undefined = toolset === "coding" ? checkSpecFor(state, step.kind as "implement" | "integrate", step.taskId!, cfg) : undefined;
-		let feedback: string | undefined;
+		// A resumed run retries with the feedback its last failed attempt got.
+		let feedback: string | undefined = state.retry?.step === stepLabel(step) ? state.retry.feedback : undefined;
 		let accepted: Judgement | undefined;
 
 		for (let attempt = 1; attempt <= maxAttempts && !accepted; attempt++) {
@@ -176,6 +177,8 @@ export async function runWorkflow(env: WorkflowEnv, opts: RunOptions): Promise<W
 				feedback =
 					(judged.detail ?? "The step did not produce an accepted result.") +
 					(toolset === "coding" ? "\n\nThe files from that attempt are still in /workspace; continue from them or replace them." : "");
+				state = { ...state, retry: { step: stepLabel(step), feedback } };
+				env.saveState(state);
 			}
 		}
 
@@ -190,6 +193,7 @@ export async function runWorkflow(env: WorkflowEnv, opts: RunOptions): Promise<W
 			return state;
 		}
 		state = applySubmission(state, step.kind, step.taskId, accepted.value);
+		delete state.retry;
 		env.event({ type: "step_accepted", step: stepLabel(step) });
 		env.saveState(state);
 	}

@@ -19,6 +19,7 @@ import { fileURLToPath } from "node:url";
 import { buildWorkflowTool } from "../lib/workflow-tool.ts";
 import { type AgentRun, runWorkflow, type StepDir, type WorkflowEnv } from "../lib/workflow-runner.ts";
 import {
+	describeCheck,
 	buildPrompt,
 	type CheckReport,
 	type CheckSpec,
@@ -176,7 +177,7 @@ await test("spec and prompts carry what the next fresh session needs", () => {
 	assert.match(spec, /Whole-task scenarios this task must provide tests for:\n- \*\*S1\*\*/);
 	const prompt = buildPrompt(p, { kind: "implement", taskId: "T1" }, cfg, "tests failed");
 	assert.match(prompt, /^# Workflow step: implement T1\n/);
-	assert.match(prompt, /`test_T2_S1_<what>`/);
+	assert.doesNotMatch(prompt, /_<what>`|in the test.s name/, "test names are the model's choice");
 	assert.match(prompt, /runs the whole test suite from \/workspace with: `run-the-tests`/);
 	assert.doesNotMatch(prompt, /python|unittest|urllib|HTTP|standard library/i, "the harness's own words must not assume a language or a task");
 	assert.match(prompt, /## A previous attempt at this step failed\n\ntests failed/);
@@ -232,7 +233,7 @@ function fakeEnv(script: Script) {
 		},
 		readOut: (dir) => outs.get(dir.name) ?? null,
 		async runCheck(dir, _spec: CheckSpec) {
-			return checks.get(dir.name) ?? { ok: true, problems: [], tests: { ran: 3, failures: 0, errors: 0, rc: 0 } };
+			return checks.get(dir.name) ?? { ok: true, problems: [], tests: { rc: 0, count: 3 } };
 		},
 		saveState: (s) => (saved = s),
 		event: (e) => events.push(e),
@@ -283,6 +284,22 @@ await test("runner: a failed coding attempt is retried fresh with the check outp
 	assert.deepEqual(impl.map((p) => p.step.replace(/^\d+-/, "")), ["implement-T1-a1", "implement-T1-a2"]);
 	assert.match(impl[1].prompt, /## A previous attempt at this step failed[\s\S]*AssertionError: 3 != 2/);
 	assert.match(impl[1].prompt, /still in \/workspace/);
+});
+
+await test("runner: the retry feedback is saved, so a resumed run retries with it", async () => {
+	const failing = { out: good.done, check: { ok: false, problems: ["the test suite failed"], tests: { rc: 1, failures: [{ test: "test_get", error: "AssertionError: 404 != 200" }] } } };
+	const f = fakeEnv((dir) => (dir.name.includes("implement-T1") ? failing : { out: answerFor(dir.name) }));
+	const s = await runWorkflow(f.env, { config: mergeConfig(cfg, { attempts: { implement: 1 } }), task: "x", profile: PROFILE, preexistingCode: false });
+	assert.equal(s.status, "failed");
+	assert.equal(s.retry?.step, "implement-T1");
+	assert.match(s.retry!.feedback, /Failing tests:\n- test_get: AssertionError: 404 != 200/);
+	const resumed = { ...structuredClone(s), status: "running" as const, tasks: s.tasks.map((t) => ({ ...t, status: t.status === "failed" ? ("planned" as const) : t.status })) };
+	const g = fakeEnv((dir) => ({ out: answerFor(dir.name) }));
+	const r = await runWorkflow(g.env, { config: cfg, task: "x", profile: PROFILE, preexistingCode: false, state: resumed });
+	assert.equal(r.status, "completed");
+	assert.match(g.prompts[0].prompt, /## A previous attempt at this step failed[\s\S]*test_get: AssertionError: 404 != 200/);
+	assert.equal(r.retry, undefined, "cleared once the step is accepted");
+	assert.doesNotMatch(g.prompts[1].prompt, /A previous attempt/, "only the step it belongs to gets it");
 });
 
 await test("runner: an invalid submission is re-validated by the host, whatever the tool said", async () => {
@@ -393,7 +410,7 @@ const PY_TESTS = { testCommand: "python3 -m unittest discover -s tests -v", test
 
 function runCheckPy(ws: string, spec: Partial<CheckSpec>): CheckReport {
 	const specPath = join(ws, ".check.json");
-	writeFileSync(specPath, JSON.stringify({ requiredTokens: [], testTimeoutSec: 30, checks: [], ...PY_TESTS, ...spec }));
+	writeFileSync(specPath, JSON.stringify({ minTests: 0, testTimeoutSec: 30, checks: [], ...PY_TESTS, ...spec }));
 	const r = spawnSync("python3", [CHECK, specPath, ws], { encoding: "utf8" });
 	try {
 		return JSON.parse(r.stdout);
@@ -406,41 +423,70 @@ const MOD = "def add(a, b):\n    return a + b\n";
 const TEST = (body = "self.assertEqual(add(1, 2), 3)") =>
 	`import unittest\nfrom mod import add\n\nclass T(unittest.TestCase):\n    def test_S1_adds(self):\n        ${body}\n\n    def test_T1_S1_more(self):\n        self.assertEqual(add(2, 2), 4)\n`;
 
-await test("check.py: passes a clean workspace with the required tokens", () => {
-	const r = runCheckPy(workspace({ "mod.py": MOD, "tests/test_mod.py": TEST() }), { requiredTokens: ["S1", "T1_S1"] });
+await test("check.py: passes a clean workspace; test names are free", () => {
+	const r = runCheckPy(workspace({ "mod.py": MOD, "tests/test_mod.py": TEST() }), { minTests: 2 });
 	assert.ok(r.ok, JSON.stringify(r));
 	assert.equal(r.tests!.count, 2);
 });
 
-await test("check.py: a missing scenario token is named", () => {
-	const r = runCheckPy(workspace({ "mod.py": MOD, "tests/test_mod.py": TEST() }), { requiredTokens: ["S1", "S2"] });
+await test("check.py: fewer tests than scenarios fails, saying how many", () => {
+	const r = runCheckPy(workspace({ "mod.py": MOD, "tests/test_mod.py": TEST() }), { minTests: 5 });
 	assert.ok(!r.ok);
-	assert.deepEqual(r.missingTokens, ["S2"]);
-	assert.match(r.problems.join(), /test_S2_<what>/);
+	assert.match(r.problems.join(), /2 tests ran, but there are 5 scenarios so far/);
 });
 
-await test("check.py: S1 is not satisfied by T2_S1 or S10, T2_S1 not by T2_S10", () => {
-	const ws = workspace({ "tests/test_x.py": "def test_T2_S1_a(): pass\ndef test_S10_b(): pass\ndef test_T3_S10_c(): pass\n" });
-	const r = runCheckPy(ws, { requiredTokens: ["S1", "T3_S1", "T2_S1", "S10"], testCommand: "true", testCountPattern: undefined });
-	assert.deepEqual(r.missingTokens, ["S1", "T3_S1"]);
-});
-
-await test("check.py: any language — tokens in a JS test file, found without a glob", () => {
-	const ws = workspace({ "src/orders.js": "export const n = 1;\n", "src/orders.test.js": 'test("S1: creates an order", () => {});\nit("T1_S2 rejects bad input", () => {});\n' });
-	const r = runCheckPy(ws, { requiredTokens: ["S1", "T1_S2"], testCommand: "true", testCountPattern: undefined });
+await test("check.py: without a count pattern the count is not checked; any language", () => {
+	const ws = workspace({ "src/orders.js": "export const n = 1;\n", "src/orders.test.js": 'test("creates an order", () => {});\n' });
+	const r = runCheckPy(ws, { minTests: 3, testCommand: "true", testCountPattern: undefined });
 	assert.ok(r.ok, JSON.stringify(r));
 });
 
+await test("check.py: no test files at all fails", () => {
+	const r = runCheckPy(workspace({ "mod.py": MOD }), { testCommand: "true", testCountPattern: undefined });
+	assert.ok(!r.ok && /no test files found/.test(r.problems.join()), JSON.stringify(r));
+});
+
 await test("check.py: a failing suite fails the check with its output", () => {
-	const r = runCheckPy(workspace({ "mod.py": MOD, "tests/test_mod.py": TEST("self.assertEqual(add(1, 2), 4)") }), { requiredTokens: ["S1"] });
+	const r = runCheckPy(workspace({ "mod.py": MOD, "tests/test_mod.py": TEST("self.assertEqual(add(1, 2), 4)") }), {});
 	assert.ok(!r.ok);
 	assert.notEqual(r.tests!.rc, 0);
 	assert.match(r.tests!.tail!, /AssertionError: 3 != 4/);
 });
 
+await test("check.py + describeCheck: a failure pattern turns the output into one line per failing test", () => {
+	const body = "self.assertEqual(add(1, 2), 4)\n\n    def test_crash(self):\n        raise ValueError('bad input')";
+	const r = runCheckPy(workspace({ "mod.py": MOD, "tests/test_mod.py": TEST(body) }), { failurePattern: "^(?:FAIL|ERROR): (\\S+)" });
+	assert.deepEqual(r.tests!.failures, [
+		{ test: "test_crash", error: "ValueError: bad input" },
+		{ test: "test_S1_adds", error: "AssertionError: 3 != 4" },
+	]);
+	const text = describeCheck(r);
+	assert.match(text, /Failing tests:\n- test_crash: ValueError: bad input\n- test_S1_adds: AssertionError: 3 != 4/);
+	assert.doesNotMatch(text, /Traceback/);
+});
+
 await test("check.py: with a count pattern, a suite that runs nothing fails", () => {
-	const r = runCheckPy(workspace({ "tests/test_none.py": "# S1 nothing here\n" }), { requiredTokens: ["S1"], testCommand: "python3 -m unittest discover -s tests -v || true" });
+	const r = runCheckPy(workspace({ "tests/test_none.py": "# S1 nothing here\n" }), { testCommand: "python3 -m unittest discover -s tests -v || true" });
 	assert.ok(!r.ok && /ran no tests/.test(r.problems.join()), JSON.stringify(r));
+});
+
+await test("check.py: failure extraction is framework-agnostic — pytest-style inline errors, other separators, no match", () => {
+	const ws = workspace({ "tests/t.txt": "x" });
+	const pytestOut = "tests/test_a.py::test_one PASSED\\ntests/test_a.py::test_two FAILED\\n=========== short test summary info ===========\\nFAILED tests/test_a.py::test_two - assert 1 == 2\\nFAILED tests/test_a.py::test_three - KeyError: id\\n====== 2 failed, 1 passed in 0.02s ======";
+	const py = runCheckPy(ws, { testCommand: `printf '${pytestOut}'; exit 1`, testCountPattern: undefined, failurePattern: "^FAILED (\\S+) - (.*)" });
+	assert.deepEqual(py.tests!.failures, [
+		{ test: "tests/test_a.py::test_two", error: "assert 1 == 2" },
+		{ test: "tests/test_a.py::test_three", error: "KeyError: id" },
+	]);
+	const blockOut = "not ok 1 - adds\\n  expected 4\\n  got 3\\n##########\\nnot ok 2 - parses\\n  SyntaxError: bad token";
+	const tap = runCheckPy(ws, { testCommand: `printf '${blockOut}'; exit 1`, testCountPattern: undefined, failurePattern: "^not ok \\d+ - (.+)" });
+	assert.deepEqual(tap.tests!.failures, [
+		{ test: "adds", error: "got 3" },
+		{ test: "parses", error: "SyntaxError: bad token" },
+	]);
+	const none = runCheckPy(ws, { testCommand: "echo something broke; exit 1", testCountPattern: undefined, failurePattern: "^FAILED (\\S+)" });
+	assert.deepEqual(none.tests!.failures, []);
+	assert.match(describeCheck(none), /Last lines of the test run:[\s\S]*something broke/, "no match falls back to the output tail");
 });
 
 await test("check.py: a hanging suite is killed at the time limit", () => {
@@ -454,18 +500,11 @@ await test("check.py: task checks run, and a failing one is reported with its ou
 	const stdlib = resolve(HERE, "..", "workflow", "checks", "python_stdlib_only.py");
 	const checks = [{ name: "stdlib only", command: `python3 "${stdlib.replace(/\\/g, "/")}"` }];
 	const ws = workspace({ "mod.py": "import json, os.path\nimport requests\nfrom flask import Flask\n" + MOD, "tests/test_mod.py": TEST() });
-	const r = runCheckPy(ws, { requiredTokens: ["S1"], checks });
+	const r = runCheckPy(ws, { checks });
 	assert.ok(!r.ok && /"stdlib only" check failed/.test(r.problems.join()));
 	assert.match(r.checks![0].tail!, /imports 'requests'/);
 	assert.match(r.checks![0].tail!, /imports 'flask'/);
-	assert.ok(runCheckPy(workspace({ "mod.py": MOD, "tests/test_mod.py": TEST() }), { requiredTokens: ["S1"], checks }).ok);
-});
-
-await test("check.py: integration tokens are required like any other", () => {
-	const ws = workspace({ "mod.py": MOD, "tests/test_mod.py": TEST() });
-	assert.deepEqual(runCheckPy(ws, { requiredTokens: ["S1", "I2"] }).missingTokens, ["I2"]);
-	writeFileSync(join(ws, "tests/test_integration.py"), "import unittest\nclass I(unittest.TestCase):\n    def test_I2_end_to_end(self):\n        pass\n");
-	assert.ok(runCheckPy(ws, { requiredTokens: ["S1", "I2"] }).ok);
+	assert.ok(runCheckPy(workspace({ "mod.py": MOD, "tests/test_mod.py": TEST() }), { checks }).ok);
 });
 
 // ------------------------------------------------------------ submit tool --
@@ -536,7 +575,7 @@ await test("tool: repeated invalid submissions end the session unaccepted", asyn
 await test("tool: report_done refuses while check.py fails, accepts once it passes", async () => {
 	const ws = workspace({ "mod.py": MOD, "tests/test_mod.py": TEST("self.assertEqual(add(1, 2), 4)") });
 	const specPath = join(ws, ".check.json");
-	const spec: CheckSpec = { ...PY_TESTS, requiredTokens: ["S1"], testTimeoutSec: 30, checks: [] };
+	const spec: CheckSpec = { ...PY_TESTS, minTests: 1, testTimeoutSec: 30, checks: [] };
 	writeFileSync(specPath, JSON.stringify(spec));
 	const { step, out } = stepFile("implement", { toolset: "coding", checkScript: CHECK, checkSpecPath: specPath, check: spec, config: mergeConfig(cfg, { doneRefusals: 3 }) });
 	const cwd = process.cwd();

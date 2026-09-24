@@ -9,7 +9,7 @@
  *   - arguments are validated by ../lib/workflow.ts; a rejection is THROWN, so
  *     pi hands it back to the model as a tool error listing what to fix, and the
  *     session carries on;
- *   - report_done first runs ../workflow/check.py (scenario ids in the tests,
+ *   - report_done first runs ../workflow/check.py (a test per scenario,
  *     the task's test command, the task's own checks) and refuses while it
  *     fails, with the failures as the error;
  *   - an accepted submission is written to the step's `out` file and ends the
@@ -85,7 +85,7 @@ const DESCRIPTIONS: Record<string, string> = {
 	submit_scenarios: "Submit verification scenarios for the whole task, a few per call. Set done: true on the last call; the step ends when enough have been accepted.",
 	submit_breakdown: "Submit the ordered list of implementation tasks. Ends this step when accepted.",
 	submit_task_plan: "Submit this task's verification scenarios and implementation logic. Ends this step when accepted.",
-	report_done: "Report that this step is finished. The harness first runs its own checks (a test named for every scenario, the whole test suite, the task's own checks) and refuses if they fail.",
+	report_done: "Report that this step is finished. The harness first runs its own checks (the whole test suite, a test for every scenario, the task's own checks) and refuses if they fail.",
 };
 
 /** Run check.py the way the host does, but in this container, on the live workspace. */

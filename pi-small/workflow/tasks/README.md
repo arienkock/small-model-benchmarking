@@ -15,8 +15,9 @@ Only `prompt` is required.
 |---|---|
 | `prompt` | The markdown file holding the task text, given to the model verbatim. For a coding-bench task, use the same text the bench gave. |
 | `testCommand` | The shell command, run from `/workspace` in the sandbox, that runs the whole test suite. Exit 0 means pass. **If omitted, the breakdown step makes the model propose one** (`test_command`), and every later check uses that. |
-| `testFiles` | Globs, relative to `/workspace`, of the files that hold tests. The harness looks for scenario ids there. Omitted: any file whose path contains `test` or `spec`. |
-| `testCountPattern` | A regex over the test output whose first group is the number of tests run, e.g. `"^Ran (\\d+) tests?"` for unittest. When set, a run that reports 0 tests, or doesn't match at all, fails. That closes the "exit 0 because nothing ran" hole. |
+| `testFiles` | Globs, relative to `/workspace`, of the files that hold tests. At least one must exist. Omitted: any file whose path contains `test` or `spec`. |
+| `testCountPattern` | A regex over the test output whose first group is the number of tests run, e.g. `"^Ran (\\d+) tests?"` for unittest. When set, a run that reports 0 tests, or doesn't match at all, fails. That closes the "exit 0 because nothing ran" hole. It is also how "a test per scenario" is checked: the count must reach the number of scenarios so far. Without it, only a passing suite is required. |
+| `failurePattern` | A regex matching one line per failing test. Group 1 is the test's name, and an optional group 2 is its error on that line. Without group 2, the error is the last line of the block under the match, up to a separator line. Examples: `"^(?:FAIL\|ERROR): (\\S+)"` for unittest, `"^FAILED (\\S+) - (.*)"` for `pytest -rf`. Retry feedback then shows one line per failing test instead of the output's last 40 lines. Leave it out for frameworks that print errors above the test name (go test) or end blocks with stack traces (jest); the tail is used instead. |
 | `conventions` | Task-specific rules shown in every step: test framework, layout, constraints worth repeating. The harness's own rules are generic. |
 | `checks` | `[{ "name", "command" }]`: extra shell commands run from `/workspace` after the suite, each exit 0 = pass. A failing check is fed back to the model like a failing test, with its output. |
 | `grader` | A shell command run once after the workflow, in a no-network container, from `/workspace`, with this directory mounted at `/task`. Its output is saved as `grade.json`. If its last line is JSON with `passed` and `total`, that is the score. **The model never sees the grader.** |
@@ -39,13 +40,11 @@ at `/opt/pi-small/workflow/checks`:
 
 - scenarios → breakdown → a plan per task → implement → integrate, each step in
   a fresh session ending with a validated submission;
-- every scenario id (`S3`, `T2.S1` → `T2_S1`) must appear in some test file,
-  cumulatively. From the second task on, or when a seed existed, the `I<k>`
-  integration tokens must appear too. This is a plain-text search, so any
-  language works: `def test_T2_S1_x`, `it("T2_S1: x")`, `#[test] fn test_T2_S1_x`;
+- a test per scenario, cumulatively, plus one per integration step, counted with
+  `testCountPattern` when the task has one. Test names are the model's choice;
 - the test command must pass within `testTimeoutSec`, and so must every task
   check;
-- nudges, fresh retries and the stop rule, as in `../README.md`.
+- fresh retries and the stop rule, as in `../README.md`.
 
 ## Porting a coding-bench task
 
