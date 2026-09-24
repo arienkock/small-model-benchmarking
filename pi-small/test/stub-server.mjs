@@ -28,10 +28,20 @@
  *        PI_SMALL_STUB_CRASH_ABOVE_CTX=<n> to exit(1) immediately instead of
  *        starting, for any -c greater than <n> — simulates a GPU-memory crash
  *        at load time, for testing ServerManager's context ladder fallback.
+ *        PI_SMALL_STUB_SCRIPT=<module.mjs> to let a script play the model: its
+ *        `respond(payload)` is asked first and may return
+ *        { kind: "tool", name, args } or { kind: "text", text }; returning
+ *        nothing falls through to the behaviour above (so the probes still
+ *        work). test/fixtures/workflow-script.mjs drives the workflow e2e test.
  */
 
 import { createServer } from "node:http";
 import { writeFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
+
+const script = process.env.PI_SMALL_STUB_SCRIPT ? await import(pathToFileURL(resolve(process.env.PI_SMALL_STUB_SCRIPT)).href) : null;
+let callSeq = 0;
 
 const argv = process.argv.slice(2);
 
@@ -97,6 +107,9 @@ function respond(payload) {
 
 	const hasTools = Array.isArray(payload.tools) && payload.tools.length > 0;
 
+	const scripted = script?.respond(payload);
+	if (scripted) return scripted;
+
 	// Once a tool result comes back, answer in prose. Without this the stub would
 	// re-issue the same tool call forever, because the triggering user message is
 	// still the last USER message in the conversation.
@@ -122,6 +135,15 @@ function respond(payload) {
 	};
 }
 
+/** One OpenAI tool call: a scripted { name, args }, or the built-in bash { command }. */
+function toolCall(r) {
+	return {
+		id: `call_stub_${++callSeq}`,
+		type: "function",
+		function: { name: r.name ?? "bash", arguments: JSON.stringify(r.args ?? { command: r.command }) },
+	};
+}
+
 function nonStreaming(res, payload) {
 	const r = respond(payload);
 	const message =
@@ -129,13 +151,7 @@ function nonStreaming(res, payload) {
 			? {
 					role: "assistant",
 					content: "",
-					tool_calls: [
-						{
-							id: "call_stub_1",
-							type: "function",
-							function: { name: "bash", arguments: JSON.stringify({ command: r.command }) },
-						},
-					],
+					tool_calls: [toolCall(r)],
 				}
 			: { role: "assistant", content: r.text };
 	if (thinks(payload)) message.reasoning_content = "stub thoughts";
@@ -174,14 +190,7 @@ function streaming(res, payload) {
 				{
 					index: 0,
 					delta: {
-						tool_calls: [
-							{
-								index: 0,
-								id: "call_stub_1",
-								type: "function",
-								function: { name: "bash", arguments: JSON.stringify({ command: r.command }) },
-							},
-						],
+						tool_calls: [{ index: 0, ...toolCall(r) }],
 					},
 					finish_reason: null,
 				},

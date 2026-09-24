@@ -58,6 +58,7 @@ import { homedir, tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { buildTool } from "../lib/tools.ts";
+import { buildWorkflowTool, loadStepFile } from "../lib/workflow-tool.ts";
 import {
 	buildServerArgs,
 	compareProps,
@@ -785,10 +786,18 @@ export default function (pi: ExtensionAPI) {
 	// overrides them, so a guard or variant added for one model (see
 	// MiniCPM5's bash guard) never touches any other model's config. Done per
 	// model in switchTo(), not once here, so the tool set follows /sm-model.
+	//
+	// A workflow step (PI_SMALL_WORKFLOW_STEP, set by ../workflow/run.ts) may
+	// replace the tool kinds — a planning step gets none — and always adds its
+	// own submit tool, which has to be in the active set or setActiveTools()
+	// below would switch it off.
+	const workflowStep = loadStepFile();
 	const registerToolsFor = (spec: ModelSpec): string[] => {
-		const kinds = resolveTools(spec, d);
+		const kinds = workflowStep?.toolKinds ?? resolveTools(spec, d);
 		for (const kind of kinds) pi.registerTool(buildTool(kind, process.cwd(), resolveToolOptions(spec, d, kind)));
-		return kinds;
+		if (!workflowStep) return kinds;
+		pi.registerTool(buildWorkflowTool(workflowStep) as any);
+		return [...kinds, workflowStep.tool];
 	};
 
 	// ------------------------------------------------------------ sampling --
@@ -813,7 +822,7 @@ export default function (pi: ExtensionAPI) {
 			// session has, and the server's own default may be the other mode.
 			...(mgr.state.thinking === null
 				? {}
-				: { chat_template_kwargs: { ...(event.payload?.chat_template_kwargs ?? {}), ...thinkingKwargs(mgr.state.thinking) } }),
+				: { chat_template_kwargs: { ...(event.payload?.chat_template_kwargs ?? {}), ...thinkingKwargs(mgr.state.thinking, mgr.state.spec.reasoningEffort) } }),
 		};
 	});
 
@@ -824,19 +833,24 @@ export default function (pi: ExtensionAPI) {
 	// with no systemPrompt of its own (and no roster default) leaves
 	// event.systemPrompt untouched, so PI_SMALL_SYSTEM_PROMPT / the CLI's
 	// near-empty default still apply.
+	// A workflow step (PI_SMALL_WORKFLOW_STEP) may add its own text — by default
+	// the terse response style — APPENDED to whatever the model would otherwise
+	// get, so a model's own roster prompt (LFM's file-overwrite warning) survives.
 	pi.on("before_agent_start", (event: any, ctx: any) => {
 		const override = resolveSystemPrompt(mgr.state.spec, d);
+		const base = String(override ?? event?.systemPrompt ?? "");
+		const extra = workflowStep?.systemPrompt?.trim();
+		const effective = extra ? (base.trim() ? `${base.trimEnd()}\n\n${extra}` : extra) : base;
 		// pi does not persist the system prompt in its session record, so the
 		// only proof of what a session was actually given is what we log here.
-		const effective = String(override ?? event?.systemPrompt ?? "");
 		const hash = createHash("sha256").update(effective).digest("hex").slice(0, 12);
 		if (hash !== lastPromptHash) {
 			lastPromptHash = hash;
-			const source = override !== undefined ? "roster systemPrompt" : "PI_SMALL_SYSTEM_PROMPT / pi default";
+			const source = (override !== undefined ? "roster systemPrompt" : "PI_SMALL_SYSTEM_PROMPT / pi default") + (extra ? " + workflow systemPrompt" : "");
 			sessionLog.write({ type: "system_prompt", model: mgr.state.spec.alias, source, chars: effective.length, sha256: hash });
 			if (ctx) say(ctx, `pi-small: system prompt — ${source}, ${effective.length} chars, sha256 ${hash}`, "info");
 		}
-		return override === undefined ? {} : { systemPrompt: override };
+		return override === undefined && !extra ? {} : { systemPrompt: effective };
 	});
 
 	// ----------------------------------------------------------- responses --

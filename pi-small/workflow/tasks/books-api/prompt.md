@@ -1,0 +1,28 @@
+Build a RESTful HTTP API for books in Python.
+
+Constraints:
+- Python 3 standard library only (for example http.server, json, urllib.parse, threading). No third-party packages.
+- Keep the data in memory; nothing is written to disk. Data may be lost when the server stops.
+- The entry point is `/workspace/app.py`. Running `python3 app.py` starts the server on the port given by the environment variable `PORT` (default 8000), listening on 127.0.0.1, and keeps serving until it is stopped.
+
+A book has these fields:
+- `id`: integer, assigned by the server (1, 2, 3, … in creation order, never reused after a delete); never supplied by the client
+- `title`: string, required, not empty
+- `author`: string, required, not empty
+- `isbn`: string, required, not empty
+- `synopsis`: string, optional; defaults to an empty string
+
+Endpoints (all request and response bodies are JSON, with `Content-Type: application/json`):
+- `POST /books` creates a book from a JSON object with title, author, isbn and optionally synopsis. Responds 201 with the created book, including its `id`.
+- `GET /books/{id}` responds 200 with the book.
+- `PUT /books/{id}` replaces the book's title, author, isbn and synopsis with the ones in the body (same rules as create). Responds 200 with the updated book.
+- `DELETE /books/{id}` removes the book. Responds 204 with no body.
+- `GET /books` responds 200 with a JSON list of all books, ordered by id. It supports searching and filtering by every field through query parameters:
+  - `id=<n>` keeps only the book with that id;
+  - `title=…`, `author=…`, `isbn=…`, `synopsis=…` keep books whose field contains the value, ignoring case;
+  - `q=…` keeps books where any of title, author, isbn or synopsis contains the value, ignoring case;
+  - several parameters together must all match. An unknown query parameter is an error.
+
+Errors respond with a JSON object `{"error": "<message>"}`:
+- 400 for a body that is not valid JSON or not a JSON object, a missing or empty required field, a field of the wrong type, an `id` in a create or update body, an id in the path that is not an integer, or an unknown query parameter;
+- 404 for a book id that does not exist, or any other path.

@@ -79,6 +79,14 @@ export interface ModelSpec {
 	 */
 	thinking?: ThinkingMode;
 	/**
+	 * `reasoning_effort` for templates that read it, sent next to
+	 * `enable_thinking` (command line and every request) while thinking is on.
+	 * Granite-4.2's template knows one value: "low" appends "{reasoning effort:
+	 * low}" to the last user message; anything else is its normal effort. Ignored
+	 * with thinking off and for a model with no thinking mode.
+	 */
+	reasoningEffort?: string;
+	/**
 	 * One sampler per thinking mode, for a model whose card pairs different
 	 * numbers with each mode (Qwen: temp 1.0 / top_p 0.95 thinking, 0.7 / 0.80
 	 * instruct). The row for the ACTIVE mode is used; any field it omits falls
@@ -430,9 +438,13 @@ export function resolveSampler(spec: ModelSpec, d: RosterDefaults, mode: Thinkin
 	};
 }
 
-/** The chat-template kwargs that put a moded model in `mode`, or null for a model without modes. */
-export function thinkingKwargs(mode: ThinkingMode | null): { enable_thinking: boolean } | null {
-	return mode === null ? null : { enable_thinking: mode === "on" };
+/**
+ * The chat-template kwargs that put a moded model in `mode`, or null for a model
+ * without modes. `reasoningEffort` rides along only while thinking is on.
+ */
+export function thinkingKwargs(mode: ThinkingMode | null, reasoningEffort?: string): { enable_thinking: boolean; reasoning_effort?: string } | null {
+	if (mode === null) return null;
+	return mode === "on" && reasoningEffort ? { enable_thinking: true, reasoning_effort: reasoningEffort } : { enable_thinking: mode === "on" };
 }
 
 /**
@@ -451,7 +463,7 @@ export function thinkingArgs(spec: ModelSpec, d: RosterDefaults, ctx: number, mo
 	const wanted = spec.reasoningBudget ?? d.reasoningBudget;
 	const budget = wanted > 0 ? Math.min(wanted, Math.floor(ctx / 4)) : wanted;
 	if (mode === "off") return ["--reasoning-budget", "0", "--chat-template-kwargs", JSON.stringify(thinkingKwargs(mode))];
-	if (mode === "on") return ["--reasoning-budget", String(budget), "--chat-template-kwargs", JSON.stringify(thinkingKwargs(mode))];
+	if (mode === "on") return ["--reasoning-budget", String(budget), "--chat-template-kwargs", JSON.stringify(thinkingKwargs(mode, spec.reasoningEffort))];
 	return ["--reasoning-budget", String(budget)];
 }
 
@@ -514,6 +526,12 @@ export function validateSpec(spec: ModelSpec): string[] {
 	}
 	if (spec.thinking && spec.thinking !== "on" && spec.thinking !== "off") {
 		out.push(`${spec.alias}: thinking must be "on" or "off", got ${JSON.stringify(spec.thinking)}`);
+	}
+	if (spec.reasoningEffort !== undefined && !spec.thinking) {
+		out.push(`${spec.alias}: has "reasoningEffort" but no "thinking" mode, so it is never sent`);
+	}
+	if (spec.reasoningEffort !== undefined && (typeof spec.reasoningEffort !== "string" || !spec.reasoningEffort)) {
+		out.push(`${spec.alias}: "reasoningEffort" must be a non-empty string`);
 	}
 	if (spec.samplers && !spec.thinking) {
 		out.push(`${spec.alias}: has per-mode "samplers" but no "thinking" mode, so neither row is ever used`);

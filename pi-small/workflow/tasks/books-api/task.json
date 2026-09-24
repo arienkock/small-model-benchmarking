@@ -1,0 +1,9 @@
+{
+	"prompt": "prompt.md",
+	"testCommand": "python3 -m unittest discover -s tests -v",
+	"testFiles": ["tests/*.py"],
+	"testCountPattern": "^Ran (\\d+) tests?",
+	"conventions": "- Tests are Python unittest files in /workspace/tests/, named test_*.py; each test is a method named after its scenario.\n- Tests that need the HTTP server start it themselves on a free port and shut it down afterwards.",
+	"checks": [{ "name": "Python standard library only", "command": "python3 /opt/pi-small/workflow/checks/python_stdlib_only.py" }],
+	"grader": "python3 /task/grader.py /workspace"
+}

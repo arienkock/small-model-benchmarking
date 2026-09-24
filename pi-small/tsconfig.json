@@ -18,6 +18,7 @@
 	"include": [
 		"extensions/**/*.ts",
 		"lib/**/*.ts",
-		"test/**/*.ts"
+		"test/**/*.ts",
+		"workflow/**/*.ts"
 	]
 }

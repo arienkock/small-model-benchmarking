@@ -18,7 +18,7 @@ import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { buildServerArgs, compareProps, quoteForCmdShell, requiredReserveTokens, validateSpec } from "../lib/roster.ts";
+import { buildServerArgs, compareProps, quoteForCmdShell, requiredReserveTokens, resolveSampler, thinkingKwargs, validateSpec } from "../lib/roster.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SERVE = resolve(HERE, "..", "serve.mjs");
@@ -374,6 +374,17 @@ try {
 	assert.equal(quoteForCmdShell("a b"), '"a b"', "whitespace is quoted");
 	assert.equal(quoteForCmdShell('x\\"y'), '"x\\\\\\"y"', "backslashes before a quote are doubled, plus the quote's own");
 	pass("arguments passed through a .cmd wrapper are quoted so JSON survives cmd.exe");
+
+	// --- reasoning_effort rides with enable_thinking, only while thinking is on ---
+	const granite = roster.models.find((m: any) => m.alias === "Granite-4.2-3B-Q8_0")!;
+	assert.equal(granite.thinking, "on");
+	assert.deepEqual(thinkingKwargs("on", granite.reasoningEffort), { enable_thinking: true, reasoning_effort: "low" });
+	assert.deepEqual(thinkingKwargs("off", granite.reasoningEffort), { enable_thinking: false }, "no effort with thinking off");
+	assert.equal(thinkingKwargs(null, "low"), null, "nothing for a model without modes");
+	const gArgs = buildServerArgs(granite, roster.defaults, 16384, resolveSampler(granite, roster.defaults, "on"), undefined, "on");
+	assert.equal(gArgs[gArgs.indexOf("--chat-template-kwargs") + 1], '{"enable_thinking":true,"reasoning_effort":"low"}');
+	assert.equal(gArgs[gArgs.indexOf("--reasoning-budget") + 1], "2048");
+	pass("Granite's reasoning_effort reaches the server command line with thinking on, and nowhere with it off");
 
 	console.log(`\n${passed.length} checks passed. Logs: ${LOGS}`);
 } finally {

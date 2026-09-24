@@ -48,9 +48,11 @@
 			"repo": "ibm-granite/granite-4.2-3b-GGUF",
 			"file": "granite-4.2-3b-Q8_0.gguf",
 			"localFile": "D:/llama-cache/models--ibm-granite--granite-4.2-3b-GGUF/snapshots/*/granite-4.2-3b-Q8_0.gguf",
-			"notes": "Official IBM GGUF. Best algorithm column of round 3', cheapest cells, but the 3B skips IBM's agentic-RL block — thin on verification. Embedded template handles tools.",
+			"notes": "Official IBM GGUF. Best algorithm column of round 3', cheapest cells, but the 3B skips IBM's agentic-RL block — thin on verification. Embedded template handles tools. THINKING (2026-09-24): the embedded template thinks by default (enable_thinking defaults to true; the generation prompt opens <think>) and reads reasoning_effort, where only \"low\" does anything (it appends '{reasoning effort: low}' to the last user message). Before this entry declared a mode, pi-small sent only --reasoning-budget 2048, so every turn thought up to ~2k tokens; in the first workflow run (books-api) Granite spent 78 of 85 minutes generating at ~14 t/s. Now: thinking on at low effort, budget 2048. `PI_SMALL_THINKING=off` / `serve.mjs --thinking off` turns it off (<think></think>). The card gives one sampler for both modes, so it stays flat.",
 			"chatTemplate": null,
-			"serverArgs": []
+			"serverArgs": [],
+			"thinking": "on",
+			"reasoningEffort": "low"
 		},
 		{
 			"alias": "Nanbeige4.2-3B-Q6_K",

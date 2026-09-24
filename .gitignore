@@ -40,3 +40,6 @@ pi-small/workspace/
 pi-small/eval/supervisor/out/probe-jobs-*/
 pi-small/eval/supervisor/out/probe-results/
 pi-small/eval/supervisor/out/*.log
+
+# workflow run directories (pi-small/workflow)
+pi-small/workflow-runs/

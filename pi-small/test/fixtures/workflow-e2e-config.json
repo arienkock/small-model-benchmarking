@@ -1,0 +1,4 @@
+{
+	"stepTimeoutMin": 5,
+	"testTimeoutSec": 120
+}
