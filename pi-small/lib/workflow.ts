@@ -113,6 +113,13 @@ export interface WorkflowConfig {
 	feedback: "minimal" | "failures" | "output";
 	/** A model rotation (roster aliases): every failed session moves to the next. --models overrides it. */
 	models?: string[];
+	/**
+	 * Tool kinds for coding steps (lib/tools.ts), instead of each model's roster
+	 * tools. ["bash", "edit"] gives a targeted edit: with bash alone every model in
+	 * the 2026-09-24 overnight run rewrote whole files with heredocs to change a
+	 * line, and each rewrite brought a new error.
+	 */
+	codingTools?: string[];
 }
 
 export const TERSE_STYLE =

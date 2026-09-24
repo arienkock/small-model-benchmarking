@@ -149,7 +149,7 @@ export async function runWorkflow(env: WorkflowEnv, opts: RunOptions): Promise<W
 				taskId: step.taskId,
 				tool: STEP_TOOL[step.kind],
 				toolset,
-				toolKinds: toolset === "planning" ? (state.preexistingCode ? ["read", "ls"] : []) : undefined,
+				toolKinds: toolset === "planning" ? (state.preexistingCode ? ["read", "ls"] : []) : cfg.codingTools,
 				out: dir.out,
 				config: cfg,
 				systemPrompt: cfg.systemPrompt?.trim() || undefined,
