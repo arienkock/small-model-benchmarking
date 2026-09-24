@@ -562,7 +562,7 @@ export const integrationToken = (taskId: string): string => `I${taskId.replace(/
 export function requiredTokensThrough(state: WorkflowState, taskId: string, kind: "implement" | "integrate" = "implement"): string[] {
 	const tokens: string[] = [];
 	for (const t of state.tasks) {
-		tokens.push(...t.covers.map(testToken), ...t.scenarios.map((s) => testToken(s.id)));
+		tokens.push(...taskScenarios(state, t).map((s) => testToken(s.id)));
 		const current = t.id === taskId;
 		if (needsIntegration(state, t.id) && (!current || kind === "integrate")) tokens.push(integrationToken(t.id));
 		if (current) break;
@@ -645,6 +645,43 @@ export function renderSpec(state: WorkflowState, focus?: string): string {
 		if (f.logic.length) out.push("", "Implementation logic:", ...f.logic.map((l) => `- ${l}`));
 		out.push("");
 	}
+	return out.join("\n").trimEnd() + "\n";
+}
+
+/** A scenario's meaning, for spotting the same scenario under two ids. */
+const scenarioKey = (s: Scenario): string => [s.given, s.when, s.then].map((x) => String(x).toLowerCase().replace(/\s+/g, " ").trim()).join("|");
+
+/**
+ * The scenarios task `t` must test, each once: the whole-task scenarios it
+ * covers, then its own that are not one of those (or of any whole-task
+ * scenario) under another id. Planners repeat: in the 2026-09-24 rotation
+ * run's plan, 23 of the 25 task-level scenarios were verbatim copies of
+ * whole-task ones, so T1 asked for 12 tests where 7 were distinct.
+ */
+export function taskScenarios(state: WorkflowState, t: WfTask): Scenario[] {
+	const out = state.scenarios.filter((s) => t.covers.includes(s.id));
+	const byKey = new Map(state.scenarios.map((s) => [scenarioKey(s), s]));
+	const seen = new Set(out.map(scenarioKey));
+	for (const s of t.scenarios) {
+		const k = scenarioKey(s);
+		if (seen.has(k)) continue;
+		seen.add(k);
+		out.push(byKey.get(k) ?? s);
+	}
+	return out;
+}
+
+/**
+ * The spec as a coding step sees it: the task and the current task, nothing
+ * else. The whole-task scenario list and the other tasks' plans are context
+ * the step does not act on (planning steps get the full renderSpec).
+ */
+export function renderFocus(state: WorkflowState, taskId: string): string {
+	const f = state.tasks.find((t) => t.id === taskId)!;
+	const out: string[] = ["## The task", "", state.task, "", `## Current task: ${f.id} — ${f.title}`, "", f.goal, "", `Files: ${f.files.join(", ")}`];
+	const sc = taskScenarios(state, f);
+	if (sc.length) out.push("", "Scenarios to test:", ...sc.map(scenarioLine));
+	if (f.logic.length) out.push("", "Implementation logic:", ...f.logic.map((l) => `- ${l}`));
 	return out.join("\n").trimEnd() + "\n";
 }
 
@@ -750,7 +787,7 @@ export function buildPrompt(state: WorkflowState, step: NextStep, cfg: WorkflowC
 				"",
 				CODING_RULES(state, cfg),
 				"",
-				renderSpec(state, step.taskId),
+				renderFocus(state, step.taskId!),
 				...taskRules(state),
 				"When all tests pass, call the tool `report_done` with a one-sentence summary. It runs the harness's own checks and tells you if anything is still wrong.",
 			);
@@ -766,7 +803,7 @@ export function buildPrompt(state: WorkflowState, step: NextStep, cfg: WorkflowC
 				"",
 				CODING_RULES(state, cfg),
 				"",
-				renderSpec(state, step.taskId),
+				renderFocus(state, step.taskId!),
 				...taskRules(state),
 				"When the whole suite passes, call the tool `report_done` with a one-sentence summary. It runs the harness's own checks and tells you if anything is still wrong.",
 			);

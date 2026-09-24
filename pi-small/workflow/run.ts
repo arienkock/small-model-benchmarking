@@ -52,7 +52,10 @@
  *   current-step.json         the step the plugin's next session reads
  *   steps/NN-<kind>[-Tk]-aN/  the prompt, step.json, check.json, out.json, check reports
  *   grade.json                the task grader's output, if the task has one
- *   ws/                       the workspace (pi's own session files are in ws/.home)
+ *   home/                     the agent's HOME: pi's config and session files, pi-small's
+ *                             session logs. Outside the workspace, so a model listing
+ *                             /workspace does not find (and read) its own transcripts.
+ *   ws/                       the workspace
  */
 
 import { type ChildProcess, spawn, spawnSync } from "node:child_process";
@@ -99,6 +102,7 @@ const thinking = (args.thinking as string) || "";
 
 mkdirSync(join(runDir, "steps"), { recursive: true });
 mkdirSync(ws, { recursive: true });
+mkdirSync(join(runDir, "home"), { recursive: true });
 
 const log = (msg: string) => console.error(`[run ${new Date().toISOString().slice(11, 19)}] ${msg}`);
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -210,7 +214,7 @@ function startAgent(): PiRpc {
 		return new PiRpc(
 			"bash",
 			[join(PLUGIN_DIR, "bin", "pi-small"), "--mode", "rpc"],
-			{ cwd: ws, env: { ...process.env, ...env, PI_SMALL_HOST: "127.0.0.1", HOME: join(ws, ".home"), ...(existsSync(piBin) ? { PI_SMALL_PI_BIN: piBin } : {}) } },
+			{ cwd: ws, env: { ...process.env, ...env, PI_SMALL_HOST: "127.0.0.1", HOME: join(runDir, "home"), ...(existsSync(piBin) ? { PI_SMALL_PI_BIN: piBin } : {}) } },
 			null,
 			events,
 			stderr,
@@ -223,7 +227,7 @@ function startAgent(): PiRpc {
 			"run", "--rm", "-i", "--name", name,
 			"-v", `${ws}:/workspace`, "-v", `${PLUGIN_DIR}:/opt/pi-small:ro`, "-v", `${runDir}:/wf`,
 			"-w", "/workspace",
-			"-e", "HOME=/workspace/.home",
+			"-e", "HOME=/wf/home",
 			"-e", "PI_SMALL_HOST=host.docker.internal",
 			...Object.entries(env).flatMap(([k, v]) => ["-e", `${k}=${v}`]),
 			"--add-host=host.docker.internal:host-gateway",

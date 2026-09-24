@@ -100,7 +100,7 @@ assert.equal(sessions, steps.length - 1, "a fresh session for every step and att
 assert.ok(!readFileSync(join(runDir, "agent.stderr.log"), "utf8").match(/\[pi process exited: [1-9]/), "the pi process should not have crashed");
 
 // The workflow's system prompt reached the model: pi-small logs what each session was given.
-const logDir = join(runDir, "ws", ".home", ".pi-small");
+const logDir = join(runDir, "home", ".pi-small");
 const records = (existsSync(logDir) ? readdirSync(logDir) : []).flatMap((f) =>
 	readFileSync(join(logDir, f), "utf8").trim().split("\n").filter(Boolean).map((l) => JSON.parse(l)),
 );

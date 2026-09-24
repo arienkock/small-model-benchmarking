@@ -136,8 +136,10 @@ Defaults are in `DEFAULT_CONFIG` (`lib/workflow.ts`); override them with
         out.json      what the submit tool recorded (accepted or not, refusals)
         check-report-*.json   the host's own check runs
       grade.json      the task grader's output, if it has one
-      ws/             the workspace the model worked in; pi's session files and
-                      pi-small's session logs are in ws/.home
+      home/           the agent's HOME: pi's session files and pi-small's session
+                      logs, kept out of the workspace so a model listing it does
+                      not read its own transcripts (Spark did, 2026-09-24)
+      ws/             the workspace the model worked in
 
 ## Files
 

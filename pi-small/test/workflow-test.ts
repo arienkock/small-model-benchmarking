@@ -184,6 +184,22 @@ await test("spec and prompts carry what the next fresh session needs", () => {
 	assert.match(buildPrompt(p, { kind: "scenarios" }, cfg), /Do not write any code in this step/);
 });
 
+await test("coding prompts: only the task and the current task, each scenario once", () => {
+	const p = planned();
+	const s1 = p.scenarios[0];
+	p.tasks[0].scenarios = [
+		{ ...s1, id: "T1.S1", title: "same as S1 under another id" },
+		{ id: "T1.S2", kind: "unhappy", title: "own one", given: "g2", when: "w2", then: "t2" },
+	];
+	p.tasks[0].status = "planned";
+	const prompt = buildPrompt(p, { kind: "implement", taskId: "T1" }, cfg);
+	assert.doesNotMatch(prompt, /Verification scenarios for the whole task|Implementation plan/);
+	assert.doesNotMatch(prompt, /T1\.S1/, "a verbatim copy of a whole-task scenario is listed once, under the whole-task id");
+	assert.match(prompt, /Scenarios to test:\n- \*\*S1\*\*[\s\S]*\*\*T1\.S2\*\* \[unhappy\] own one/);
+	assert.deepEqual(requiredTokensThrough(p, "T1"), ["S1", "S4", "T1_S2"]);
+	assert.match(buildPrompt(p, { kind: "task_plan", taskId: "T2" }, cfg), /Implementation plan/, "planning steps still see the whole plan");
+});
+
 await test("task conventions reach every step; the harness adds none of its own", () => {
 	const p = planned();
 	p.profile.conventions = "Tests use node:test in tests/*.test.ts.";
