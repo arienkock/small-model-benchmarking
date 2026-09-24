@@ -1,0 +1,322 @@
+[
+ {
+  "n": 0,
+  "run": "20260912-202533/01-r3-MiniCPM5-2B-Q8_0",
+  "upto": 7,
+  "G1": false,
+  "G3": false,
+  "note": null
+ },
+ {
+  "n": 1,
+  "run": "20260912-202533/03-r1-Granite-4.2-3B-Q8_0",
+  "upto": 12,
+  "G1": false,
+  "G3": false,
+  "note": null
+ },
+ {
+  "n": 2,
+  "run": "20260912-202533/02-r3-LFM2.5-2.6B-Q8_0",
+  "upto": 26,
+  "G1": false,
+  "G3": false,
+  "note": null
+ },
+ {
+  "n": 3,
+  "run": "20260912-202533/03-r3-Nanbeige4.2-3B-Q6_K",
+  "upto": 9,
+  "G1": false,
+  "G3": false,
+  "note": null
+ },
+ {
+  "n": 4,
+  "run": "20260912-202533/02-r3-LFM2.5-2.6B-Q8_0",
+  "upto": 22,
+  "G1": false,
+  "G3": false,
+  "note": null
+ },
+ {
+  "n": 5,
+  "run": "20260912-202533/02-r3-Granite-4.2-3B-Q8_0",
+  "upto": 5,
+  "G1": false,
+  "G3": false,
+  "note": null
+ },
+ {
+  "n": 6,
+  "run": "20260912-142607/03-MiniCPM5-2B-Q8_0",
+  "upto": 11,
+  "G1": false,
+  "G3": false,
+  "note": null
+ },
+ {
+  "n": 7,
+  "run": "20260912-202533/01-r1-LFM2.5-2.6B-Q8_0",
+  "upto": 8,
+  "G1": false,
+  "G3": false,
+  "note": null
+ },
+ {
+  "n": 8,
+  "run": "20260912-202533/03-r3-Nanbeige4.2-3B-Q6_K",
+  "upto": 5,
+  "G1": false,
+  "G3": false,
+  "note": null
+ },
+ {
+  "n": 9,
+  "run": "20260912-142607/03-MiniCPM5-2B-Q8_0",
+  "upto": 20,
+  "G1": false,
+  "G3": false,
+  "note": null
+ },
+ {
+  "n": 10,
+  "run": "20260913-141131/03-r1-Nanbeige4.2-3B-Q6_K",
+  "upto": 4,
+  "G1": false,
+  "G3": false,
+  "note": null
+ },
+ {
+  "n": 11,
+  "run": "20260912-202533/03-r1-Granite-4.2-3B-Q8_0",
+  "upto": 32,
+  "G1": false,
+  "G3": false,
+  "note": null
+ },
+ {
+  "n": 12,
+  "run": "20260913-141131/03-r2-Spark-X2.5-4B-Q6_K",
+  "upto": 11,
+  "G1": false,
+  "G3": false,
+  "note": null
+ },
+ {
+  "n": 13,
+  "run": "20260913-141131/03-r2-Spark-X2.5-4B-Q6_K",
+  "upto": 15,
+  "G1": false,
+  "G3": false,
+  "note": null
+ },
+ {
+  "n": 14,
+  "run": "20260912-202533/02-r1-LFM2.5-2.6B-Q8_0",
+  "upto": 6,
+  "G1": false,
+  "G3": false,
+  "note": null
+ },
+ {
+  "n": 15,
+  "run": "20260912-083544/02-Nanbeige4.2-3B-Q6_K",
+  "upto": 8,
+  "G1": false,
+  "G3": false,
+  "note": null
+ },
+ {
+  "n": 16,
+  "run": "20260912-142607/03-MiniCPM5-2B-Q8_0",
+  "upto": 24,
+  "G1": false,
+  "G3": false,
+  "note": null
+ },
+ {
+  "n": 17,
+  "run": "20260912-202533/02-r3-LFM2.5-2.6B-Q8_0",
+  "upto": 2,
+  "G1": false,
+  "G3": false,
+  "note": null
+ },
+ {
+  "n": 18,
+  "run": "20260912-142607/02-Nanbeige4.2-3B-Q6_K",
+  "upto": 11,
+  "G1": false,
+  "G3": false,
+  "note": null
+ },
+ {
+  "n": 19,
+  "run": "20260912-202533/03-r1-Granite-4.2-3B-Q8_0",
+  "upto": 18,
+  "G1": false,
+  "G3": false,
+  "note": null
+ },
+ {
+  "n": 20,
+  "run": "20260912-202533/03-r1-LFM2.5-2.6B-Q8_0",
+  "upto": 7,
+  "G1": false,
+  "G3": true,
+  "note": "turn 8 is a thinking-only stop right after `require is not defined`: the session ends on an unfixed crash"
+ },
+ {
+  "n": 21,
+  "run": "20260913-141131/01-r2-Nanbeige4.2-3B-Q6_K",
+  "upto": 5,
+  "G1": false,
+  "G3": false,
+  "note": null
+ },
+ {
+  "n": 22,
+  "run": "20260912-202533/01-r2-Nanbeige4.2-3B-Q6_K",
+  "upto": 5,
+  "G1": false,
+  "G3": false,
+  "note": null
+ },
+ {
+  "n": 23,
+  "run": "20260912-202533/02-r2-MiniCPM5-2B-Q8_0",
+  "upto": 5,
+  "G1": false,
+  "G3": false,
+  "note": null
+ },
+ {
+  "n": 24,
+  "run": "20260912-202533/03-r1-Spark-X2.5-4B-Q6_K",
+  "upto": 3,
+  "G1": false,
+  "G3": false,
+  "note": null
+ },
+ {
+  "n": 25,
+  "run": "20260913-141131/01-r2-Spark-X2.5-4B-Q6_K",
+  "upto": 3,
+  "G1": null,
+  "G3": false,
+  "note": "response cut off at max_tokens with no action; G1 undefined"
+ },
+ {
+  "n": 26,
+  "run": "20260912-202533/03-r1-Spark-X2.5-4B-Q6_K",
+  "upto": 10,
+  "G1": false,
+  "G3": false,
+  "note": null
+ },
+ {
+  "n": 27,
+  "run": "20260913-141131/01-r3-Granite-4.2-3B-Q8_0",
+  "upto": 10,
+  "G1": false,
+  "G3": false,
+  "note": null
+ },
+ {
+  "n": 28,
+  "run": "20260912-202533/02-r3-Granite-4.2-3B-Q8_0",
+  "upto": 17,
+  "G1": false,
+  "G3": false,
+  "note": null
+ },
+ {
+  "n": 29,
+  "run": "20260912-202533/02-r3-LFM2.5-2.6B-Q8_0",
+  "upto": 18,
+  "G1": false,
+  "G3": false,
+  "note": null
+ },
+ {
+  "n": 30,
+  "run": "20260912-202533/02-r3-Granite-4.2-3B-Q8_0",
+  "upto": 18,
+  "G1": false,
+  "G3": false,
+  "note": "test script imports `requests` although the task says standard library only (not a G1/G3 case; G4 is mechanical-only)"
+ },
+ {
+  "n": 31,
+  "run": "20260913-141131/02-r3-Granite-4.2-3B-Q8_0",
+  "upto": 38,
+  "G1": false,
+  "G3": false,
+  "note": null
+ },
+ {
+  "n": 32,
+  "run": "20260912-202533/03-r1-Granite-4.2-3B-Q8_0",
+  "upto": 13,
+  "G1": false,
+  "G3": false,
+  "note": null
+ },
+ {
+  "n": 33,
+  "run": "20260914-203559/03-r2-Granite-4.2-3B-Q8_0",
+  "upto": 9,
+  "G1": false,
+  "G3": false,
+  "note": null
+ },
+ {
+  "n": 34,
+  "run": "20260912-202533/02-r2-MiniCPM5-2B-Q8_0",
+  "upto": 10,
+  "G1": false,
+  "G3": false,
+  "note": null
+ },
+ {
+  "n": 35,
+  "run": "20260912-083544/01-LFM2.5-2.6B-Q8_0",
+  "upto": 3,
+  "G1": false,
+  "G3": false,
+  "note": null
+ },
+ {
+  "n": 36,
+  "run": "20260912-202533/03-r3-Nanbeige4.2-3B-Q6_K",
+  "upto": 7,
+  "G1": false,
+  "G3": false,
+  "note": null
+ },
+ {
+  "n": 37,
+  "run": "20260912-142607/02-Nanbeige4.2-3B-Q6_K",
+  "upto": 9,
+  "G1": false,
+  "G3": false,
+  "note": null
+ },
+ {
+  "n": 38,
+  "run": "20260913-141131/01-r3-Granite-4.2-3B-Q8_0",
+  "upto": 8,
+  "G1": false,
+  "G3": false,
+  "note": null
+ },
+ {
+  "n": 39,
+  "run": "20260912-083544/03-MiniCPM5-2B-Q8_0",
+  "upto": 7,
+  "G1": false,
+  "G3": false,
+  "note": null
+ }
+]

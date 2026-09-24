@@ -34,3 +34,9 @@ pi-small/.pi-home/
 # cache migration log (one-off, on the serving machine)
 cache-move.log
 pi-small/workspace/
+
+# supervisor bake-off: intermediate probe jobs, raw per-command output (collected into
+# out/probes.jsonl) and run logs; the verdicts, checklists and scores stay committed
+pi-small/eval/supervisor/out/probe-jobs-*/
+pi-small/eval/supervisor/out/probe-results/
+pi-small/eval/supervisor/out/*.log

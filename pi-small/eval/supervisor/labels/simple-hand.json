@@ -1,0 +1,585 @@
+[
+ {
+  "run": "20260912-083544/01-Granite-4.2-3B-Q8_0",
+  "upto": 6,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260912-083544/01-Nanbeige4.2-3B-Q6_K",
+  "upto": 2,
+  "cand": [
+   "S4"
+  ],
+  "S4": false
+ },
+ {
+  "run": "20260912-083544/03-MiniCPM5-2B-Q8_0",
+  "upto": 10,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260912-083544/03-Nanbeige4.2-3B-Q6_K",
+  "upto": 10,
+  "cand": [
+   "S5"
+  ],
+  "S5": false
+ },
+ {
+  "run": "20260912-142607/01-Granite-4.2-3B-Q8_0",
+  "upto": 5,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260912-142607/01-Granite-4.2-3B-Q8_0",
+  "upto": 12,
+  "cand": [
+   "S3"
+  ],
+  "S3": false,
+  "note": "claims 'Output: all tests passed' after a read, not a run; not S3 (no error shown)"
+ },
+ {
+  "run": "20260912-142607/01-LFM2.5-2.6B-Q8_0",
+  "upto": 7,
+  "cand": [
+   "S5"
+  ],
+  "S5": false
+ },
+ {
+  "run": "20260912-142607/01-LFM2.5-2.6B-Q8_0",
+  "upto": 8,
+  "cand": [
+   "S5"
+  ],
+  "S5": false
+ },
+ {
+  "run": "20260912-142607/02-Spark-X2.5-4B-Q6_K",
+  "upto": 5,
+  "cand": [
+   "S3",
+   "S4"
+  ],
+  "S3": false,
+  "S4": false
+ },
+ {
+  "run": "20260912-142607/03-LFM2.5-2.6B-Q8_0",
+  "upto": 11,
+  "cand": [
+   "S5"
+  ],
+  "S5": false
+ },
+ {
+  "run": "20260912-142607/03-MiniCPM5-2B-Q8_0",
+  "upto": 21,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260912-142607/03-Nanbeige4.2-3B-Q6_K",
+  "upto": 18,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260912-142607/03-Nanbeige4.2-3B-Q6_K",
+  "upto": 20,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260912-202533/01-r1-Granite-4.2-3B-Q8_0",
+  "upto": 6,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260912-202533/01-r1-Granite-4.2-3B-Q8_0",
+  "upto": 12,
+  "cand": [
+   "S5"
+  ],
+  "S5": false
+ },
+ {
+  "run": "20260912-202533/01-r1-LFM2.5-2.6B-Q8_0",
+  "upto": 9,
+  "cand": [
+   "S3",
+   "S5"
+  ],
+  "S3": false,
+  "S5": false
+ },
+ {
+  "run": "20260912-202533/01-r1-MiniCPM5-2B-Q8_0",
+  "upto": 3,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260912-202533/01-r1-MiniCPM5-2B-Q8_0",
+  "upto": 14,
+  "cand": [
+   "S5"
+  ],
+  "S5": false
+ },
+ {
+  "run": "20260912-202533/01-r2-LFM2.5-2.6B-Q8_0",
+  "upto": 7,
+  "cand": [
+   "S5"
+  ],
+  "S5": false
+ },
+ {
+  "run": "20260912-202533/01-r2-LFM2.5-2.6B-Q8_0",
+  "upto": 8,
+  "cand": [
+   "S5"
+  ],
+  "S5": false
+ },
+ {
+  "run": "20260912-202533/01-r2-MiniCPM5-2B-Q8_0",
+  "upto": 9,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260912-202533/01-r2-MiniCPM5-2B-Q8_0",
+  "upto": 13,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260912-202533/01-r2-Nanbeige4.2-3B-Q6_K",
+  "upto": 6,
+  "cand": [
+   "S4"
+  ],
+  "S4": false
+ },
+ {
+  "run": "20260912-202533/01-r3-Granite-4.2-3B-Q8_0",
+  "upto": 6,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260912-202533/01-r3-Granite-4.2-3B-Q8_0",
+  "upto": 7,
+  "cand": [
+   "S5"
+  ],
+  "S5": false
+ },
+ {
+  "run": "20260912-202533/01-r3-LFM2.5-2.6B-Q8_0",
+  "upto": 9,
+  "cand": [
+   "S5"
+  ],
+  "S5": false
+ },
+ {
+  "run": "20260912-202533/01-r3-LFM2.5-2.6B-Q8_0",
+  "upto": 10,
+  "cand": [
+   "S5"
+  ],
+  "S5": false
+ },
+ {
+  "run": "20260912-202533/01-r3-MiniCPM5-2B-Q8_0",
+  "upto": 8,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260912-202533/01-r3-Spark-X2.5-4B-Q6_K",
+  "upto": 7,
+  "cand": [
+   "S3",
+   "S4"
+  ],
+  "S3": false,
+  "S4": false
+ },
+ {
+  "run": "20260912-202533/02-r1-Spark-X2.5-4B-Q6_K",
+  "upto": 6,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260912-202533/02-r2-Granite-4.2-3B-Q8_0",
+  "upto": 33,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260912-202533/02-r2-Spark-X2.5-4B-Q6_K",
+  "upto": 4,
+  "cand": [
+   "S3",
+   "S4"
+  ],
+  "S3": false,
+  "S4": false
+ },
+ {
+  "run": "20260912-202533/02-r2-Spark-X2.5-4B-Q6_K",
+  "upto": 8,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260912-202533/02-r3-LFM2.5-2.6B-Q8_0",
+  "upto": 29,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260912-202533/03-r1-Spark-X2.5-4B-Q6_K",
+  "upto": 10,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260912-202533/03-r1-Spark-X2.5-4B-Q6_K",
+  "upto": 11,
+  "cand": [
+   "S5"
+  ],
+  "S5": false
+ },
+ {
+  "run": "20260912-202533/03-r2-Nanbeige4.2-3B-Q6_K",
+  "upto": 12,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260912-202533/03-r2-Spark-X2.5-4B-Q6_K",
+  "upto": 11,
+  "cand": [
+   "S3",
+   "S5"
+  ],
+  "S3": false,
+  "S5": false
+ },
+ {
+  "run": "20260912-202533/03-r3-Granite-4.2-3B-Q8_0",
+  "upto": 6,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260912-202533/03-r3-MiniCPM5-2B-Q8_0",
+  "upto": 4,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260912-202533/03-r3-Spark-X2.5-4B-Q6_K",
+  "upto": 3,
+  "cand": [
+   "S3",
+   "S5"
+  ],
+  "S3": false,
+  "S5": false
+ },
+ {
+  "run": "20260913-141131/01-r1-Granite-4.2-3B-Q8_0",
+  "upto": 7,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260913-141131/01-r1-Spark-X2.5-4B-Q6_K",
+  "upto": 8,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260913-141131/01-r2-Granite-4.2-3B-Q8_0",
+  "upto": 12,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260913-141131/01-r2-Nanbeige4.2-3B-Q6_K",
+  "upto": 8,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260913-141131/01-r3-Granite-4.2-3B-Q8_0",
+  "upto": 4,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260913-141131/01-r3-Granite-4.2-3B-Q8_0",
+  "upto": 7,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260913-141131/01-r4-Granite-4.2-3B-Q8_0",
+  "upto": 6,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260913-141131/02-r1-Nanbeige4.2-3B-Q6_K",
+  "upto": 4,
+  "cand": [
+   "S4"
+  ],
+  "S4": false
+ },
+ {
+  "run": "20260913-141131/02-r1-Nanbeige4.2-3B-Q6_K",
+  "upto": 6,
+  "cand": [
+   "S4"
+  ],
+  "S4": false
+ },
+ {
+  "run": "20260913-141131/02-r1-Nanbeige4.2-3B-Q6_K",
+  "upto": 8,
+  "cand": [
+   "S4"
+  ],
+  "S4": false,
+  "note": "rewrites after failed edits but the rewrite still has the typo; does not claim the edit was made"
+ },
+ {
+  "run": "20260913-141131/02-r3-Nanbeige4.2-3B-Q6_K",
+  "upto": 10,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260913-141131/03-r1-Nanbeige4.2-3B-Q6_K",
+  "upto": 16,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260913-141131/03-r2-Granite-4.2-3B-Q8_0",
+  "upto": 6,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260913-141131/03-r2-Granite-4.2-3B-Q8_0",
+  "upto": 17,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260913-141131/03-r2-Nanbeige4.2-3B-Q6_K",
+  "upto": 28,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260913-141131/03-r2-Spark-X2.5-4B-Q6_K",
+  "upto": 16,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260913-141131/03-r2-Spark-X2.5-4B-Q6_K",
+  "upto": 19,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260913-141131/03-r3-Nanbeige4.2-3B-Q6_K",
+  "upto": 17,
+  "cand": [
+   "S3"
+  ],
+  "S3": false,
+  "note": "claims all assertions passed via an 'equivalent' run; previous turn is a read, no error shown"
+ },
+ {
+  "run": "20260913-141131/03-r4-Spark-X2.5-4B-Q6_K",
+  "upto": 6,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260914-203559/01-r1-Granite-4.2-3B-Q8_0",
+  "upto": 6,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260914-203559/01-r1-Granite-4.2-3B-Q8_0",
+  "upto": 9,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260914-203559/01-r2-Granite-4.2-3B-Q8_0",
+  "upto": 3,
+  "cand": [
+   "S4"
+  ],
+  "S4": false
+ },
+ {
+  "run": "20260914-203559/01-r3-Granite-4.2-3B-Q8_0",
+  "upto": 5,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260914-203559/02-r1-Granite-4.2-3B-Q8_0",
+  "upto": 4,
+  "cand": [
+   "S5"
+  ],
+  "S5": false
+ },
+ {
+  "run": "20260914-203559/02-r1-Spark-X2.5-4B-Q6_K",
+  "upto": 6,
+  "cand": [
+   "S5"
+  ],
+  "S5": false
+ },
+ {
+  "run": "20260914-203559/02-r3-Granite-4.2-3B-Q8_0",
+  "upto": 3,
+  "cand": [
+   "S4"
+  ],
+  "S4": false
+ },
+ {
+  "run": "20260914-203559/02-r3-Granite-4.2-3B-Q8_0",
+  "upto": 24,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260914-203559/02-r3-Granite-4.2-3B-Q8_0",
+  "upto": 28,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260914-203559/02-r3-Spark-X2.5-4B-Q6_K",
+  "upto": 7,
+  "cand": [
+   "S3"
+  ],
+  "S3": false
+ },
+ {
+  "run": "20260914-203559/03-r3-Granite-4.2-3B-Q8_0",
+  "upto": 11,
+  "cand": [
+   "S5"
+  ],
+  "S5": false
+ }
+]

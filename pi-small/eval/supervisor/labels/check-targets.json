@@ -1,0 +1,1118 @@
+{
+"Granite-4.2-3B-Q8_0|78820dee|0|0": [
+"D-exists"
+],
+"Granite-4.2-3B-Q8_0|78820dee|0|1": [
+"D-runs"
+],
+"Granite-4.2-3B-Q8_0|78820dee|1|0": [
+"D-runs"
+],
+"Granite-4.2-3B-Q8_0|78820dee|1|1": [
+"D-exists",
+"D-cancel",
+"D-args"
+],
+"Granite-4.2-3B-Q8_0|78820dee|1|2": [],
+"Granite-4.2-3B-Q8_0|78820dee|1|3": [
+"D-cancel",
+"D-args"
+],
+"Granite-4.2-3B-Q8_0|78820dee|2|0": [
+"D-exists"
+],
+"Granite-4.2-3B-Q8_0|78820dee|2|1": [
+"D-cancel"
+],
+"Granite-4.2-3B-Q8_0|78820dee|2|2": [
+"D-runs"
+],
+"Granite-4.2-3B-Q8_0|78820dee|3|0": [
+"D-exists"
+],
+"Granite-4.2-3B-Q8_0|78820dee|3|1": [],
+"Granite-4.2-3B-Q8_0|78820dee|3|2": [
+"D-runs"
+],
+"Granite-4.2-3B-Q8_0|78820dee|3|3": [
+"D-runs"
+],
+"Granite-4.2-3B-Q8_0|78820dee|4|0": [
+"D-exists"
+],
+"Granite-4.2-3B-Q8_0|78820dee|4|1": [
+"D-runs"
+],
+"Granite-4.2-3B-Q8_0|78820dee|4|2": [
+"D-cancel"
+],
+"Granite-4.2-3B-Q8_0|78820dee|4|3": [
+"D-cancel"
+],
+"Granite-4.2-3B-Q8_0|78820dee|4|4": [
+"D-cancel"
+],
+"Granite-4.2-3B-Q8_0|78820dee|4|5": [],
+"Granite-4.2-3B-Q8_0|78820dee|4|6": [
+"D-runs"
+],
+"Granite-4.2-3B-Q8_0|627e146d|0|0": [
+"T-exists"
+],
+"Granite-4.2-3B-Q8_0|627e146d|0|1": [
+"T-exists"
+],
+"Granite-4.2-3B-Q8_0|627e146d|0|2": [],
+"Granite-4.2-3B-Q8_0|627e146d|0|3": [],
+"Granite-4.2-3B-Q8_0|627e146d|0|4": [
+"T-429"
+],
+"Granite-4.2-3B-Q8_0|627e146d|1|0": [
+"T-exists"
+],
+"Granite-4.2-3B-Q8_0|627e146d|1|1": [
+"T-exists"
+],
+"Granite-4.2-3B-Q8_0|627e146d|1|2": [],
+"Granite-4.2-3B-Q8_0|627e146d|1|3": [
+"T-429"
+],
+"Granite-4.2-3B-Q8_0|627e146d|1|4": [],
+"Granite-4.2-3B-Q8_0|627e146d|1|5": [
+"T-429"
+],
+"Granite-4.2-3B-Q8_0|627e146d|2|0": [
+"T-exists"
+],
+"Granite-4.2-3B-Q8_0|627e146d|2|1": [
+"T-exists"
+],
+"Granite-4.2-3B-Q8_0|627e146d|2|2": [],
+"Granite-4.2-3B-Q8_0|627e146d|2|3": [
+"T-429"
+],
+"Granite-4.2-3B-Q8_0|627e146d|2|4": [],
+"Granite-4.2-3B-Q8_0|627e146d|2|5": [
+"T-runs"
+],
+"Granite-4.2-3B-Q8_0|627e146d|3|0": [
+"T-exists"
+],
+"Granite-4.2-3B-Q8_0|627e146d|3|1": [
+"T-exists"
+],
+"Granite-4.2-3B-Q8_0|627e146d|3|2": [],
+"Granite-4.2-3B-Q8_0|627e146d|3|3": [
+"T-429"
+],
+"Granite-4.2-3B-Q8_0|627e146d|4|0": [
+"T-exists"
+],
+"Granite-4.2-3B-Q8_0|627e146d|4|1": [
+"T-exists"
+],
+"Granite-4.2-3B-Q8_0|627e146d|4|2": [
+"T-429"
+],
+"Granite-4.2-3B-Q8_0|f3708b76|0|0": [
+"A-exists"
+],
+"Granite-4.2-3B-Q8_0|f3708b76|0|1": [
+"A-exists"
+],
+"Granite-4.2-3B-Q8_0|f3708b76|0|2": [
+"A-server"
+],
+"Granite-4.2-3B-Q8_0|f3708b76|1|0": [
+"A-exists"
+],
+"Granite-4.2-3B-Q8_0|f3708b76|1|1": [
+"A-exists"
+],
+"Granite-4.2-3B-Q8_0|f3708b76|1|2": [
+"A-server"
+],
+"Granite-4.2-3B-Q8_0|f3708b76|1|3": [
+"A-server"
+],
+"Granite-4.2-3B-Q8_0|f3708b76|2|0": [
+"A-exists"
+],
+"Granite-4.2-3B-Q8_0|f3708b76|2|1": [
+"A-exists"
+],
+"Granite-4.2-3B-Q8_0|f3708b76|2|2": [
+"A-server"
+],
+"Granite-4.2-3B-Q8_0|f3708b76|2|3": [
+"A-server"
+],
+"Granite-4.2-3B-Q8_0|f3708b76|2|4": [
+"A-runs",
+"A-logic"
+],
+"Granite-4.2-3B-Q8_0|f3708b76|3|0": [
+"A-exists"
+],
+"Granite-4.2-3B-Q8_0|f3708b76|3|1": [
+"A-exists"
+],
+"Granite-4.2-3B-Q8_0|f3708b76|3|2": [],
+"Granite-4.2-3B-Q8_0|f3708b76|3|3": [],
+"Granite-4.2-3B-Q8_0|f3708b76|3|4": [],
+"Granite-4.2-3B-Q8_0|f3708b76|3|5": [
+"A-server"
+],
+"Granite-4.2-3B-Q8_0|f3708b76|3|6": [
+"A-server"
+],
+"Granite-4.2-3B-Q8_0|f3708b76|3|7": [
+"A-logic"
+],
+"Granite-4.2-3B-Q8_0|f3708b76|4|0": [
+"A-exists"
+],
+"Granite-4.2-3B-Q8_0|f3708b76|4|1": [
+"A-exists"
+],
+"Granite-4.2-3B-Q8_0|f3708b76|4|2": [
+"A-server"
+],
+"Granite-4.2-3B-Q8_0|f3708b76|4|3": [
+"A-server"
+],
+"Granite-4.2-3B-Q8_0|f3708b76|4|4": [
+"A-server"
+],
+"Granite-4.2-3B-Q8_0|f3708b76|4|5": [
+"A-server"
+],
+"Granite-4.2-3B-Q8_0|f3708b76|4|6": [
+"A-logic"
+],
+"Granite-4.2-3B-Q8_0|f3708b76|4|7": [],
+"Granite-4.2-3B-Q8_0|2fa8e50b|0|0": [],
+"Granite-4.2-3B-Q8_0|2fa8e50b|0|1": [
+"B-status",
+"B-body"
+],
+"Granite-4.2-3B-Q8_0|2fa8e50b|1|0": [],
+"Granite-4.2-3B-Q8_0|2fa8e50b|1|1": [],
+"Granite-4.2-3B-Q8_0|2fa8e50b|1|2": [
+"B-status",
+"B-body"
+],
+"Granite-4.2-3B-Q8_0|2fa8e50b|2|0": [],
+"Granite-4.2-3B-Q8_0|2fa8e50b|2|1": [
+"B-status",
+"B-body"
+],
+"Granite-4.2-3B-Q8_0|2fa8e50b|2|2": [],
+"Granite-4.2-3B-Q8_0|2fa8e50b|2|3": [],
+"Granite-4.2-3B-Q8_0|2fa8e50b|2|4": [
+"B-body"
+],
+"Granite-4.2-3B-Q8_0|2fa8e50b|3|0": [],
+"Granite-4.2-3B-Q8_0|2fa8e50b|3|1": [],
+"Granite-4.2-3B-Q8_0|2fa8e50b|3|2": [
+"B-status",
+"B-body"
+],
+"Granite-4.2-3B-Q8_0|2fa8e50b|4|0": [],
+"Granite-4.2-3B-Q8_0|2fa8e50b|4|1": [
+"B-status",
+"B-body"
+],
+"Spark-X2.5-4B-Q6_K|2fa8e50b|0|0": [],
+"Spark-X2.5-4B-Q6_K|2fa8e50b|0|1": [],
+"Spark-X2.5-4B-Q6_K|2fa8e50b|0|2": [],
+"Spark-X2.5-4B-Q6_K|2fa8e50b|0|3": [
+"B-headers"
+],
+"Spark-X2.5-4B-Q6_K|2fa8e50b|0|4": [
+"B-headers"
+],
+"Spark-X2.5-4B-Q6_K|2fa8e50b|0|5": [
+"B-headers"
+],
+"Spark-X2.5-4B-Q6_K|2fa8e50b|0|6": [],
+"Spark-X2.5-4B-Q6_K|2fa8e50b|0|7": [],
+"Spark-X2.5-4B-Q6_K|2fa8e50b|0|8": [
+"B-body"
+],
+"Spark-X2.5-4B-Q6_K|2fa8e50b|0|9": [
+"B-status"
+],
+"Spark-X2.5-4B-Q6_K|2fa8e50b|2|0": [
+"B-headers"
+],
+"Spark-X2.5-4B-Q6_K|2fa8e50b|2|1": [
+"B-status",
+"B-body"
+],
+"Spark-X2.5-4B-Q6_K|2fa8e50b|2|2": [
+"B-status"
+],
+"Spark-X2.5-4B-Q6_K|2fa8e50b|2|3": [],
+"Spark-X2.5-4B-Q6_K|2fa8e50b|2|4": [
+"B-status"
+],
+"Spark-X2.5-4B-Q6_K|2fa8e50b|2|5": [
+"B-headers"
+],
+"Spark-X2.5-4B-Q6_K|2fa8e50b|2|6": [
+"B-body"
+],
+"Spark-X2.5-4B-Q6_K|2fa8e50b|2|7": [],
+"Spark-X2.5-4B-Q6_K|2fa8e50b|3|0": [],
+"Spark-X2.5-4B-Q6_K|2fa8e50b|3|1": [
+"B-status",
+"B-body"
+],
+"Spark-X2.5-4B-Q6_K|2fa8e50b|3|2": [
+"B-headers"
+],
+"Spark-X2.5-4B-Q6_K|2fa8e50b|3|3": [
+"B-headers"
+],
+"Spark-X2.5-4B-Q6_K|2fa8e50b|3|4": [
+"B-status"
+],
+"Spark-X2.5-4B-Q6_K|2fa8e50b|3|5": [
+"B-body"
+],
+"Spark-X2.5-4B-Q6_K|2fa8e50b|3|6": [],
+"Spark-X2.5-4B-Q6_K|2fa8e50b|4|0": [
+"B-status"
+],
+"Spark-X2.5-4B-Q6_K|2fa8e50b|4|1": [
+"B-body"
+],
+"Spark-X2.5-4B-Q6_K|2fa8e50b|4|2": [
+"B-headers"
+],
+"Spark-X2.5-4B-Q6_K|2fa8e50b|4|3": [
+"B-headers"
+],
+"Spark-X2.5-4B-Q6_K|2fa8e50b|4|4": [
+"B-status"
+],
+"Spark-X2.5-4B-Q6_K|2fa8e50b|4|5": [
+"B-status"
+],
+"Spark-X2.5-4B-Q6_K|2fa8e50b|4|6": [],
+"Spark-X2.5-4B-Q6_K|2fa8e50b|4|7": [],
+"Spark-X2.5-4B-Q6_K|627e146d|0|0": [
+"T-exists"
+],
+"Spark-X2.5-4B-Q6_K|627e146d|0|1": [],
+"Spark-X2.5-4B-Q6_K|627e146d|0|2": [],
+"Spark-X2.5-4B-Q6_K|627e146d|0|3": [],
+"Spark-X2.5-4B-Q6_K|627e146d|0|4": [
+"T-runs"
+],
+"Spark-X2.5-4B-Q6_K|627e146d|0|5": [],
+"Spark-X2.5-4B-Q6_K|627e146d|0|6": [
+"T-429"
+],
+"Spark-X2.5-4B-Q6_K|627e146d|0|7": [
+"T-429"
+],
+"Spark-X2.5-4B-Q6_K|627e146d|1|0": [
+"T-exists"
+],
+"Spark-X2.5-4B-Q6_K|627e146d|1|1": [
+"T-exists"
+],
+"Spark-X2.5-4B-Q6_K|627e146d|1|2": [],
+"Spark-X2.5-4B-Q6_K|627e146d|1|3": [],
+"Spark-X2.5-4B-Q6_K|627e146d|1|4": [
+"T-runs"
+],
+"Spark-X2.5-4B-Q6_K|627e146d|1|5": [
+"T-429"
+],
+"Spark-X2.5-4B-Q6_K|627e146d|1|6": [
+"T-429"
+],
+"Spark-X2.5-4B-Q6_K|627e146d|1|7": [
+"T-429"
+],
+"Spark-X2.5-4B-Q6_K|627e146d|1|8": [
+"T-429"
+],
+"Spark-X2.5-4B-Q6_K|627e146d|1|9": [
+"T-logic"
+],
+"Spark-X2.5-4B-Q6_K|627e146d|2|0": [
+"T-exists"
+],
+"Spark-X2.5-4B-Q6_K|627e146d|2|1": [],
+"Spark-X2.5-4B-Q6_K|627e146d|2|2": [],
+"Spark-X2.5-4B-Q6_K|627e146d|2|3": [
+"T-429"
+],
+"Spark-X2.5-4B-Q6_K|627e146d|2|4": [
+"T-429"
+],
+"Spark-X2.5-4B-Q6_K|627e146d|2|5": [
+"T-429"
+],
+"Spark-X2.5-4B-Q6_K|627e146d|2|6": [
+"T-exists"
+],
+"Spark-X2.5-4B-Q6_K|627e146d|2|7": [
+"T-logic"
+],
+"Spark-X2.5-4B-Q6_K|627e146d|2|8": [
+"T-runs"
+],
+"Spark-X2.5-4B-Q6_K|627e146d|2|9": [],
+"Spark-X2.5-4B-Q6_K|627e146d|4|0": [
+"T-exists"
+],
+"Spark-X2.5-4B-Q6_K|627e146d|4|1": [
+"T-exists"
+],
+"Spark-X2.5-4B-Q6_K|627e146d|4|2": [],
+"Spark-X2.5-4B-Q6_K|627e146d|4|3": [],
+"Spark-X2.5-4B-Q6_K|627e146d|4|4": [
+"T-429"
+],
+"Spark-X2.5-4B-Q6_K|627e146d|4|5": [
+"T-429"
+],
+"Spark-X2.5-4B-Q6_K|627e146d|4|6": [],
+"Spark-X2.5-4B-Q6_K|627e146d|4|7": [
+"T-runs"
+],
+"Spark-X2.5-4B-Q6_K|627e146d|4|8": [],
+"Spark-X2.5-4B-Q6_K|627e146d|4|9": [],
+"Spark-X2.5-4B-Q6_K|78820dee|0|0": [
+"D-exists"
+],
+"Spark-X2.5-4B-Q6_K|78820dee|0|1": [
+"D-cancel"
+],
+"Spark-X2.5-4B-Q6_K|78820dee|0|2": [
+"D-runs"
+],
+"Spark-X2.5-4B-Q6_K|78820dee|0|3": [
+"D-runs"
+],
+"Spark-X2.5-4B-Q6_K|78820dee|0|4": [
+"D-runs"
+],
+"Spark-X2.5-4B-Q6_K|78820dee|1|0": [
+"D-exists"
+],
+"Spark-X2.5-4B-Q6_K|78820dee|1|1": [],
+"Spark-X2.5-4B-Q6_K|78820dee|1|2": [
+"D-runs"
+],
+"Spark-X2.5-4B-Q6_K|78820dee|1|3": [
+"D-runs"
+],
+"Spark-X2.5-4B-Q6_K|78820dee|1|4": [
+"D-cancel"
+],
+"Spark-X2.5-4B-Q6_K|78820dee|1|5": [
+"D-args"
+],
+"Spark-X2.5-4B-Q6_K|78820dee|2|0": [
+"D-exists"
+],
+"Spark-X2.5-4B-Q6_K|78820dee|2|1": [],
+"Spark-X2.5-4B-Q6_K|78820dee|2|2": [
+"D-args"
+],
+"Spark-X2.5-4B-Q6_K|78820dee|2|3": [
+"D-cancel"
+],
+"Spark-X2.5-4B-Q6_K|78820dee|2|4": [],
+"Spark-X2.5-4B-Q6_K|78820dee|2|5": [],
+"Spark-X2.5-4B-Q6_K|78820dee|2|6": [
+"D-runs"
+],
+"Spark-X2.5-4B-Q6_K|78820dee|2|7": [
+"D-args",
+"D-cancel"
+],
+"Spark-X2.5-4B-Q6_K|78820dee|2|8": [
+"D-cancel"
+],
+"Spark-X2.5-4B-Q6_K|78820dee|3|0": [
+"D-cancel",
+"D-args"
+],
+"Spark-X2.5-4B-Q6_K|78820dee|3|1": [],
+"Spark-X2.5-4B-Q6_K|78820dee|3|2": [
+"D-runs"
+],
+"Spark-X2.5-4B-Q6_K|78820dee|3|3": [
+"D-runs"
+],
+"Spark-X2.5-4B-Q6_K|78820dee|3|4": [
+"D-args",
+"D-cancel"
+],
+"Spark-X2.5-4B-Q6_K|78820dee|3|5": [
+"D-cancel",
+"D-args"
+],
+"Spark-X2.5-4B-Q6_K|78820dee|4|0": [],
+"Spark-X2.5-4B-Q6_K|78820dee|4|1": [
+"D-cancel"
+],
+"Spark-X2.5-4B-Q6_K|78820dee|4|2": [
+"D-cancel"
+],
+"Spark-X2.5-4B-Q6_K|78820dee|4|3": [
+"D-runs"
+],
+"Spark-X2.5-4B-Q6_K|78820dee|4|4": [],
+"Spark-X2.5-4B-Q6_K|78820dee|4|5": [
+"D-runs"
+],
+"Spark-X2.5-4B-Q6_K|78820dee|4|6": [
+"D-args"
+],
+"Spark-X2.5-4B-Q6_K|f3708b76|0|0": [
+"A-exists"
+],
+"Spark-X2.5-4B-Q6_K|f3708b76|0|1": [
+"A-exists"
+],
+"Spark-X2.5-4B-Q6_K|f3708b76|0|2": [
+"A-server"
+],
+"Spark-X2.5-4B-Q6_K|f3708b76|0|3": [],
+"Spark-X2.5-4B-Q6_K|f3708b76|0|4": [],
+"Spark-X2.5-4B-Q6_K|f3708b76|0|5": [],
+"Spark-X2.5-4B-Q6_K|f3708b76|0|6": [
+"A-server"
+],
+"Spark-X2.5-4B-Q6_K|f3708b76|0|7": [
+"A-server"
+],
+"Spark-X2.5-4B-Q6_K|f3708b76|0|8": [
+"A-runs"
+],
+"Spark-X2.5-4B-Q6_K|f3708b76|1|0": [
+"A-exists"
+],
+"Spark-X2.5-4B-Q6_K|f3708b76|1|1": [
+"A-exists"
+],
+"Spark-X2.5-4B-Q6_K|f3708b76|1|2": [],
+"Spark-X2.5-4B-Q6_K|f3708b76|1|3": [],
+"Spark-X2.5-4B-Q6_K|f3708b76|1|4": [],
+"Spark-X2.5-4B-Q6_K|f3708b76|1|5": [
+"A-server"
+],
+"Spark-X2.5-4B-Q6_K|f3708b76|1|6": [
+"A-server"
+],
+"Spark-X2.5-4B-Q6_K|f3708b76|1|7": [
+"A-logic"
+],
+"Spark-X2.5-4B-Q6_K|f3708b76|1|8": [
+"A-runs"
+],
+"Spark-X2.5-4B-Q6_K|f3708b76|3|0": [
+"A-exists"
+],
+"Spark-X2.5-4B-Q6_K|f3708b76|3|1": [
+"A-exists"
+],
+"Spark-X2.5-4B-Q6_K|f3708b76|3|2": [],
+"Spark-X2.5-4B-Q6_K|f3708b76|3|3": [],
+"Spark-X2.5-4B-Q6_K|f3708b76|3|4": [],
+"Spark-X2.5-4B-Q6_K|f3708b76|3|5": [
+"A-server"
+],
+"Spark-X2.5-4B-Q6_K|f3708b76|3|6": [
+"A-server"
+],
+"Spark-X2.5-4B-Q6_K|f3708b76|3|7": [
+"A-server"
+],
+"Spark-X2.5-4B-Q6_K|f3708b76|3|8": [
+"A-logic"
+],
+"Spark-X2.5-4B-Q6_K|f3708b76|3|9": [
+"A-logic"
+],
+"Spark-X2.5-4B-Q6_K|f3708b76|4|0": [
+"A-exists"
+],
+"Spark-X2.5-4B-Q6_K|f3708b76|4|1": [
+"A-server"
+],
+"Spark-X2.5-4B-Q6_K|f3708b76|4|2": [
+"A-server"
+],
+"Spark-X2.5-4B-Q6_K|f3708b76|4|3": [
+"A-server"
+],
+"Spark-X2.5-4B-Q6_K|f3708b76|4|4": [
+"A-server"
+],
+"Spark-X2.5-4B-Q6_K|f3708b76|4|5": [],
+"Spark-X2.5-4B-Q6_K|f3708b76|4|6": [],
+"Spark-X2.5-4B-Q6_K|f3708b76|4|7": [
+"A-logic"
+],
+"Spark-X2.5-4B-Q6_K|f3708b76|4|8": [
+"A-logic"
+],
+"Spark-X2.5-4B-Q6_K|f3708b76|4|9": [
+"A-runs"
+],
+"MiniCPM5-2B-Q8_0|627e146d|0|0": [
+"T-exists"
+],
+"MiniCPM5-2B-Q8_0|627e146d|0|1": [
+"T-exists"
+],
+"MiniCPM5-2B-Q8_0|627e146d|0|2": [
+"T-429"
+],
+"MiniCPM5-2B-Q8_0|627e146d|1|0": [
+"T-exists"
+],
+"MiniCPM5-2B-Q8_0|627e146d|1|1": [
+"T-exists"
+],
+"MiniCPM5-2B-Q8_0|627e146d|1|2": [],
+"MiniCPM5-2B-Q8_0|627e146d|1|3": [
+"T-429"
+],
+"MiniCPM5-2B-Q8_0|627e146d|1|4": [
+"T-429"
+],
+"MiniCPM5-2B-Q8_0|627e146d|1|5": [],
+"MiniCPM5-2B-Q8_0|627e146d|1|6": [
+"T-runs"
+],
+"MiniCPM5-2B-Q8_0|627e146d|1|7": [
+"T-429"
+],
+"MiniCPM5-2B-Q8_0|627e146d|2|0": [
+"T-exists"
+],
+"MiniCPM5-2B-Q8_0|627e146d|2|1": [
+"T-exists"
+],
+"MiniCPM5-2B-Q8_0|627e146d|2|2": [
+"T-429"
+],
+"MiniCPM5-2B-Q8_0|627e146d|2|3": [
+"T-429"
+],
+"MiniCPM5-2B-Q8_0|627e146d|3|0": [],
+"MiniCPM5-2B-Q8_0|627e146d|3|1": [],
+"MiniCPM5-2B-Q8_0|627e146d|3|2": [],
+"MiniCPM5-2B-Q8_0|627e146d|3|3": [
+"T-logic"
+],
+"MiniCPM5-2B-Q8_0|627e146d|3|4": [
+"T-runs"
+],
+"MiniCPM5-2B-Q8_0|627e146d|3|5": [
+"T-429"
+],
+"MiniCPM5-2B-Q8_0|627e146d|4|0": [
+"T-exists"
+],
+"MiniCPM5-2B-Q8_0|627e146d|4|1": [],
+"MiniCPM5-2B-Q8_0|627e146d|4|2": [
+"T-429"
+],
+"MiniCPM5-2B-Q8_0|627e146d|4|3": [
+"T-429"
+],
+"MiniCPM5-2B-Q8_0|627e146d|4|4": [],
+"MiniCPM5-2B-Q8_0|627e146d|4|5": [
+"T-runs"
+],
+"MiniCPM5-2B-Q8_0|627e146d|4|6": [
+"T-429"
+],
+"MiniCPM5-2B-Q8_0|78820dee|0|0": [
+"D-runs"
+],
+"MiniCPM5-2B-Q8_0|78820dee|0|1": [
+"D-exists"
+],
+"MiniCPM5-2B-Q8_0|78820dee|0|2": [],
+"MiniCPM5-2B-Q8_0|78820dee|1|0": [
+"D-exists"
+],
+"MiniCPM5-2B-Q8_0|78820dee|1|1": [
+"D-runs"
+],
+"MiniCPM5-2B-Q8_0|78820dee|1|2": [],
+"MiniCPM5-2B-Q8_0|78820dee|2|0": [
+"D-runs"
+],
+"MiniCPM5-2B-Q8_0|78820dee|2|1": [],
+"MiniCPM5-2B-Q8_0|78820dee|2|2": [
+"D-cancel"
+],
+"MiniCPM5-2B-Q8_0|78820dee|3|0": [
+"D-exists"
+],
+"MiniCPM5-2B-Q8_0|78820dee|3|1": [
+"D-runs"
+],
+"MiniCPM5-2B-Q8_0|78820dee|3|2": [
+"D-runs"
+],
+"MiniCPM5-2B-Q8_0|78820dee|4|0": [
+"D-runs"
+],
+"MiniCPM5-2B-Q8_0|f3708b76|0|0": [
+"A-exists"
+],
+"MiniCPM5-2B-Q8_0|f3708b76|0|1": [
+"A-exists"
+],
+"MiniCPM5-2B-Q8_0|f3708b76|0|2": [
+"A-server"
+],
+"MiniCPM5-2B-Q8_0|f3708b76|0|3": [
+"A-server"
+],
+"MiniCPM5-2B-Q8_0|f3708b76|0|4": [
+"A-runs"
+],
+"MiniCPM5-2B-Q8_0|f3708b76|1|0": [
+"A-exists"
+],
+"MiniCPM5-2B-Q8_0|f3708b76|1|1": [
+"A-server"
+],
+"MiniCPM5-2B-Q8_0|f3708b76|1|2": [
+"A-server"
+],
+"MiniCPM5-2B-Q8_0|f3708b76|1|3": [
+"A-server"
+],
+"MiniCPM5-2B-Q8_0|f3708b76|1|4": [
+"A-exists"
+],
+"MiniCPM5-2B-Q8_0|f3708b76|1|5": [
+"A-logic"
+],
+"MiniCPM5-2B-Q8_0|f3708b76|1|6": [
+"A-runs"
+],
+"MiniCPM5-2B-Q8_0|f3708b76|2|0": [],
+"MiniCPM5-2B-Q8_0|f3708b76|2|1": [
+"A-runs"
+],
+"MiniCPM5-2B-Q8_0|f3708b76|2|2": [
+"A-server"
+],
+"MiniCPM5-2B-Q8_0|f3708b76|2|3": [
+"A-server"
+],
+"MiniCPM5-2B-Q8_0|f3708b76|2|4": [
+"A-runs"
+],
+"MiniCPM5-2B-Q8_0|f3708b76|3|0": [
+"A-exists"
+],
+"MiniCPM5-2B-Q8_0|f3708b76|3|1": [
+"A-exists"
+],
+"MiniCPM5-2B-Q8_0|f3708b76|3|2": [
+"A-server"
+],
+"MiniCPM5-2B-Q8_0|f3708b76|3|3": [
+"A-server"
+],
+"MiniCPM5-2B-Q8_0|f3708b76|3|4": [
+"A-runs"
+],
+"MiniCPM5-2B-Q8_0|f3708b76|4|0": [],
+"MiniCPM5-2B-Q8_0|f3708b76|4|1": [],
+"MiniCPM5-2B-Q8_0|f3708b76|4|2": [
+"A-server"
+],
+"MiniCPM5-2B-Q8_0|f3708b76|4|3": [
+"A-server"
+],
+"LFM2.5-2.6B-Q8_0|627e146d|0|0": [
+"T-exists"
+],
+"LFM2.5-2.6B-Q8_0|627e146d|0|1": [
+"T-exists"
+],
+"LFM2.5-2.6B-Q8_0|627e146d|0|2": [],
+"LFM2.5-2.6B-Q8_0|627e146d|0|3": [
+"T-runs"
+],
+"LFM2.5-2.6B-Q8_0|627e146d|1|0": [
+"T-exists"
+],
+"LFM2.5-2.6B-Q8_0|627e146d|1|1": [
+"T-exists"
+],
+"LFM2.5-2.6B-Q8_0|627e146d|1|2": [
+"T-429"
+],
+"LFM2.5-2.6B-Q8_0|627e146d|1|3": [
+"T-runs"
+],
+"LFM2.5-2.6B-Q8_0|627e146d|1|4": [
+"T-429"
+],
+"LFM2.5-2.6B-Q8_0|627e146d|2|0": [
+"T-exists"
+],
+"LFM2.5-2.6B-Q8_0|627e146d|2|1": [
+"T-exists"
+],
+"LFM2.5-2.6B-Q8_0|627e146d|2|2": [],
+"LFM2.5-2.6B-Q8_0|627e146d|2|3": [
+"T-429"
+],
+"LFM2.5-2.6B-Q8_0|627e146d|2|4": [
+"T-429"
+],
+"LFM2.5-2.6B-Q8_0|627e146d|2|5": [],
+"LFM2.5-2.6B-Q8_0|627e146d|2|6": [
+"T-logic"
+],
+"LFM2.5-2.6B-Q8_0|627e146d|3|0": [
+"T-exists"
+],
+"LFM2.5-2.6B-Q8_0|627e146d|3|1": [
+"T-exists"
+],
+"LFM2.5-2.6B-Q8_0|627e146d|3|2": [],
+"LFM2.5-2.6B-Q8_0|627e146d|3|3": [
+"T-logic"
+],
+"LFM2.5-2.6B-Q8_0|627e146d|3|4": [
+"T-429"
+],
+"LFM2.5-2.6B-Q8_0|627e146d|3|5": [
+"T-429"
+],
+"LFM2.5-2.6B-Q8_0|627e146d|3|6": [
+"T-runs"
+],
+"LFM2.5-2.6B-Q8_0|627e146d|4|0": [
+"T-exists"
+],
+"LFM2.5-2.6B-Q8_0|627e146d|4|1": [
+"T-429"
+],
+"LFM2.5-2.6B-Q8_0|627e146d|4|2": [
+"T-exists"
+],
+"LFM2.5-2.6B-Q8_0|78820dee|0|0": [
+"D-exists"
+],
+"LFM2.5-2.6B-Q8_0|78820dee|0|1": [
+"D-cancel"
+],
+"LFM2.5-2.6B-Q8_0|78820dee|0|2": [
+"D-runs"
+],
+"LFM2.5-2.6B-Q8_0|78820dee|0|3": [],
+"LFM2.5-2.6B-Q8_0|78820dee|0|4": [],
+"LFM2.5-2.6B-Q8_0|78820dee|1|0": [
+"D-cancel"
+],
+"LFM2.5-2.6B-Q8_0|78820dee|1|1": [
+"D-runs"
+],
+"LFM2.5-2.6B-Q8_0|78820dee|1|2": [
+"D-cancel"
+],
+"LFM2.5-2.6B-Q8_0|78820dee|2|0": [
+"D-cancel"
+],
+"LFM2.5-2.6B-Q8_0|78820dee|2|1": [
+"D-runs"
+],
+"LFM2.5-2.6B-Q8_0|78820dee|3|0": [
+"D-cancel"
+],
+"LFM2.5-2.6B-Q8_0|78820dee|3|1": [
+"D-runs"
+],
+"LFM2.5-2.6B-Q8_0|78820dee|4|0": [
+"D-exists"
+],
+"LFM2.5-2.6B-Q8_0|78820dee|4|1": [
+"D-cancel"
+],
+"LFM2.5-2.6B-Q8_0|78820dee|4|2": [
+"D-runs"
+],
+"LFM2.5-2.6B-Q8_0|f3708b76|0|0": [
+"A-exists"
+],
+"LFM2.5-2.6B-Q8_0|f3708b76|0|1": [
+"A-exists"
+],
+"LFM2.5-2.6B-Q8_0|f3708b76|0|2": [
+"A-server"
+],
+"LFM2.5-2.6B-Q8_0|f3708b76|0|3": [
+"A-server"
+],
+"LFM2.5-2.6B-Q8_0|f3708b76|0|4": [
+"A-runs"
+],
+"LFM2.5-2.6B-Q8_0|f3708b76|1|0": [
+"A-exists"
+],
+"LFM2.5-2.6B-Q8_0|f3708b76|1|1": [
+"A-exists"
+],
+"LFM2.5-2.6B-Q8_0|f3708b76|1|2": [
+"A-server"
+],
+"LFM2.5-2.6B-Q8_0|f3708b76|1|3": [
+"A-server"
+],
+"LFM2.5-2.6B-Q8_0|f3708b76|1|4": [
+"A-runs"
+],
+"LFM2.5-2.6B-Q8_0|f3708b76|2|0": [
+"A-exists"
+],
+"LFM2.5-2.6B-Q8_0|f3708b76|2|1": [
+"A-exists"
+],
+"LFM2.5-2.6B-Q8_0|f3708b76|2|2": [
+"A-server"
+],
+"LFM2.5-2.6B-Q8_0|f3708b76|2|3": [
+"A-server"
+],
+"LFM2.5-2.6B-Q8_0|f3708b76|2|4": [
+"A-logic"
+],
+"LFM2.5-2.6B-Q8_0|f3708b76|2|5": [],
+"LFM2.5-2.6B-Q8_0|f3708b76|2|6": [
+"A-logic"
+],
+"LFM2.5-2.6B-Q8_0|f3708b76|2|7": [
+"A-runs"
+],
+"LFM2.5-2.6B-Q8_0|f3708b76|3|0": [
+"A-exists"
+],
+"LFM2.5-2.6B-Q8_0|f3708b76|3|1": [
+"A-exists"
+],
+"LFM2.5-2.6B-Q8_0|f3708b76|3|2": [
+"A-server"
+],
+"LFM2.5-2.6B-Q8_0|f3708b76|3|3": [
+"A-server"
+],
+"LFM2.5-2.6B-Q8_0|f3708b76|3|4": [
+"A-runs"
+],
+"LFM2.5-2.6B-Q8_0|f3708b76|4|0": [
+"A-exists",
+"A-server"
+],
+"LFM2.5-2.6B-Q8_0|f3708b76|4|1": [
+"A-exists"
+],
+"LFM2.5-2.6B-Q8_0|f3708b76|4|2": [
+"A-server"
+],
+"LFM2.5-2.6B-Q8_0|f3708b76|4|3": [
+"A-server"
+],
+"LFM2.5-2.6B-Q8_0|f3708b76|4|4": [
+"A-runs"
+],
+"Nanbeige4.2-3B-Q6_K|627e146d|0|0": [
+"T-exists"
+],
+"Nanbeige4.2-3B-Q6_K|627e146d|0|1": [],
+"Nanbeige4.2-3B-Q6_K|627e146d|0|2": [],
+"Nanbeige4.2-3B-Q6_K|627e146d|0|3": [
+"T-429"
+],
+"Nanbeige4.2-3B-Q6_K|627e146d|0|4": [],
+"Nanbeige4.2-3B-Q6_K|627e146d|0|5": [
+"T-runs"
+],
+"Nanbeige4.2-3B-Q6_K|627e146d|0|6": [],
+"Nanbeige4.2-3B-Q6_K|627e146d|0|7": [
+"T-logic"
+],
+"Nanbeige4.2-3B-Q6_K|627e146d|0|8": [],
+"Nanbeige4.2-3B-Q6_K|627e146d|0|9": [
+"T-429"
+],
+"Nanbeige4.2-3B-Q6_K|627e146d|1|0": [
+"T-exists"
+],
+"Nanbeige4.2-3B-Q6_K|627e146d|1|1": [],
+"Nanbeige4.2-3B-Q6_K|627e146d|1|2": [],
+"Nanbeige4.2-3B-Q6_K|627e146d|1|3": [
+"T-429"
+],
+"Nanbeige4.2-3B-Q6_K|627e146d|1|4": [],
+"Nanbeige4.2-3B-Q6_K|627e146d|1|5": [
+"T-runs"
+],
+"Nanbeige4.2-3B-Q6_K|627e146d|1|6": [],
+"Nanbeige4.2-3B-Q6_K|627e146d|1|7": [
+"T-runs"
+],
+"Nanbeige4.2-3B-Q6_K|627e146d|1|8": [
+"T-429"
+],
+"Nanbeige4.2-3B-Q6_K|627e146d|1|9": [],
+"Nanbeige4.2-3B-Q6_K|627e146d|2|0": [],
+"Nanbeige4.2-3B-Q6_K|627e146d|2|1": [],
+"Nanbeige4.2-3B-Q6_K|627e146d|2|2": [
+"T-exists"
+],
+"Nanbeige4.2-3B-Q6_K|627e146d|2|3": [],
+"Nanbeige4.2-3B-Q6_K|627e146d|2|4": [
+"T-429"
+],
+"Nanbeige4.2-3B-Q6_K|627e146d|2|5": [
+"T-runs"
+],
+"Nanbeige4.2-3B-Q6_K|627e146d|2|6": [
+"T-logic"
+],
+"Nanbeige4.2-3B-Q6_K|627e146d|2|7": [],
+"Nanbeige4.2-3B-Q6_K|627e146d|2|8": [
+"T-429"
+],
+"Nanbeige4.2-3B-Q6_K|627e146d|2|9": [
+"T-429"
+],
+"Nanbeige4.2-3B-Q6_K|78820dee|0|0": [
+"D-exists"
+],
+"Nanbeige4.2-3B-Q6_K|78820dee|0|1": [],
+"Nanbeige4.2-3B-Q6_K|78820dee|0|2": [
+"D-cancel"
+],
+"Nanbeige4.2-3B-Q6_K|78820dee|0|3": [
+"D-args"
+],
+"Nanbeige4.2-3B-Q6_K|78820dee|0|4": [
+"D-runs"
+],
+"Nanbeige4.2-3B-Q6_K|78820dee|0|5": [
+"D-runs"
+],
+"Nanbeige4.2-3B-Q6_K|78820dee|0|6": [],
+"Nanbeige4.2-3B-Q6_K|78820dee|0|7": [],
+"Nanbeige4.2-3B-Q6_K|78820dee|0|8": [],
+"Nanbeige4.2-3B-Q6_K|78820dee|0|9": [
+"D-args",
+"D-cancel"
+],
+"Nanbeige4.2-3B-Q6_K|78820dee|1|0": [
+"D-exists"
+],
+"Nanbeige4.2-3B-Q6_K|78820dee|1|1": [],
+"Nanbeige4.2-3B-Q6_K|78820dee|1|2": [
+"D-cancel"
+],
+"Nanbeige4.2-3B-Q6_K|78820dee|1|3": [],
+"Nanbeige4.2-3B-Q6_K|78820dee|1|4": [
+"D-runs"
+],
+"Nanbeige4.2-3B-Q6_K|78820dee|1|5": [
+"D-runs"
+],
+"Nanbeige4.2-3B-Q6_K|78820dee|1|6": [],
+"Nanbeige4.2-3B-Q6_K|78820dee|1|7": [
+"D-args",
+"D-cancel"
+],
+"Nanbeige4.2-3B-Q6_K|78820dee|1|8": [
+"D-runs"
+],
+"Nanbeige4.2-3B-Q6_K|78820dee|1|9": [],
+"Nanbeige4.2-3B-Q6_K|f3708b76|0|0": [
+"A-exists"
+],
+"Nanbeige4.2-3B-Q6_K|f3708b76|0|1": [
+"A-server"
+],
+"Nanbeige4.2-3B-Q6_K|f3708b76|0|2": [
+"A-server"
+],
+"Nanbeige4.2-3B-Q6_K|f3708b76|0|3": [],
+"Nanbeige4.2-3B-Q6_K|f3708b76|0|4": [],
+"Nanbeige4.2-3B-Q6_K|f3708b76|0|5": [
+"A-runs"
+],
+"Nanbeige4.2-3B-Q6_K|f3708b76|0|6": [],
+"Nanbeige4.2-3B-Q6_K|f3708b76|0|7": [],
+"Nanbeige4.2-3B-Q6_K|f3708b76|0|8": [
+"A-logic"
+],
+"Nanbeige4.2-3B-Q6_K|f3708b76|0|9": [
+"A-logic"
+],
+"Nanbeige4.2-3B-Q6_K|f3708b76|1|0": [
+"A-exists"
+],
+"Nanbeige4.2-3B-Q6_K|f3708b76|1|1": [
+"A-server"
+],
+"Nanbeige4.2-3B-Q6_K|f3708b76|1|2": [
+"A-server"
+],
+"Nanbeige4.2-3B-Q6_K|f3708b76|1|3": [],
+"Nanbeige4.2-3B-Q6_K|f3708b76|1|4": [
+"A-logic"
+],
+"Nanbeige4.2-3B-Q6_K|f3708b76|1|5": [],
+"Nanbeige4.2-3B-Q6_K|f3708b76|1|6": [
+"A-runs"
+],
+"Nanbeige4.2-3B-Q6_K|f3708b76|1|7": [],
+"Nanbeige4.2-3B-Q6_K|f3708b76|1|8": [
+"A-logic"
+],
+"Nanbeige4.2-3B-Q6_K|f3708b76|1|9": [
+"A-logic"
+],
+"Nanbeige4.2-3B-Q6_K|f3708b76|2|0": [],
+"Nanbeige4.2-3B-Q6_K|f3708b76|2|1": [
+"A-server"
+],
+"Nanbeige4.2-3B-Q6_K|f3708b76|2|2": [
+"A-server"
+],
+"Nanbeige4.2-3B-Q6_K|f3708b76|2|3": [
+"A-server"
+],
+"Nanbeige4.2-3B-Q6_K|f3708b76|2|4": [
+"A-logic"
+],
+"Nanbeige4.2-3B-Q6_K|f3708b76|2|5": [],
+"Nanbeige4.2-3B-Q6_K|f3708b76|2|6": [
+"A-runs"
+],
+"Nanbeige4.2-3B-Q6_K|f3708b76|2|7": [
+"A-runs"
+],
+"Nanbeige4.2-3B-Q6_K|f3708b76|2|8": [
+"A-exists"
+]
+}
