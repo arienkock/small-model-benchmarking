@@ -47,10 +47,11 @@ export interface BashToolConfig extends BashToolOptions {
 	commandGuards?: CommandGuard[];
 	/**
 	 * Seconds a command may run when the model does not pass its own `timeout`.
-	 * pi's bash has none by default, so one command that never returns — a server
-	 * started with `&` whose output pipe stays open — blocks the session until its
-	 * limit: Granite-4.2-3B lost 36 of a session's 40 minutes that way on
-	 * 2026-09-24. A model that needs longer can still ask for it per call.
+	 * pi's bash has none by default, so one command that never returns blocks the
+	 * session until its limit: Granite-4.2-3B lost 36 of a session's 40 minutes on
+	 * 2026-09-24 to a `curl` (no -m) against its own server, which accepted the
+	 * connection and never answered. Short on purpose (20 s in roster.json): the
+	 * error tells the model to pass a `timeout` when a command really needs longer.
 	 */
 	defaultTimeoutSec?: number;
 }
@@ -72,13 +73,31 @@ function withGuards(options: BashToolConfig): BashToolOptions {
 	return { ...rest, spawnHook: hook };
 }
 
-/** Give every bash call a timeout unless the model chose one itself. */
+/**
+ * Give every bash call a timeout unless the model chose one itself. When the
+ * DEFAULT is what stopped a command, the error says so and tells the model how to
+ * ask for more, so a legitimately long command (a test suite, a build) is one
+ * retry away rather than a dead end.
+ */
 function withDefaultTimeout(def: ToolDefinition<any, any, any>, seconds: number | undefined): ToolDefinition<any, any, any> {
 	if (!seconds) return def;
 	return {
 		...def,
-		execute: (id: string, params: any, ...rest: any[]) =>
-			(def.execute as any)(id, params && params.timeout === undefined ? { ...params, timeout: seconds } : params, ...rest),
+		execute: async (id: string, params: any, ...rest: any[]) => {
+			const defaulted = params && params.timeout === undefined;
+			try {
+				return await (def.execute as any)(id, defaulted ? { ...params, timeout: seconds } : params, ...rest);
+			} catch (e: any) {
+				if (defaulted && /Command timed out after/.test(String(e?.message))) {
+					throw new Error(
+						`${e.message}\n[pi-small] ${seconds} s is the default limit for a command. If this command needs longer (a test suite, a build), ` +
+							`run it again with the bash tool's "timeout" argument set, in seconds. If it should have finished, it is probably waiting ` +
+							`on something (a server that never answers, input it will not get).`,
+					);
+				}
+				throw e;
+			}
+		},
 	};
 }
 

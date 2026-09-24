@@ -390,9 +390,9 @@ try {
 	// --- per-model toolOptions merge over the defaults; bash gets a default timeout ---
 	const minicpm = roster.models.find((m: any) => m.alias === "MiniCPM5-2B-Q8_0")!;
 	const mOpts = resolveToolOptions(minicpm, roster.defaults, "bash") as any;
-	assert.equal(mOpts.defaultTimeoutSec, 120, "MiniCPM5's own bash options must not drop the roster-wide timeout");
+	assert.equal(mOpts.defaultTimeoutSec, 20, "MiniCPM5's own bash options must not drop the roster-wide timeout");
 	assert.ok(Array.isArray(mOpts.commandGuards) && mOpts.commandGuards.length > 0, "and its guards stay");
-	assert.equal((resolveToolOptions(granite, roster.defaults, "bash") as any).defaultTimeoutSec, 120);
+	assert.equal((resolveToolOptions(granite, roster.defaults, "bash") as any).defaultTimeoutSec, 20);
 	const bash = buildTool("bash", tmpdir(), { defaultTimeoutSec: 1 });
 	const t0 = Date.now();
 	const hung = await (bash.execute as any)("t1", { command: "sleep 30" }, undefined, undefined, undefined).then(
@@ -400,10 +400,12 @@ try {
 		(e: any) => String(e?.message ?? e),
 	);
 	assert.ok(Date.now() - t0 < 15_000, `a command with no timeout of its own is stopped by the default (took ${Date.now() - t0} ms): ${hung}`);
-	assert.match(hung, /timed out|timeout/i);
+	assert.match(hung, /Command timed out after 1 seconds[\s\S]*default limit[\s\S]*"timeout" argument/, "the model is told the default stopped it and how to ask for more");
 	const own = await (bash.execute as any)("t2", { command: "sleep 2; echo done", timeout: 10 }, undefined, undefined, undefined);
 	assert.match(JSON.stringify(own.content), /done/, "a model's own longer timeout wins over the default");
-	pass("tool options merge over the roster defaults, and bash calls get a 120 s timeout unless the model sets one");
+	const ownTimeout = await (bash.execute as any)("t3", { command: "sleep 30", timeout: 1 }, undefined, undefined, undefined).then(() => "", (e: any) => String(e.message));
+	assert.doesNotMatch(ownTimeout, /default limit/, "a timeout the model chose itself gets no hint");
+	pass("tool options merge over the roster defaults; bash calls get a 20 s default timeout, and hitting it tells the model how to ask for more");
 
 	console.log(`\n${passed.length} checks passed. Logs: ${LOGS}`);
 } finally {

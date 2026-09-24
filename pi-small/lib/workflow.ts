@@ -624,7 +624,8 @@ const CODING_RULES = (state: WorkflowState, cfg: WorkflowConfig) =>
 		`- Every scenario needs an automated test that proves it. ${testFilesRule(state)}`,
 		"- Put the scenario id in the test's name, with the dot written as an underscore: scenario T2.S1 needs a test named like `test_T2_S1_<what>` " +
 			'(or "T2_S1: <what>" where tests are named with strings); whole-task scenario S4 needs one named like `test_S4_<what>`.',
-		`- The harness runs the whole test suite from /workspace with: \`${state.testCommand}\`. It must pass and finish within ${cfg.testTimeoutSec} seconds; run it yourself before you finish.`,
+		`- The harness runs the whole test suite from /workspace with: \`${state.testCommand}\`. It must pass and finish within ${cfg.testTimeoutSec} seconds; run it yourself before you finish, ` +
+			`with the bash tool's timeout set to ${cfg.testTimeoutSec}.`,
 		"- Tests must clean up whatever they start (servers, background processes, temporary files).",
 	].join("\n");
 
