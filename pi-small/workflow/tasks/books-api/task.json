@@ -4,7 +4,7 @@
 	"testFiles": ["tests/*.py"],
 	"testCountPattern": "^Ran (\\d+) tests?",
 	"failurePattern": "^(?:FAIL|ERROR): (\\S+)",
-	"conventions": "- Tests are Python unittest files in /workspace/tests/, named test_*.py.\n- Tests that need the HTTP server start it themselves on a free port and shut it down afterwards.",
+	"conventions": "- Tests are Python unittest files in /workspace/tests/, named test_*.py.\n- app.py defines make_server(port), which returns an http.server.HTTPServer (or ThreadingHTTPServer) bound to 127.0.0.1:port; `python3 app.py` calls it with $PORT and serves forever.\n- Tests call app.make_server(0) in setUpClass (port 0 picks a free port; the real one is server.server_address[1]), run serve_forever() in a daemon thread, and call shutdown() and then server_close() in tearDownClass.",
 	"checks": [{ "name": "Python standard library only", "command": "python3 /opt/pi-small/workflow/checks/python_stdlib_only.py" }],
 	"grader": "python3 /task/grader.py /workspace"
 }
