@@ -119,6 +119,15 @@ CUDA kernels categorically exclude it) and 27B-class CPU-only ternary
 inference, even with a properly vectorized AVX2 kernel (PQ2_0), isn't fast
 enough on a 4-core/8-thread 2015-era CPU to compete.
 
+**Followed up in
+[`pi-small-qwen3-coder-findings-20260922.md`](pi-small-qwen3-coder-findings-20260922.md):**
+Qwen3-Coder-30B-A3B was put on the pi-small roster and run as a real agent. The
+`llama-bench` numbers here do **not** transfer — a live agent session gets
+~6 t/s generation and ~3 t/s prompt processing, because agent turns are small
+batches and `pp512` exists precisely to amortise the per-batch cost away. That
+document also records why **ctx 4096 cannot be used at all** under pi, which
+matters because 4096 is the size this round validated.
+
 Open follow-ups if this gets revisited: a finer `--n-cpu-moe` sweep around
 28-36 to explain/exploit the 24-dip and pin down the true optimum with more
 repeats (variance was ~20% here); whether Bonsai 2's PQ2_0 kernel benefits
