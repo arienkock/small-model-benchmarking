@@ -1,0 +1,5 @@
+{
+	"_about": "2026-09-24 experiment: every session is cut at 10 turns (on top of the time limits), and every failed session hands the step to the next model in the --models rotation. Attempts are effectively unlimited; the run's --deadline ends it.",
+	"maxTurns": 10,
+	"attempts": { "planning": 1000, "implement": 1000, "integrate": 1000 }
+}

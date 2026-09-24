@@ -8,6 +8,7 @@ lives in this directory and moves on its own schedule.
     bin/pi-small        the entry point: pi with nothing of its own
     pi-small-docker.sh  the same thing, sandboxed  <- use this one
     serve.mjs           starts llama-server on the host, for the container
+    proxy.mjs           or: a host daemon in front of llama-server that switches models on request
     extensions/small.ts the plugin: model, server, sampler, tools
     lib/roster.ts       roster + path/flag logic, with no dependency on pi
     lib/tools.ts         tool kinds (bash, read, write, …) and per-model guards
@@ -99,6 +100,31 @@ normally. `/sm-model`, `/sm-ctx` and `/sm-restart` print the exact host command
 to run instead. Remote mode turns on with `PI_SMALL_REMOTE=1`, or whenever the
 configured host is not loopback.
 
+### The host proxy: switching models from inside the container
+
+`serve.mjs` fixes the model at launch, so a containerised pi could only change
+models by exiting. `proxy.mjs` removes that. It listens on the roster port
+instead of llama-server, runs llama-server behind it on a loopback-only port
+(`PI_SMALL_BACKEND_PORT`, default 8125), and adds two endpoints:
+
+    GET  /pi-small/status     { alias, thinking, ctx, state: ready|switching|down, error }
+    POST /pi-small/model      { alias, thinking? }  -> switches, then answers with the status
+
+    node proxy.mjs --model Granite-4.2-3B-Q8_0      # instead of node serve.mjs Granite-…
+
+Everything else is passed through unchanged, including streaming. A switch
+runs `serve.mjs` against the backend port, so the command line, context ladder,
+sampler check and the refusal to kill someone else's server are all the same.
+Requests that arrive during a switch wait for it (`PI_SMALL_PROXY_WAIT`,
+default 900 s). Switches are serialised, the API key is required, and unknown
+aliases are rejected.
+
+The plugin finds the proxy through `/pi-small/status`. When it is there,
+remote mode gets model switching back: `/sm-model` and pi's `/model` ask the
+proxy, and a session that starts with a `PI_SMALL_MODEL` the host is not
+serving asks for it. Without a proxy nothing changes. The staged workflow's
+model rotation (`workflow/README.md`) depends on this.
+
 ### Running it uncontained
 
 `./bin/pi-small` still works and is the right thing when you are iterating on
@@ -170,6 +196,8 @@ plugin does:
                   moves with the mode)
     /sm-probe     re-run the probes against the live server
     /sm-restart   restart with the current settings
+    /workflow run <run-spec.json>   drive the staged workflow in this process
+                  (sent by workflow/run.ts; see workflow/README.md)
 
 **A model switch serves the new model's own sampler.** It used to carry the
 whole sampler across as "session state", which served one model's card to the

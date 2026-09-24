@@ -1,13 +1,8 @@
 /**
- * pi-rpc.ts — one pi-small process for a whole workflow run, driven over pi's
- * RPC mode (`pi --mode rpc`: JSON lines on stdin/stdout, see pi's docs/rpc.md).
- *
- * The workflow used to start a container and a pi process per step and per
- * retry. Now one process serves the whole run and every step or retry is a
- * `new_session` in it: an empty context, the same process. pi re-instantiates
- * extensions on a new session, so the pi-small plugin re-reads the step file at
- * its fixed path (PI_SMALL_WORKFLOW_STEP) each time and registers that step's
- * tools.
+ * pi-rpc.ts — the one pi-small process of a workflow run, driven over pi's RPC
+ * mode (`pi --mode rpc`: JSON lines on stdin/stdout, see pi's docs/rpc.md).
+ * run.ts starts it (in the sandbox container, or directly with --local) and
+ * sends it one command, `/workflow run <spec>`; the plugin does the rest.
  */
 
 import { type ChildProcess, spawn, spawnSync } from "node:child_process";
@@ -21,22 +16,26 @@ export class PiRpc {
 	private listeners = new Set<Listener>();
 	private seq = 0;
 
-	/**
-	 * @param argv   `docker run -i … pi-small --mode rpc` arguments
-	 * @param name   the container name, for kill
-	 * @param events file every event but streaming deltas is appended to
-	 * @param stderr file stderr is appended to
-	 */
+	private readonly command: string;
 	private readonly argv: string[];
-	private readonly name: string;
+	private readonly options: { cwd?: string; env?: NodeJS.ProcessEnv };
+	private readonly container: string | null;
 	private readonly events: string;
 	private readonly stderr: string;
 
+	/**
+	 * @param command   `docker` (with `run -i … pi-small --mode rpc`) or `bash` (--local)
+	 * @param container the container name, for kill; null for a local process
+	 * @param events    file every event but streaming deltas is appended to
+	 * @param stderr    file stderr is appended to
+	 */
 	// Plain fields, not constructor parameter properties: Node's built-in type
 	// stripping (how these .ts files run) rejects the latter.
-	constructor(argv: string[], name: string, events: string, stderr: string) {
+	constructor(command: string, argv: string[], options: { cwd?: string; env?: NodeJS.ProcessEnv }, container: string | null, events: string, stderr: string) {
+		this.command = command;
 		this.argv = argv;
-		this.name = name;
+		this.options = options;
+		this.container = container;
 		this.events = events;
 		this.stderr = stderr;
 	}
@@ -46,7 +45,7 @@ export class PiRpc {
 	}
 
 	start(): void {
-		const p = spawn("docker", this.argv, { stdio: ["pipe", "pipe", "pipe"] });
+		const p = spawn(this.command, this.argv, { ...this.options, stdio: ["pipe", "pipe", "pipe"] });
 		p.stdout!.on("data", (d: Buffer) => {
 			this.buf += d.toString("utf8");
 			for (let i = this.buf.indexOf("\n"); i >= 0; i = this.buf.indexOf("\n")) {
@@ -123,7 +122,8 @@ export class PiRpc {
 	}
 
 	kill(): void {
-		spawnSync("docker", ["kill", this.name], { stdio: "ignore" });
+		if (this.container) spawnSync("docker", ["kill", this.container], { stdio: "ignore" });
+		else this.proc?.kill("SIGKILL");
 	}
 
 	/** End the process: close stdin, give it a moment, then kill. */

@@ -53,6 +53,16 @@ export interface AgentRun {
 	exitCode: number | null;
 	timedOut: boolean;
 	durationMs: number;
+	/** The session was aborted at `config.maxTurns`. */
+	turnLimited?: boolean;
+	turns?: number;
+}
+
+/** What one session may use: its time, its turns, and (with a rotation) which model serves it. */
+export interface SessionLimits {
+	timeoutMs: number;
+	maxTurns: number;
+	model?: string;
 }
 
 export interface WorkflowEnv {
@@ -60,8 +70,8 @@ export interface WorkflowEnv {
 	prepareStep(label: string): StepDir;
 	/** Write a JSON file into the step directory (step.json, check.json). */
 	writeStepFile(dir: StepDir, name: string, data: unknown): void;
-	/** Run one fresh session with this prompt, for at most `timeoutMs`. */
-	runAgent(dir: StepDir, prompt: string, timeoutMs: number): Promise<AgentRun>;
+	/** Run one fresh session with this prompt, within `limits` (and on `limits.model`, when set). */
+	runAgent(dir: StepDir, prompt: string, limits: SessionLimits): Promise<AgentRun>;
 	/** The submit tool's out file, parsed, or null. */
 	readOut(dir: StepDir): any | null;
 	/** Run check.py against the workspace in a fresh container. */
@@ -82,6 +92,12 @@ export interface RunOptions {
 	state?: WorkflowState;
 	/** Epoch ms. No step starts after it and a running session is cut off at it; the run ends "stopped". */
 	deadline?: number;
+	/**
+	 * Model rotation: every session runs on the current model, and every FAILED
+	 * session moves the rotation to the next one (wrapping around). Unset: one
+	 * model, whatever the host serves.
+	 */
+	models?: string[];
 	/** For tests. */
 	now?: () => number;
 }
@@ -113,6 +129,8 @@ export async function runWorkflow(env: WorkflowEnv, opts: RunOptions): Promise<W
 	let state = opts.state ?? initialState(opts.task, opts.preexistingCode, opts.profile);
 	env.saveState(state);
 	let counter = 0;
+	const models = opts.models?.length ? opts.models : undefined;
+	let modelIdx = 0;
 
 	for (let step = nextStep(state); step; step = nextStep(state)) {
 		const toolset = STEP_TOOLSET[step.kind];
@@ -144,10 +162,13 @@ export async function runWorkflow(env: WorkflowEnv, opts: RunOptions): Promise<W
 			if (checkSpec) env.writeStepFile(dir, "check.json", checkSpec);
 
 			const prompt = buildPrompt(state, step, cfg, feedback);
-			env.event({ type: "step_start", step: dir.name, kind: step.kind, taskId: step.taskId, attempt, promptChars: prompt.length });
-			const run = await env.runAgent(dir, prompt, sessionMs());
-			const judged = await judge(env, dir, step, stepFile, checkSpec, run);
-			env.event({ type: "step_run", step: dir.name, ...run, ok: judged.ok, detail: judged.ok ? undefined : judged.detail });
+			const model = models?.[modelIdx % models.length];
+			env.event({ type: "step_start", step: dir.name, kind: step.kind, taskId: step.taskId, attempt, model, promptChars: prompt.length });
+			const run = await env.runAgent(dir, prompt, { timeoutMs: sessionMs(), maxTurns: cfg.maxTurns, model });
+			const judged = await judge(env, dir, step, stepFile, checkSpec, run, cfg);
+			env.event({ type: "step_run", step: dir.name, model, ...run, ok: judged.ok, detail: judged.ok ? undefined : judged.detail });
+			// A failed session hands the next attempt to the next model in the rotation.
+			if (!judged.ok && models) modelIdx++;
 
 			if (judged.ok) accepted = judged;
 			else if (now() >= deadline) return stopped(state, `during ${stepLabel(step)} attempt ${attempt}`);
@@ -195,10 +216,15 @@ async function judge(
 	stepFile: StepFile,
 	checkSpec: CheckSpec | undefined,
 	run: AgentRun,
+	cfg: WorkflowConfig,
 ): Promise<Judgement> {
 	const tool = STEP_TOOL[step.kind];
 	const out = env.readOut(dir);
-	const timeout = run.timedOut ? " The session was stopped at the time limit." : "";
+	const timeout = run.turnLimited
+		? ` The session was stopped at the ${cfg.maxTurns}-turn limit.`
+		: run.timedOut
+			? " The session was stopped at the time limit."
+			: "";
 
 	if (!checkSpec) {
 		// Planning: the submission is the product. Re-validated here, whatever the tool said.

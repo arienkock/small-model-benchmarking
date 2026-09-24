@@ -211,24 +211,24 @@ await test("task.json problems are caught before any model runs", () => {
 
 // ---------------------------------------------------------------- runner --
 
-type Script = (step: StepDir, prompt: string) => { out?: any; check?: CheckReport; timedOut?: boolean };
+type Script = (step: StepDir, prompt: string) => { out?: any; check?: CheckReport; timedOut?: boolean; turnLimited?: boolean };
 
 function fakeEnv(script: Script) {
 	const events: any[] = [];
 	const outs = new Map<string, any>();
 	const checks = new Map<string, CheckReport>();
-	const prompts: Array<{ step: string; prompt: string; timeoutMs: number }> = [];
+	const prompts: Array<{ step: string; prompt: string; timeoutMs: number; maxTurns?: number; model?: string }> = [];
 	let saved: WorkflowState | undefined;
 	const env: WorkflowEnv = {
 		checkScript: "/check.py",
 		prepareStep: (label) => ({ name: label, out: `/h/${label}/out.json`, checkSpecPath: `/h/${label}/check.json` }),
 		writeStepFile: () => {},
-		async runAgent(dir, prompt, timeoutMs): Promise<AgentRun> {
-			prompts.push({ step: dir.name, prompt, timeoutMs });
+		async runAgent(dir, prompt, limits): Promise<AgentRun> {
+			prompts.push({ step: dir.name, prompt, timeoutMs: limits.timeoutMs, maxTurns: limits.maxTurns, model: limits.model });
 			const r = script(dir, prompt);
 			if (r.out !== undefined) outs.set(dir.name, r.out);
 			if (r.check) checks.set(dir.name, r.check);
-			return { exitCode: 0, timedOut: !!r.timedOut, durationMs: 1 };
+			return { exitCode: 0, timedOut: !!r.timedOut, turnLimited: !!r.turnLimited, durationMs: 1 };
 		},
 		readOut: (dir) => outs.get(dir.name) ?? null,
 		async runCheck(dir, _spec: CheckSpec) {
@@ -357,6 +357,24 @@ await test("runner: the deadline caps each session and stops the run between ste
 	assert.equal(s.status, "stopped");
 	assert.match(s.failure!, /time budget ran out before task_plan-T2/);
 	assert.deepEqual(f.prompts.map((p) => p.timeoutMs / 60_000), [10, 6, 2], "each session capped by what is left of the budget, under the 15-minute step limit");
+});
+
+await test("runner: a model rotation moves on after every failed session, and stays after a success", async () => {
+	const f = fakeEnv((dir) => {
+		// scenarios: attempts 1 and 2 fail; implement T1: attempt 1 fails
+		if (/scenarios-a[12]$/.test(dir.name)) return { turnLimited: true };
+		if (dir.name.includes("implement-T1-a1")) return { turnLimited: true, check: { ok: false, problems: ["the test suite failed"] } };
+		return { out: answerFor(dir.name) };
+	});
+	const s = await runWorkflow(f.env, { config: mergeConfig(cfg, { maxTurns: 10 }), task: "x", profile: PROFILE, preexistingCode: false, models: ["A", "B", "C"] });
+	assert.equal(s.status, "completed", s.failure);
+	assert.deepEqual(
+		f.prompts.map((p) => `${p.step.replace(/^\d+-/, "")}@${p.model}`),
+		["scenarios-a1@A", "scenarios-a2@B", "scenarios-a3@C", "breakdown-a1@C", "task_plan-T1-a1@C", "task_plan-T2-a1@C", "implement-T1-a1@C", "implement-T1-a2@A", "implement-T2-a1@A", "integrate-T2-a1@A"],
+	);
+	assert.ok(f.prompts.every((p) => p.maxTurns === 10));
+	assert.match(f.prompts[1].prompt, /stopped at the 10-turn limit/);
+	assert.ok(f.events.some((e) => e.type === "step_run" && e.model === "B" && e.turnLimited));
 });
 
 // -------------------------------------------------------------- check.py --

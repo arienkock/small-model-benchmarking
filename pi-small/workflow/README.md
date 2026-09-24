@@ -6,15 +6,25 @@ thing per step, in a **fresh context** every time. The harness decides what the
 step is, what counts as a valid answer, whether the code works, and what comes
 next.
 
-**One agent process per run.** `run.ts` starts one pi-small process in the
-sandbox container, in pi's RPC mode (`pi-rpc.ts`). Every step and every retry is
-a `new_session` in that process: an empty context, no new container. pi creates
-new extension instances on a new session, so the plugin re-reads the step file
-at `/harness/step.json`, which `run.ts` rewrites before each session. The
-harness's checks run in their own short-lived no-network container; they are a
-test runner, not an agent.
+**The workflow runs inside the plugin, in one pi process.** `run.ts` is only the
+host side. It makes sure `../proxy.mjs` is serving the first model, starts one
+pi-small process (in the sandbox container, or here with `--local`) in pi's RPC
+mode (`pi-rpc.ts`), and sends it one command: `/workflow run <run-spec.json>`.
+From then on `../lib/workflow-command.ts`, in the plugin, drives the run:
+- every step and every retry is `newSession()` in that process, which gives an
+  empty context. pi creates new extension instances for a new session, so the
+  plugin re-reads the step file (`current-step.json` in the run directory);
+- turn limits and time limits are enforced by watching the session and
+  aborting it;
+- a model rotation asks the host proxy for the next model, so pi never exits;
+- `check.py` runs as a child process of pi.
+
+When the plugin writes `workflow_end`, `run.ts` runs the task's grader, in its
+own no-network container.
 
     node workflow/run.ts --task workflow/tasks/books-api --model Granite-4.2-3B-Q8_0
+    node workflow/run.ts --task workflow/tasks/books-api --models Granite-4.2-3B-Q8_0,Spark-X2.5-4B-Q6_K,LFM2.5-2.6B-Q8_0 \
+        --config workflow/configs/rotation-10turns.json --deadline 2026-09-24T21:20
 
 **The harness is task-agnostic.** It assumes no language, test framework, file
 layout or dependency policy. Everything about a particular task comes from its
@@ -63,10 +73,12 @@ directory). Each fresh session gets the parts of the spec it needs, rendered by
 - **`report_done` runs the checks itself.** It refuses, with the failing
   output, until `check.py` passes. After `doneRefusals` refusals it ends the
   session anyway, and the host decides what happens next.
-- **The host judges every step again**, never trusting the session.
+- **The runner judges every step again**, never trusting the session.
   - Planning submissions are re-validated.
-  - Coding steps are re-checked with `check.py` in a fresh container with no
-    network.
+  - Coding steps are re-checked with `check.py` after the session ends. This
+    happens in the agent's container: `check.py` is on the read-only plugin
+    mount, so the model cannot change it, but it is no longer a fresh
+    no-network container. The grader still is.
 - **Recovery is fixed policy, not model judgement. Every retry starts fresh.**
   A step that ends without an accepted result is retried in a new, empty session
   whose prompt is the full step prompt plus the failure as feedback, up to
@@ -74,10 +86,14 @@ directory). Each fresh session gets the parts of the spec it needs, rendered by
   workspace. Then the workflow stops and records why. Continuing the failed
   session ("nudging") was dropped after the 2026-09-24 runs: long sessions did
   not recover, and a fresh attempt did better.
-- **Time limits.** A session gets `stepTimeoutMin` (default 15), capped by what
-  is left of `--deadline`. At the limit the harness sends `abort`; if the
-  session still does not stop, it kills the process, which is started again
-  for the next session. The test suite gets `testTimeoutSec` (default 60).
+- **Turn and time limits.** A session gets `stepTimeoutMin` (default 15),
+  capped by what is left of `--deadline`, and `maxTurns` assistant turns (0 = no
+  limit). At either limit the plugin aborts the session and waits up to 60 s
+  for it to settle. The test suite gets `testTimeoutSec` (default 60).
+- **Model rotation.** With `--models A,B,C`, every failed session moves to the
+  next model, cycling, until the task is done or the deadline passes. The
+  plugin asks `proxy.mjs` for the switch (`POST /pi-small/model`) before the
+  next session starts. Requests wait while the switch is in progress.
 - **Scenario to test traceability is mechanical, and language-agnostic.** The
   id of scenario `T2.S1`, written `T2_S1`, must appear in some test file, for
   example `def test_T2_S1_…` or `it("T2_S1: …")`. This is a plain-text search
@@ -97,29 +113,34 @@ Defaults are in `DEFAULT_CONFIG` (`lib/workflow.ts`); override them with
 ## The run directory
 
     workflow-runs/<timestamp>-<model>/
-      run.json        model, config, task, grader
+      run.json        model(s), config, task, deadline
+      run-spec.json   what the plugin was given (/workflow run reads it)
       state.json      the workflow state; --resume continues from it
       spec.md         the enriched task as it stands
       events.jsonl    every step start, run and judgement, with timings
+      workflow.log    the same, one line per session and check, human-readable
       agent.events.jsonl / agent.stderr.log   the pi process's RPC events (not
                       the token deltas) and its stderr
-      harness/        the current step's files, mounted at /harness
+      proxy.log       the host proxy and every model switch, when run.ts started it
+      current-step.json   the step the plugin's next session reads
       steps/NN-<kind>[-Tk]-aN/
         prompt.md     what the session was given
         step.json     what the plugin read: tool, tool set, limits
         check.json    what check.py was asked to verify
         out.json      what the submit tool recorded (accepted or not, refusals)
         check-report-*.json   the host's own check runs
-        sessions/     pi's session file and pi-small's session log for the step
       grade.json      the task grader's output, if it has one
-      ws/             the workspace the model worked in
+      ws/             the workspace the model worked in; pi's session files and
+                      pi-small's session logs are in ws/.home
 
 ## Files
 
 | file | does |
 |---|---|
-| `run.ts` | the CLI: docker, serve.mjs, the run directory |
+| `run.ts` | the CLI, host side: the proxy, the agent process, the run spec, the grader |
 | `pi-rpc.ts` | the one pi-small process of a run, driven over pi's RPC mode |
+| `../lib/workflow-command.ts` | `/workflow run`: the runner's I/O on top of pi sessions, in the plugin |
+| `../proxy.mjs` | host daemon in front of llama-server; switches models on request |
 | `../lib/workflow.ts` | steps, validators, spec rendering, prompts. No I/O |
 | `../lib/workflow-runner.ts` | the loop: fresh attempts, feedback, deadline, stop. I/O through an interface |
 | `../lib/workflow-tool.ts` | the submit tool the plugin registers in the container |
@@ -130,10 +151,12 @@ Defaults are in `DEFAULT_CONFIG` (`lib/workflow.ts`); override them with
 Tests:
 - `node test/workflow-test.ts` covers the validators, step order, runner
   control flow, `check.py` and the submit tool, with no model and no Docker.
-- `node test/workflow-e2e.ts`, on the laptop, runs the whole thing: Docker, one
-  pi process in RPC mode, and the plugin, with the stub server playing the model
-  from `test/fixtures/workflow-script.mjs`. That script takes every recovery path
-  once:
+- `node test/workflow-e2e.ts`, on the laptop, runs the whole thing: the proxy,
+  Docker, one pi process in RPC mode, `/workflow run`, and a two-model
+  rotation, with the stub server (started by the proxy, as llama-server would
+  be) playing the model from `test/fixtures/workflow-script.mjs`. Add `--local`
+  to run it without Docker, for example on the Mac. That script takes every
+  recovery path once:
   - a session that runs past its time limit and is aborted;
   - a session that ends without submitting;
   - a refused submission;
@@ -157,4 +180,5 @@ Tests:
   `tsc --noEmit` accepts them, so only running the file shows the problem.
 - **`http.server` on macOS** calls `socket.getfqdn()` when it binds, and a
   reverse DNS lookup can take more than 5 s. Tests that start a server are slow
-  or time out on the Mac. They are fine in the container.
+  or time out on the Mac. They are fine in the container. `workflow-e2e.ts
+  --local` patches it out with `test/fixtures/local-python/sitecustomize.py`.

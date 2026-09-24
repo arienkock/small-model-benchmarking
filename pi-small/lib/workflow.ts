@@ -74,6 +74,12 @@ export interface WorkflowConfig {
 	logic: { min: number; max: number };
 	/** Fresh-context attempts per step before the workflow stops. */
 	attempts: { planning: number; implement: number; integrate: number };
+	/**
+	 * Turns a session may take (one model response plus its tool results is a
+	 * turn) before the harness aborts it; 0 = no limit. A session stopped here
+	 * counts as a failed attempt like any other.
+	 */
+	maxTurns: number;
 	/** report_done refusals inside one session before the tool gives up and ends it. */
 	doneRefusals: number;
 	/**
@@ -108,6 +114,7 @@ export const DEFAULT_CONFIG: WorkflowConfig = {
 	taskScenarios: { minHappy: 1, minUnhappy: 1, max: 10 },
 	logic: { min: 1, max: 12 },
 	attempts: { planning: 3, implement: 3, integrate: 3 },
+	maxTurns: 0,
 	doneRefusals: 4,
 	stepTimeoutMin: 15,
 	testTimeoutSec: 60,

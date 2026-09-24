@@ -59,6 +59,8 @@ import { dirname, join, resolve } from "node:path";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { buildTool } from "../lib/tools.ts";
 import { buildWorkflowTool, loadStepFile } from "../lib/workflow-tool.ts";
+import { proxyStatus, proxySwitch } from "../lib/proxy-client.ts";
+import { registerWorkflowCommand } from "../lib/workflow-command.ts";
 import {
 	buildServerArgs,
 	compareProps,
@@ -448,7 +450,7 @@ class ServerManager {
 	async start(spec: ModelSpec, ctx: number, notify: (msg: string) => void): Promise<void> {
 		await this.stop();
 
-		if (this.remote) return this.attachRemote(notify);
+		if (this.remote) return this.attachRemote(spec, notify);
 
 		const existing = await probeEndpoint(this.d);
 		if (existing.alive) {
@@ -603,10 +605,22 @@ class ServerManager {
 
 	/**
 	 * Follow whatever the host is serving. The container cannot start, stop or
-	 * switch the model, so the served alias is the truth and the roster entry is
-	 * only used for its notes and per-model settings when one matches.
+	 * switch the model itself, so the served alias is the truth and the roster
+	 * entry is only used for its notes and per-model settings when one matches.
+	 * When the host runs ../proxy.mjs, though, it can ASK: a different roster
+	 * model (or the same one in another thinking mode) is requested from the
+	 * proxy first, and attached to once it is loaded.
 	 */
-	private async attachRemote(notify: (msg: string) => void): Promise<void> {
+	private async attachRemote(wanted: ModelSpec, notify: (msg: string) => void): Promise<void> {
+		const proxy = await proxyStatus({ host: this.d.host, port: this.d.port, apiKey: this.d.apiKey });
+		this.proxied = proxy !== null;
+		if (proxy && this.rosterSpec?.(wanted.alias)) {
+			const mode = resolveThinking(wanted, thinkingOverride);
+			if (proxy.alias !== wanted.alias || (mode !== null && proxy.thinking !== mode)) {
+				notify(`asking the host proxy for ${wanted.alias}${mode ? ` (thinking ${mode})` : ""} — it was serving ${proxy.alias ?? "nothing"}`);
+				await proxySwitch({ host: this.d.host, port: this.d.port, apiKey: this.d.apiKey }, wanted.alias, mode);
+			}
+		}
 		const existing = await probeEndpoint(this.d);
 		if (!existing.alive) {
 			throw new Error(
@@ -631,6 +645,14 @@ class ServerManager {
 
 	/** Injected by the extension so attachRemote can name what it found. */
 	rosterSpec?: (alias: string) => ModelSpec | undefined;
+
+	/** Remote mode behind ../proxy.mjs: models can be switched from here. Set by attachRemote. */
+	proxied = false;
+
+	/** Can this session change the model itself? Locally always; remotely only through the proxy. */
+	get canSwitch(): boolean {
+		return !this.remote || this.proxied;
+	}
 
 	async runProbes(): Promise<void> {
 		const mode = this.state.thinking;
@@ -1039,7 +1061,7 @@ export default function (pi: ExtensionAPI) {
 		if (!spec) return;
 		const alreadyServing = mgr.state.spec.alias === spec.alias && (mgr.state.proc !== null || mgr.state.adopted);
 		if (alreadyServing) return;
-		if (mgr.remote) {
+		if (!mgr.canSwitch) {
 			ctx.ui.notify(hostControlHint(`node serve.mjs ${spec.alias}`), "warn");
 			return;
 		}
@@ -1047,6 +1069,10 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// ------------------------------------------------------------ commands --
+	// /workflow run <spec>: the staged workflow, driven from inside this process
+	// (../lib/workflow-command.ts); the host proxy switches models for it.
+	registerWorkflowCommand(pi, { host: d.host, port: d.port, apiKey: d.apiKey }, (c, msg) => say(c, `pi-small: ${msg}`, "info"));
+
 	pi.registerCommand("sm-status", {
 		description: "Show the local model, server, sampler, tools and prompt state",
 		handler: async (_args: string, ctx: any) => {
@@ -1073,7 +1099,7 @@ export default function (pi: ExtensionAPI) {
 				ctx.ui.notify(`unknown model "${alias}". Roster: ${roster.models.map((m) => m.alias).join(", ")}`, "error");
 				return;
 			}
-			if (mgr.remote) {
+			if (!mgr.canSwitch) {
 				ctx.ui.notify(hostControlHint(`node serve.mjs ${alias}`), "warn");
 				return;
 			}

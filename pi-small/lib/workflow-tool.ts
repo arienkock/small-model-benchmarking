@@ -20,12 +20,14 @@
  */
 
 import { spawnSync } from "node:child_process";
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { Type } from "typebox";
 import { type CheckReport, describeCheck, type StepFile, unwrapArgs, validateScenarios, validateSubmission } from "./workflow.ts";
 
 export function loadStepFile(path = process.env.PI_SMALL_WORKFLOW_STEP): StepFile | null {
-	if (!path) return null;
+	// Missing is normal: the pi process starts before the workflow writes its
+	// first step, and every later session's plugin instance reads the then-current one.
+	if (!path || !existsSync(path)) return null;
 	return JSON.parse(readFileSync(path, "utf8")) as StepFile;
 }
 
