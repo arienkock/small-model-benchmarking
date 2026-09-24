@@ -9,10 +9,13 @@ import { join } from "node:path";
 
 const safe = (key: string) => key.replace(/[^A-Za-z0-9._-]/g, "_");
 
-/** Copy `ws` to `<store>/<key>`, unless that copy exists (a resumed run keeps the step's original). */
-export function snapshotWorkspace(ws: string, store: string, key: string): void {
+/** Copy `ws` to `<store>/<key>`. An existing copy is kept (a resumed run keeps the step's original) unless `replace`. */
+export function snapshotWorkspace(ws: string, store: string, key: string, replace = false): void {
 	const to = join(store, safe(key));
-	if (existsSync(to)) return;
+	if (existsSync(to)) {
+		if (!replace) return;
+		rmSync(to, { recursive: true, force: true });
+	}
 	mkdirSync(to, { recursive: true });
 	for (const e of readdirSync(ws)) cpSync(join(ws, e), join(to, e), { recursive: true });
 }

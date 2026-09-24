@@ -227,7 +227,7 @@ async function runInProcess(spec: RunSpec, startCtx: any, proxy: ProxyEndpoint, 
 		event(e: Record<string, unknown>) {
 			appendFileSync(join(runDir, "events.jsonl"), JSON.stringify({ ts: new Date().toISOString(), ...e }) + "\n");
 		},
-		snapshotWorkspace: (key) => snapshotWorkspace(process.cwd(), join(runDir, "snapshots"), key),
+		snapshotWorkspace: (key, replace) => snapshotWorkspace(process.cwd(), join(runDir, "snapshots"), key, replace),
 		restoreWorkspace(key) {
 			restoreWorkspace(process.cwd(), join(runDir, "snapshots"), key);
 			log(`  workspace reset to the start of ${key}`);

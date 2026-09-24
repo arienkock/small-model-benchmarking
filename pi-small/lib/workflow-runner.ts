@@ -80,8 +80,8 @@ export interface WorkflowEnv {
 	event(e: Record<string, unknown>): void;
 	/** Container paths the step file needs. */
 	checkScript: string;
-	/** Save the workspace under `key`, unless a copy under that key exists already (retryWorkspace "reset"). */
-	snapshotWorkspace?(key: string): void;
+	/** Save the workspace under `key`: only if no copy exists yet, unless `replace`. */
+	snapshotWorkspace?(key: string, replace?: boolean): void;
 	/** Put the workspace back to the copy saved under `key`. */
 	restoreWorkspace?(key: string): void;
 }
@@ -145,17 +145,23 @@ export async function runWorkflow(env: WorkflowEnv, opts: RunOptions): Promise<W
 		let accepted: Judgement | undefined;
 		let lastDetail: string | undefined;
 
-		const reset = toolset === "coding" && cfg.retryWorkspace === "reset" && !!env.snapshotWorkspace && !!env.restoreWorkspace;
-		if (reset) {
-			env.snapshotWorkspace!(stepLabel(step));
-			feedback = undefined;
+		// What a retry starts from (WorkflowConfig.retryWorkspace). "reset" and "best"
+		// need the env's snapshots; without them a run behaves as "keep".
+		const label = stepLabel(step);
+		const wsMode = toolset === "coding" && env.snapshotWorkspace && env.restoreWorkspace ? cfg.retryWorkspace : "keep";
+		const bestKey = `${label}.best`;
+		let best = wsMode === "best" && state.retry?.step === label && state.retry.score ? { score: state.retry.score, feedback: state.retry.feedback } : undefined;
+		if (wsMode !== "keep") {
+			env.snapshotWorkspace!(label);
+			feedback = best?.feedback;
 		}
 
 		for (let attempt = 1; attempt <= maxAttempts && !accepted; attempt++) {
-			if (now() >= deadline) return stopped(state, `before ${stepLabel(step)} attempt ${attempt}`);
-			if (reset && attempt > 1) {
-				env.restoreWorkspace!(stepLabel(step));
-				env.event({ type: "workspace_reset", step: stepLabel(step) });
+			if (now() >= deadline) return stopped(state, `before ${label} attempt ${attempt}`);
+			if (wsMode !== "keep" && attempt > 1) {
+				const from = best ? bestKey : label;
+				env.restoreWorkspace!(from);
+				env.event({ type: "workspace_reset", step: label, from, score: best?.score ?? 0 });
 			}
 			counter++;
 			const dir = env.prepareStep(`${String(counter).padStart(2, "0")}-${stepLabel(step)}-a${attempt}`);
@@ -187,11 +193,22 @@ export async function runWorkflow(env: WorkflowEnv, opts: RunOptions): Promise<W
 			if (!judged.ok && models) modelIdx++;
 
 			if (!judged.ok) lastDetail = judged.detail;
+			if (!judged.ok && wsMode === "best") {
+				// Keep the attempt that got furthest; the next one starts from it, told only its verdict.
+				const score = passingTests(judged.check);
+				if (score > (best?.score ?? 0)) {
+					env.snapshotWorkspace!(bestKey, true);
+					best = { score, feedback: `${describeCheck(judged.check!, cfg.feedback)}\n\nThe files from an earlier attempt are in /workspace; continue from them or replace them.` };
+					state = { ...state, retry: { step: label, feedback: best.feedback, score } };
+					env.saveState(state);
+				}
+				feedback = best?.feedback;
+			}
 			if (judged.ok) accepted = judged;
-			else if (now() >= deadline) return stopped(state, `during ${stepLabel(step)} attempt ${attempt}`);
+			else if (now() >= deadline) return stopped(state, `during ${label} attempt ${attempt}`);
 			else {
-				// A reset retry starts over as the first attempt did: nothing about the last one.
-				if (!reset) {
+				// "reset" and "best" decide the next attempt's start and feedback above.
+				if (wsMode === "keep") {
 					feedback =
 						(judged.detail ?? "The step did not produce an accepted result.") +
 						(toolset === "coding" ? "\n\nThe files from that attempt are still in /workspace; continue from them or replace them." : "");
@@ -230,6 +247,18 @@ export async function runWorkflow(env: WorkflowEnv, opts: RunOptions): Promise<W
 		env.saveState(state);
 	}
 	return state;
+}
+
+/**
+ * Tests passing in a failed check: the progress measure for retryWorkspace
+ * "best". Needs the per-test failures (the task's failurePattern) when the
+ * suite failed; without them, or when it timed out, 0.
+ */
+export function passingTests(check: CheckReport | undefined): number {
+	const t = check?.tests;
+	if (!t || t.timedOut || t.rc == null || t.count == null) return 0;
+	if (t.rc === 0) return t.count;
+	return t.failures ? Math.max(0, t.count - t.failures.length) : 0;
 }
 
 async function judge(

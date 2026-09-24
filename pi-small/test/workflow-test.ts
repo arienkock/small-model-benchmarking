@@ -17,7 +17,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildWorkflowTool } from "../lib/workflow-tool.ts";
-import { type AgentRun, runWorkflow, type StepDir, type WorkflowEnv } from "../lib/workflow-runner.ts";
+import { type AgentRun, passingTests, runWorkflow, type StepDir, type WorkflowEnv } from "../lib/workflow-runner.ts";
 import {
 	describeCheck,
 	buildPrompt,
@@ -318,6 +318,40 @@ await test("runner: retryWorkspace reset — a retry starts from the step's own 
 	const retry = f.prompts.find((p) => p.step.includes("implement-T1-a2"))!.prompt;
 	assert.doesNotMatch(retry, /previous attempt/);
 	assert.equal(retry, f.prompts.find((p) => p.step.includes("implement-T1-a1"))!.prompt, "the retry prompt is the first attempt's");
+});
+
+await test("runner: retryWorkspace best — retries start from the attempt with the most passing tests, told only its verdict", async () => {
+	const calls: string[] = [];
+	const report = (count: number, failing: number) => ({
+		ok: false,
+		problems: ["the test suite failed"],
+		tests: { rc: 1, count, failures: Array.from({ length: failing }, (_, i) => ({ test: `t${i}`, error: "boom" })) },
+	});
+	// a1: 0 of 7 pass; a2: 3 of 7 (best); a3: 1 of 7 (worse); a4: passes.
+	const byAttempt: Record<string, CheckReport> = { a1: report(7, 7), a2: report(7, 4), a3: report(7, 6) };
+	const f = fakeEnv((dir) => {
+		const a = dir.name.match(/implement-T1-(a\d)/)?.[1];
+		return a && byAttempt[a] ? { out: good.done, check: byAttempt[a] } : { out: answerFor(dir.name) };
+	});
+	f.env.snapshotWorkspace = (k, replace) => calls.push(`snapshot ${k}${replace ? " (replace)" : ""}`);
+	f.env.restoreWorkspace = (k) => calls.push(`restore ${k}`);
+	const s = await runWorkflow(f.env, { config: mergeConfig(cfg, { retryWorkspace: "best", attempts: { implement: 5 } }), task: "x", profile: PROFILE, preexistingCode: false });
+	assert.equal(s.status, "completed");
+	assert.deepEqual(calls.filter((c) => c.includes("T1")), [
+		"snapshot implement-T1",
+		"restore implement-T1", // a2: nothing has passed yet, so from the start
+		"snapshot implement-T1.best (replace)", // a2 got 3
+		"restore implement-T1.best", // a3
+		"restore implement-T1.best", // a4: a3 was worse
+	]);
+	const prompt = (a: string) => f.prompts.find((p) => p.step.includes(`implement-T1-${a}`))!.prompt;
+	assert.doesNotMatch(prompt("a2"), /previous attempt/, "no feedback before any progress");
+	assert.match(prompt("a3"), /previous attempt at this step failed\n\nThe harness checks did NOT pass:\n- the test suite failed\n\nThe files from an earlier attempt/);
+	assert.doesNotMatch(prompt("a3"), /boom/, "minimal: the verdict only");
+	assert.equal(prompt("a4"), prompt("a3").replace(/^(# Workflow step[^\n]*)/, "$1"), "a worse attempt changes nothing");
+	assert.equal(passingTests({ ok: false, problems: [], tests: { rc: null, timedOut: true, count: 5 } }), 0);
+	assert.equal(passingTests({ ok: false, problems: [], tests: { rc: 0, count: 5 } }), 5);
+	assert.equal(passingTests({ ok: false, problems: [], tests: { rc: 1, count: 5 } }), 0, "no per-test failures: progress unknown");
 });
 
 await test("runner: a rotation can come from the config", async () => {

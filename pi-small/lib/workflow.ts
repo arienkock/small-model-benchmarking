@@ -129,8 +129,11 @@ export interface WorkflowConfig {
 	 *          attempt spent its turns reading and patching someone else's design
 	 *          (a test file whose port scheme used an attribute it never set) and
 	 *          none repaired it.
+	 *   best   the workspace of the attempt with the most passing tests so far, and
+	 *          that attempt's verdict as feedback; "reset" until an attempt has a
+	 *          passing test. Needs the task's failurePattern to count them.
 	 */
-	retryWorkspace: "keep" | "reset";
+	retryWorkspace: "keep" | "reset" | "best";
 }
 
 export const TERSE_STYLE =
@@ -272,8 +275,8 @@ export interface WorkflowState {
 	preexistingCode: boolean;
 	scenarios: Scenario[];
 	tasks: WfTask[];
-	/** The feedback for the next attempt at `step`, kept so --resume retries with it. */
-	retry?: { step: string; feedback: string };
+	/** The feedback for the next attempt at `step`, kept so --resume retries with it (and, for retryWorkspace "best", the best attempt's score). */
+	retry?: { step: string; feedback: string; score?: number };
 }
 
 export function initialState(task: string, preexistingCode: boolean, profile: TaskProfile = {}): WorkflowState {
