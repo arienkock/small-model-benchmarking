@@ -475,6 +475,14 @@ if (toVerify === null) {
 	}
 
 	const now = await current();
+	if (now?.alias !== spec.alias) {
+		// Health came from ANOTHER server on this port (ours then failed to bind):
+		// 2026-09-24, a leftover MiniCPM answered for a Granite start, and the sampler
+		// check passed because the two rosters' samplers are identical.
+		console.error(`port ${d.port} answers as ${now?.alias ?? "nothing"}, not ${spec.alias}: another server holds the port. Stop it first.`);
+		stopOurs();
+		process.exit(4);
+	}
 	const served = now?.ctx ?? landedCtx;
 	const warning = ctxUsabilityWarning(served);
 	if (warning) console.error(`WARNING: ${warning}`);
