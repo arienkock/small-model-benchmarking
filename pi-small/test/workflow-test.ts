@@ -306,6 +306,20 @@ await test("runner: a failed coding attempt is retried fresh with the check outp
 	assert.match(g.prompts.find((p) => p.step.includes("implement-T1-a2"))!.prompt, /AssertionError: 3 != 2/, "feedback: output adds the tail");
 });
 
+await test("runner: retryWorkspace reset — a retry starts from the step's own start, with no feedback", async () => {
+	const calls: string[] = [];
+	const f = fakeEnv((dir) => (dir.name.includes("implement-T1-a1") ? { out: good.done, check: { ok: false, problems: ["the test suite failed"] } } : { out: answerFor(dir.name) }));
+	f.env.snapshotWorkspace = (k) => calls.push(`snapshot ${k}`);
+	f.env.restoreWorkspace = (k) => calls.push(`restore ${k}`);
+	const s = await runWorkflow(f.env, { config: mergeConfig(cfg, { retryWorkspace: "reset" }), task: "x", profile: PROFILE, preexistingCode: false });
+	assert.equal(s.status, "completed");
+	assert.deepEqual(calls.filter((c) => c.includes("T1")), ["snapshot implement-T1", "restore implement-T1"]);
+	assert.ok(!calls.some((c) => /scenarios|breakdown|task_plan/.test(c)), "planning steps have no workspace to reset");
+	const retry = f.prompts.find((p) => p.step.includes("implement-T1-a2"))!.prompt;
+	assert.doesNotMatch(retry, /previous attempt/);
+	assert.equal(retry, f.prompts.find((p) => p.step.includes("implement-T1-a1"))!.prompt, "the retry prompt is the first attempt's");
+});
+
 await test("runner: a rotation can come from the config", async () => {
 	const f = fakeEnv((dir) => (dir.name.includes("breakdown-a1") ? {} : { out: answerFor(dir.name) }));
 	await runWorkflow(f.env, { config: mergeConfig(cfg, { models: ["A", "B"] }), task: "x", profile: PROFILE, preexistingCode: false });

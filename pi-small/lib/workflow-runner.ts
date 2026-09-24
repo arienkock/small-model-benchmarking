@@ -80,6 +80,10 @@ export interface WorkflowEnv {
 	event(e: Record<string, unknown>): void;
 	/** Container paths the step file needs. */
 	checkScript: string;
+	/** Save the workspace under `key`, unless a copy under that key exists already (retryWorkspace "reset"). */
+	snapshotWorkspace?(key: string): void;
+	/** Put the workspace back to the copy saved under `key`. */
+	restoreWorkspace?(key: string): void;
 }
 
 export interface RunOptions {
@@ -139,9 +143,20 @@ export async function runWorkflow(env: WorkflowEnv, opts: RunOptions): Promise<W
 		// A resumed run retries with the feedback its last failed attempt got.
 		let feedback: string | undefined = state.retry?.step === stepLabel(step) ? state.retry.feedback : undefined;
 		let accepted: Judgement | undefined;
+		let lastDetail: string | undefined;
+
+		const reset = toolset === "coding" && cfg.retryWorkspace === "reset" && !!env.snapshotWorkspace && !!env.restoreWorkspace;
+		if (reset) {
+			env.snapshotWorkspace!(stepLabel(step));
+			feedback = undefined;
+		}
 
 		for (let attempt = 1; attempt <= maxAttempts && !accepted; attempt++) {
 			if (now() >= deadline) return stopped(state, `before ${stepLabel(step)} attempt ${attempt}`);
+			if (reset && attempt > 1) {
+				env.restoreWorkspace!(stepLabel(step));
+				env.event({ type: "workspace_reset", step: stepLabel(step) });
+			}
 			counter++;
 			const dir = env.prepareStep(`${String(counter).padStart(2, "0")}-${stepLabel(step)}-a${attempt}`);
 			const stepFile: StepFile = {
@@ -171,21 +186,25 @@ export async function runWorkflow(env: WorkflowEnv, opts: RunOptions): Promise<W
 			// A failed session hands the next attempt to the next model in the rotation.
 			if (!judged.ok && models) modelIdx++;
 
+			if (!judged.ok) lastDetail = judged.detail;
 			if (judged.ok) accepted = judged;
 			else if (now() >= deadline) return stopped(state, `during ${stepLabel(step)} attempt ${attempt}`);
 			else {
-				feedback =
-					(judged.detail ?? "The step did not produce an accepted result.") +
-					(toolset === "coding" ? "\n\nThe files from that attempt are still in /workspace; continue from them or replace them." : "");
-				state = { ...state, retry: { step: stepLabel(step), feedback } };
-				env.saveState(state);
+				// A reset retry starts over as the first attempt did: nothing about the last one.
+				if (!reset) {
+					feedback =
+						(judged.detail ?? "The step did not produce an accepted result.") +
+						(toolset === "coding" ? "\n\nThe files from that attempt are still in /workspace; continue from them or replace them." : "");
+					state = { ...state, retry: { step: stepLabel(step), feedback } };
+					env.saveState(state);
+				}
 			}
 		}
 
 		if (!accepted) {
 			state = structuredClone(state);
 			state.status = "failed";
-			state.failure = `${stepLabel(step)} not accepted after ${maxAttempts} attempt(s): ${feedback ?? "no detail"}`;
+			state.failure = `${stepLabel(step)} not accepted after ${maxAttempts} attempt(s): ${lastDetail ?? feedback ?? "no detail"}`;
 			const t = step.taskId ? state.tasks.find((x) => x.id === step.taskId) : undefined;
 			if (t) t.status = "failed";
 			env.event({ type: "workflow_failed", step: stepLabel(step), failure: state.failure });

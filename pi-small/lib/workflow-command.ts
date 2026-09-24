@@ -25,6 +25,7 @@ import { spawn } from "node:child_process";
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { type ProxyEndpoint, proxySwitch } from "./proxy-client.ts";
+import { restoreWorkspace, snapshotWorkspace } from "./workspace-snapshot.ts";
 import { loadRoster, resolveThinking } from "./roster.ts";
 import { type AgentRun, runWorkflow, type SessionLimits, type StepDir, type WorkflowEnv } from "./workflow-runner.ts";
 import { type CheckReport, type CheckSpec, renderSpec, type TaskProfile, type WorkflowConfig, type WorkflowState } from "./workflow.ts";
@@ -225,6 +226,11 @@ async function runInProcess(spec: RunSpec, startCtx: any, proxy: ProxyEndpoint, 
 		},
 		event(e: Record<string, unknown>) {
 			appendFileSync(join(runDir, "events.jsonl"), JSON.stringify({ ts: new Date().toISOString(), ...e }) + "\n");
+		},
+		snapshotWorkspace: (key) => snapshotWorkspace(process.cwd(), join(runDir, "snapshots"), key),
+		restoreWorkspace(key) {
+			restoreWorkspace(process.cwd(), join(runDir, "snapshots"), key);
+			log(`  workspace reset to the start of ${key}`);
 		},
 	};
 

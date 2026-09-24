@@ -120,6 +120,17 @@ export interface WorkflowConfig {
 	 * line, and each rewrite brought a new error.
 	 */
 	codingTools?: string[];
+	/**
+	 * What a retried coding step starts from:
+	 *   keep   the previous attempt's files, and its failure as feedback
+	 *   reset  the workspace as it was when the step started, and no feedback: the
+	 *          retry is the first attempt again, on the next model. In the
+	 *          2026-09-24 overnight runs every model that inherited a broken
+	 *          attempt spent its turns reading and patching someone else's design
+	 *          (a test file whose port scheme used an attribute it never set) and
+	 *          none repaired it.
+	 */
+	retryWorkspace: "keep" | "reset";
 }
 
 export const TERSE_STYLE =
@@ -139,6 +150,7 @@ export const DEFAULT_CONFIG: WorkflowConfig = {
 	testTimeoutSec: 60,
 	systemPrompt: TERSE_STYLE,
 	feedback: "minimal",
+	retryWorkspace: "keep",
 };
 
 export function mergeConfig(base: WorkflowConfig, over: any): WorkflowConfig {
