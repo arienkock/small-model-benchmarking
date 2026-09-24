@@ -1,5 +1,5 @@
 {
-	"_readme": "The roster pi-small serves. See README.md. Field meanings mirror coding-bench/models.conf: repo is a Hugging Face repo id (llama-server downloads it with -hf/-hff), or the literal 'local' in which case 'file' is a path on the serving machine. 'localFile' is a copy already on the serving machine and wins when it resolves (it may use ~ and a * segment). It does NOT save a download -- this llama.cpp build caches -hf models in the Hugging Face hub layout and reuses them -- it skips the HF API round-trip and pins the run to the exact snapshot on disk, so a re-uploaded third-party quant cannot swap the weights mid-experiment. See README.md 'Where the weights actually live'. 'serverArgs' are extra llama-server flags for THIS model only -- that is where a model's tool-call template correction goes.",
+	"_readme": "The roster pi-small serves. See README.md. Field meanings mirror coding-bench/models.conf: repo is a Hugging Face repo id (llama-server downloads it with -hf/-hff), or the literal 'local' in which case 'file' is a path on the serving machine. 'localFile' is a copy already on the serving machine and wins when it resolves (it may use ~ and a * segment). It does NOT save a download -- this llama.cpp build caches -hf models in the Hugging Face hub layout and reuses them -- it skips the HF API round-trip and pins the run to the exact snapshot on disk, so a re-uploaded third-party quant cannot swap the weights mid-experiment. See README.md 'Where the weights actually live'. 'serverArgs' are extra llama-server flags for THIS model only -- that is where a model's tool-call template correction goes. 'tools' names the tool kinds (see lib/tools.ts: bash, read, write, edit, grep, find, ls) THIS model gets, overriding defaults.tools entirely. 'toolOptions' carries per-kind config for THIS model, keyed by kind name, each kind fully overriding defaults.toolOptions for that kind -- this is where a guard or a tool variation for one model lives, e.g. bash.commandGuards, without touching any other model. 'systemPrompt' replaces the near-empty system prompt for THIS model only, overriding defaults.systemPrompt; leave unset to keep PI_SMALL_SYSTEM_PROMPT / pi's default. THINKING: 'thinking' ('on'|'off') marks a model that HAS a thinking mode and sets its default; pi-small then emits the template's own switch (--chat-template-kwargs enable_thinking) on the command line and per request, because --reasoning-budget 0 alone does not disable thinking on these templates. PI_SMALL_THINKING / serve.mjs --thinking / /sm-thinking override it per run. 'samplers': { 'thinking': {...}, 'instruct': {...} } holds one sampler per mode for a model whose card pairs different numbers with each; the active mode's row wins field by field over the flat fields. 'maxTokens' is the largest single response (thinking + answer), default 4096; bin/pi-small raises pi's compaction reserve to fit the largest. SAMPLER: 'temp'/'topP'/'topK'/'repeatPenalty'/'minP'/'presencePenalty' are set EXPLICITLY on every model from that vendor's own generation_config.json, never inherited -- three of Qwen3-Coder's four values silently matched llama.cpp's built-in defaults instead of its model card, which looked deliberate and was not. Where a vendor OMITS a field its reference implementation still runs transformers' GenerationConfig default (top_k 50, top_p 1.0, repetition_penalty 1.0, min_p disabled, presence_penalty 0.0), so that is what is recorded here rather than llama.cpp's differing defaults (top_k 40, top_p 0.95, min_p 0.05). NOTE this is the OPPOSITE of coding-bench/models.conf, which deliberately serves every model identically for cross-model comparability -- pi-small is a scaffold for using these models, not a measurement instrument, so here the model card wins. 'ngl' is how many layers THIS model puts on the GPU, overriding defaults.ngl -- the only offload lever a DENSE beyond-VRAM model has, and a measured number per model; it is a field rather than a serverArgs entry so it cannot end up as a second -ngl on the same command line. 'ctxCandidates' are the context sizes tried for THIS model if 'ctx' does not fit in GPU memory, largest first, overriding defaults.ctxCandidates entirely -- see README.md 'Context that fits the GPU'.",
 	"defaults": {
 		"port": 8123,
 		"apiKey": "sk-bench",
@@ -8,14 +8,27 @@
 		"temp": 0.7,
 		"topP": 0.95,
 		"topK": 40,
+		"repeatPenalty": 1.0,
+		"minP": 0.05,
+		"presencePenalty": 0.0,
 		"reasoningBudget": 2048,
+		"maxTokens": 4096,
 		"ngl": 999,
 		"llamaCache": "D:/llama-cache",
-		"serverArgs": []
+		"serverArgs": [],
+		"ctxCandidates": [16384, 12288, 8192],
+		"tools": ["bash"],
+		"toolOptions": {}
 	},
 	"models": [
 		{
 			"alias": "Spark-X2.5-4B-Q6_K",
+			"temp": 1.0,
+			"topP": 0.95,
+			"topK": 0,
+			"repeatPenalty": 1.0,
+			"minP": 0.0,
+			"presencePenalty": 0.0,
 			"repo": "sizzlebop/Spark-X2.5-4B-GGUF",
 			"file": "Spark-X2.5-4B-Q6_K.gguf",
 			"localFile": "D:/llama-cache/models--sizzlebop--Spark-X2.5-4B-GGUF/snapshots/*/Spark-X2.5-4B-Q6_K.gguf",
@@ -26,6 +39,12 @@
 		},
 		{
 			"alias": "Granite-4.2-3B-Q8_0",
+			"temp": 1.0,
+			"topP": 0.95,
+			"topK": 50,
+			"repeatPenalty": 1.0,
+			"minP": 0.0,
+			"presencePenalty": 0.0,
 			"repo": "ibm-granite/granite-4.2-3b-GGUF",
 			"file": "granite-4.2-3b-Q8_0.gguf",
 			"localFile": "D:/llama-cache/models--ibm-granite--granite-4.2-3b-GGUF/snapshots/*/granite-4.2-3b-Q8_0.gguf",
@@ -35,30 +54,124 @@
 		},
 		{
 			"alias": "Nanbeige4.2-3B-Q6_K",
+			"temp": 0.6,
+			"topP": 0.95,
+			"topK": 20,
+			"repeatPenalty": 1.0,
+			"minP": 0.0,
+			"presencePenalty": 0.0,
 			"repo": "bartowski/Nanbeige_Nanbeige4.2-3B-GGUF",
 			"file": "Nanbeige_Nanbeige4.2-3B-Q6_K.gguf",
 			"localFile": "D:/llama-cache/models--bartowski--Nanbeige_Nanbeige4.2-3B-GGUF/snapshots/*/Nanbeige_Nanbeige4.2-3B-Q6_K.gguf",
-			"notes": "No official GGUF. Slowest of the three (~3073s/cell in round 3').",
+			"notes": "No official GGUF. Slowest of the three (~3073s/cell in round 3'). Did not fit in the bench laptop's 6 GB card at the roster's default ctx 16384 under pi-small on 2026-09-20 — defaults.ctxCandidates falls back automatically; no per-model override needed here.",
 			"chatTemplate": null,
 			"serverArgs": []
 		},
 		{
 			"alias": "LFM2.5-2.6B-Q8_0",
+			"temp": 0.1,
+			"topP": 1.0,
+			"topK": 50,
+			"repeatPenalty": 1.1,
+			"minP": 0.0,
+			"presencePenalty": 0.0,
 			"repo": "LiquidAI/LFM2.5-2.6B-GGUF",
 			"file": "LFM2.5-2.6B-Q8_0.gguf",
 			"localFile": "D:/llama-cache/models--LiquidAI--LFM2.5-2.6B-GGUF/snapshots/*/LFM2.5-2.6B-Q8_0.gguf",
 			"notes": "Round-1 incumbent baseline; smallest and fastest on the roster. In the 143308 run it overwrote the task prompt file in two separate tasks — the benchmark added a guard for that, pi-small has none, so give it a scratch working directory.",
 			"chatTemplate": null,
-			"serverArgs": []
+			"serverArgs": [],
+			"systemPrompt": "Known failure mode for this model: in earlier benchmark runs it overwrote a file it had been given to read from, twice. Before writing to any file, read it first if it already exists, and never overwrite a file whose current content you have not seen."
 		},
 		{
 			"alias": "MiniCPM5-2B-Q8_0",
+			"temp": 1.0,
+			"topP": 0.95,
+			"topK": 50,
+			"repeatPenalty": 1.0,
+			"minP": 0.0,
+			"presencePenalty": 0.0,
 			"repo": "openbmb/MiniCPM5-2B-GGUF",
 			"file": "MiniCPM5-2B-Q8_0.gguf",
 			"localFile": "D:/llama-cache/models--openbmb--MiniCPM5-2B-GGUF/snapshots/*/MiniCPM5-2B-Q8_0.gguf",
-			"notes": "Round-1 incumbent baseline. In the 143308 run it reached for npm install and npx ts-node, and started servers in the foreground until the time budget died. The benchmark blocks both with a guard extension; pi-small deliberately does not.",
+			"notes": "Round-1 incumbent baseline. In the 143308 run it reached for npm install and npx ts-node, and started servers in the foreground until the time budget died. The benchmark blocks both with a guard extension; pi-small deliberately does not for other models, but does for this one via toolOptions.bash.commandGuards below.",
 			"chatTemplate": null,
-			"serverArgs": []
+			"serverArgs": [],
+			"toolOptions": {
+				"bash": {
+					"commandGuards": [
+						{
+							"pattern": "\\bnpm\\s+(install|i|ci)\\b",
+							"message": "npm install is disabled for this model: in the 143308 run MiniCPM5 reached for npm install and burned its time budget on it. Work with what is already installed."
+						},
+						{
+							"pattern": "\\bnpx\\b",
+							"message": "npx is disabled for this model for the same reason as npm install — see the note above."
+						}
+					]
+				}
+			}
+		},
+		{
+			"alias": "Qwen3-Coder-30B-A3B-Q4_K_M",
+			"repo": "local",
+			"file": "D:/models/qwen3-coder-30b-a3b/Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf",
+			"temp": 0.7,
+			"topP": 0.8,
+			"topK": 20,
+			"repeatPenalty": 1.05,
+			"minP": 0.0,
+			"presencePenalty": 0.0,
+			"reasoningBudget": 0,
+			"notes": "NOT RECOMMENDED (2026-09-23): the only model to fail across both beyond-VRAM rounds -- five sessions out of five shipped the same swapped-variable bug on the word-frequency task and reported it verified, one of them with an explicit verification system prompt, after trying to run its own script six times. It is also no faster than Qwen3.6-35B-A3B in a real session. Kept on the roster for comparison. See ../pi-small-verification-round-findings-20260922.md. The one BEYOND-VRAM model on the roster: 30.53B total / ~3B active MoE, Q4_K_M, 17.28 GiB — far too big for the 6 GiB card alone. It runs by hybrid CPU/GPU offload, keeping 34 layers' MoE experts on the CPU (--n-cpu-moe 34) so the attention/shared path still gets the GPU. That config is the joint pp/tg optimum measured on this laptop 2026-09-22 (pp512 ~71-78 t/s, tg128 ~10-13 t/s with ~20% run-to-run variance); -t 8 is not optional, t=4/6 collapse pp512 to ~20 t/s. See ../large-model-hybrid-inference-findings-20260922.md. repo is \"local\" ON PURPOSE: the weights are a 17 GiB manual download outside LLAMA_CACHE, so a path typo must fail loudly rather than start a re-download over -hf. VRAM is the binding constraint, not RAM (~12 GiB system RAM, but weights alone are 5.63 GiB of the 6.0 GiB card and KV lands on GPU too), but the card being full is NOT the context ceiling it looks like: CUDA reports VMM, so llama.cpp oversubscribes into system RAM and nvidia-smi pins at 6037 MiB whatever the context. Swept 2026-09-22 with f16 KV: 8192, 16384 and 32768 all load at the SAME throughput (tg 2.22 / 2.45 / 2.58 on a 2659-token prompt), 65536 is where it finally costs about half the generation speed. So this model takes the roster defaults (ctx 16384, ladder 16384/12288/8192) with no override; pass --ctx 32768 for a long task, it is measured-safe. Do NOT quantize the KV cache: -ctk/-ctv q8_0 saves nothing here (it spills either way) and costs real speed (tg 1.80 at 16384 vs 2.45 at f16). Floor, separately: 4096 — the size llama-bench measured — is below pi's fixed 4096-token safety margin, so pi clamps max_tokens to 1 and the session returns one token per turn. Verified twice on 2026-09-22. SAMPLER: temp/topP/topK/repeatPenalty/minP are set here from Qwen's own generation_config.json (0.7 / 0.8 / 20 / 1.05) rather than inherited, because the roster defaults happened to equal llama.cpp's built-in defaults (top_p 0.95, top_k 40, repeat_penalty 1.0, min_p 0.05) and so three of the four silently disagreed with the model card. minP 0 follows the Qwen3 family guidance. reasoningBudget 0 because the card is explicit that this model has no thinking mode and never emits <think> blocks.",
+			"chatTemplate": null,
+			"serverArgs": ["--n-cpu-moe", "34", "-t", "8"]
+		},
+		{
+			"alias": "Qwen3.6-35B-A3B-Q4_K_M",
+			"repo": "local",
+			"file": "D:/models/qwen3.6-35b-a3b/Qwen3.6-35B-A3B-Q4_K_M.gguf",
+			"thinking": "on",
+			"reasoningBudget": -1,
+			"samplers": {
+				"thinking": { "temp": 1.0, "topP": 0.95, "topK": 20, "repeatPenalty": 1.0, "minP": 0.0, "presencePenalty": 1.5 },
+				"instruct": { "temp": 0.7, "topP": 0.8, "topK": 20, "repeatPenalty": 1.0, "minP": 0.0, "presencePenalty": 1.5 }
+			},
+			"notes": "Beyond-VRAM MoE: 34.66B total / ~3B active, Q4_K_M, 19.0 GiB. Qwen3-Coder's general-purpose, newer sibling. --n-cpu-moe 32 -t 8 is the sweep optimum measured 2026-09-22 (pp512 ~50-90 t/s, tg128 ~10-14 t/s, ~20% run-to-run variance; its best pp (ncmoe 48) and best tg (ncmoe 32) disagree, and 32 is the generation-side pick). See ../large-model-hybrid-inference-findings-20260922.md. THINKING: on, unrestricted (-1) -- the vendor default, and the mode it passed the coding-bench debounce task in (2026-09-23, 16m40s, longest turn 1311 tokens). `PI_SMALL_THINKING=off` / `serve.mjs --thinking off` / `/sm-thinking off` selects instruct mode, and the sampler moves with it. SAMPLERS are the card's own rows, paired with their mode: thinking = its 'general tasks' row (temp 1.0 / top_p 0.95 / top_k 20 / min_p 0 / presence 1.5), which is also what generation_config.json ships; instruct = temp 0.7 / top_p 0.80 / presence 1.5. The card has a third row for 'precise coding tasks (e.g. WebDev)' -- temp 0.6, presence 0.0 -- that is not used here. Formerly two aliases (this one, thinking off, and -Thinking-Q4_K_M); collapsed 2026-09-23 when thinking became a field.",
+			"chatTemplate": null,
+			"serverArgs": ["--n-cpu-moe", "32", "-t", "8"]
+		},
+		{
+			"alias": "Qwen3.8-27B-UD-IQ4_XS",
+			"repo": "local",
+			"file": "D:/models/qwen3.8-27b/Qwen3.8-27B-UD-IQ4_XS.gguf",
+			"thinking": "on",
+			"reasoningBudget": -1,
+			"samplers": {
+				"thinking": { "temp": 1.0, "topP": 0.95, "topK": 20, "repeatPenalty": 1.0, "minP": 0.0, "presencePenalty": 0.0 },
+				"instruct": { "temp": 0.7, "topP": 0.8, "topK": 20, "repeatPenalty": 1.0, "minP": 0.0, "presencePenalty": 1.5 }
+			},
+			"ngl": 20,
+			"notes": "Beyond-VRAM DENSE: 27.32B params, UD-IQ4_XS, 13.26 GiB -- the same base model PrismML ternarized into Bonsai 2 27B. Dense means no expert-offload trick: -ngl is the only split, and 20 is the measured optimum (pp512 26.4 t/s, tg128 1.38 t/s, 2026-09-22); 24 collapses pp512 to 5.5 and 26+ is a hard CUDA OOM at load. ngl lives in its own field so it replaces defaults.ngl instead of appearing twice on the command line. Lightest footprint of the beyond-VRAM set (~8.74 GiB RAM, ~4.67 GiB VRAM at ctx 4096). IN AN AGENT SESSION its profile is the inverse of the MoE models': prompt processing 11-20 t/s, generation ~1.2-1.3 t/s. THINKING: on, unrestricted -- the vendor default; it passed the debounce task that way, but it took 85m28s, 96% of the compute generation. Switch to instruct (PI_SMALL_THINKING=off) when time matters: the word-frequency task took 11m31s that way. SAMPLERS are the card's rows, per mode: thinking = temp 1.0 / top_p 0.95 / top_k 20 / min_p 0 / presence 0.0; instruct = temp 0.7 / top_p 0.80 / presence 1.5 (note presence differs by mode). Formerly two aliases; collapsed 2026-09-23.",
+			"chatTemplate": null,
+			"serverArgs": ["-t", "8"]
+		},
+		{
+			"alias": "Granite-4.2-30B-Q4_K_M",
+			"repo": "local",
+			"file": "D:/models/granite-4.2-30b/granite-4.2-30b-Q4_K_M.gguf",
+			"thinking": "on",
+			"reasoningBudget": -1,
+			"samplers": {
+				"thinking": { "temp": 1.0, "topP": 0.95, "topK": 50, "repeatPenalty": 1.0, "minP": 0.0, "presencePenalty": 0.0 },
+				"instruct": { "temp": 1.0, "topP": 0.95, "topK": 50, "repeatPenalty": 1.0, "minP": 0.0, "presencePenalty": 0.0 }
+			},
+			"ngl": 10,
+			"ctx": 8192,
+			"ctxCandidates": [8192],
+			"notes": "Beyond-VRAM DENSE: 29.28B params, Q4_K_M, 16.50 GiB, the 30B sibling of Granite-4.2-3B -- and unlike the 3B it DID get IBM's agentic-RL block. -ngl 10 -t 8 is the measured optimum (pp512 ~24 t/s, tg128 ~1.19 t/s, 2026-09-22); ngl 20 trades pp512 down to 8.6 for +0.05 tg, and ngl 30 is a hard CUDA OOM. The slowest model on this roster: ~1.0 t/s generation in a real session. CONTEXT IS PINNED at 8192: pi cannot use 4096 (PI_CONTEXT_SAFETY_TOKENS), and 8192 is already tight on system RAM (free RAM bottomed at 585 MB in a preflight, 3.7 GB during a full containerised session on 2026-09-22 -- the earlier round's 0.0 t/s collapse at 8192 did not reproduce). THINKING: on, unrestricted -- IBM's default (full <think> chain-of-thought). At ~1 t/s that is expensive, and at ctx 8192 maxTokens is also capped at half the window (4096), so a long think can consume a whole turn; PI_SMALL_THINKING=off is the practical mode for anything interactive. It passed the word-frequency task with thinking off in 20m5s. SAMPLER: IBM's card is unusually firm -- temperature 1.0 and top_p 0.95 for ALL tasks, modes and backends, so both rows are the same; top_k 50 is transformers' default, which the card leaves unstated.",
+			"chatTemplate": null,
+			"serverArgs": ["-t", "8"]
 		},
 		{
 			"alias": "Apertus-4B-Instruct-v1.1-Q8_0",
@@ -66,7 +179,7 @@
 			"file": "apertus-v1.1-4b-instruct-q8_0.gguf",
 			"localFile": "D:/llama-cache/models--NonMiFrega--Apertus-v1.1-4B-Instruct-Q8_0-GGUF/snapshots/*/apertus-v1.1-4b-instruct-q8_0.gguf",
 			"ctx": 4096,
-			"notes": "EXPECT turn_boundary TO FAIL at startup, and that is the point of the probe: this GGUF's special_eos_id is not in special_eog_ids, so generation never stops and the model role-plays both sides of the conversation (2938 tokens of it, three times, in filter round 1). To actually use it, put an --override-kv for the EOS token id in serverArgs. Trained context is 4096.",
+			"notes": "SAMPLER NOT VERIFIED: swiss-ai's repo is gated (HTTP 401), so this one alias still runs on the roster defaults rather than its own generation_config.json -- the only model here that does. EXPECT turn_boundary TO FAIL at startup, and that is the point of the probe: this GGUF's special_eos_id is not in special_eog_ids, so generation never stops and the model role-plays both sides of the conversation (2938 tokens of it, three times, in filter round 1). To actually use it, put an --override-kv for the EOS token id in serverArgs. Trained context is 4096.",
 			"chatTemplate": null,
 			"serverArgs": []
 		}

@@ -6,18 +6,29 @@
 # extensions, no skills, no context files, no prompt templates, no themes, and a
 # system prompt stripped to the bone. The only thing loaded is the pi-small
 # plugin next to this script, which then supplies the model, the server, the
-# sampler settings and the one tool (bash) the session gets.
+# sampler settings, the tools and the system prompt the session gets — per
+# model, from roster.json (see README.md "Per-model tools, parameters and
+# system prompt"). PI_SMALL_SYSTEM_PROMPT below is the roster-wide fallback for
+# any model that does not set its own `systemPrompt`.
 #
 # Everything here is a pi CLI concern. Anything about WHICH model or HOW it is
 # served belongs in the plugin, not in this file.
 #
 # Env:
-#   PI_SMALL_MODEL          roster alias to start with (default: roster's default)
+#   PI_SMALL_MODEL          roster alias to start with (default: pi's own saved
+#                           default for "small-local" if there is one — set via
+#                           /model's "set as default" — else the roster's
+#                           `default: true` entry)
 #   PI_SMALL_ROSTER         path to roster.json
-#   PI_SMALL_SYSTEM_PROMPT  override the (near-empty) system prompt
+#   PI_SMALL_SYSTEM_PROMPT  fallback system prompt for models with none of their
+#                           own set in roster.json (default: near-empty)
 #   PI_SMALL_PI_BIN         pi executable (default: pi on PATH)
 #   PI_SMALL_LLAMA_BIN      llama-server executable (default: ../llama-server[.exe])
 #   PI_SMALL_PORT           port to serve on (default: roster's, 8123)
+#   PI_SMALL_PI_HOME        pi's config directory for THIS session (default:
+#                           see below) — sessions, trust decisions, and the
+#                           compaction settings that make this roster usable
+#                           all live there, isolated from ~/.pi/agent
 #
 set -euo pipefail
 
@@ -25,21 +36,127 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ROSTER="${PI_SMALL_ROSTER:-$HERE/roster.json}"
 PI_BIN="${PI_SMALL_PI_BIN:-pi}"
 
+# pi's compaction.reserveTokens/keepRecentTokens default to 16384/20000 —
+# sized for frontier models with 100k+ token windows. At this roster's 4k-16k
+# windows, the "should I compact" threshold (contextWindow - reserveTokens)
+# trips almost immediately, but the compaction itself silently no-ops every
+# time: there is never anything older than keepRecentTokens (20000, bigger
+# than any window here) to actually cut. Net effect: auto-compaction never
+# does anything, context grows unconstrained, and the model eventually runs
+# out of real room mid-response — which shows up as "Response was truncated
+# before completion", not as a compaction error. Manual /compact hits the
+# same wall, just as a visible error instead of a silent no-op.
+#
+# The fix has to be a settings file — there is no extension API or CLI flag
+# for these two numbers — but changing ~/.pi/agent/settings.json would change
+# it for every OTHER pi session on this machine too. PI_CODING_AGENT_DIR
+# redirects pi's entire config location (settings, sessions, trust
+# decisions), so pointing it at a pi-small-owned directory scopes the fix to
+# pi-small only.
+#
+# Containerised mode (PI_SMALL_REMOTE=1, set by pi-small-docker.sh) already
+# runs with HOME redirected to the workspace, so pi's own default resolution
+# (HOME/.pi/agent) is already isolated from the real ~/.pi/agent there — and
+# $HERE is read-only in the container (the plugin is bind-mounted :ro), so
+# nothing could be created under it anyway. Mirror pi's own default instead of
+# overriding PI_CODING_AGENT_DIR a second time.
+if [[ -n "${PI_SMALL_PI_HOME:-}" ]]; then
+	PI_HOME="$PI_SMALL_PI_HOME"
+elif [[ "${PI_SMALL_REMOTE:-}" == "1" ]]; then
+	PI_HOME="${HOME:-$HERE}/.pi/agent"
+else
+	PI_HOME="$HERE/.pi-home"
+	export PI_CODING_AGENT_DIR="$PI_HOME"
+fi
+mkdir -p "$PI_HOME"
+
+# Seed once — never overwritten on a later launch, so /model's "set as
+# default" (Ctrl+S) and anything else pi writes into this file survive.
+# reserveTokens must stay comfortably ABOVE the largest per-response cap
+# (roster `maxTokens`, default 4096), or the mismatch that causes the truncation
+# in the first place just reappears with different numbers. 6144 is the seed;
+# the step after the roster check below raises it to whatever the roster needs
+# (lib/roster.ts requiredReserveTokens), so a model given a bigger maxTokens
+# cannot silently outgrow it.
+if [[ ! -f "$PI_HOME/settings.json" ]]; then
+	node -e '
+	  const fs = require("node:fs");
+	  const path = require("node:path");
+	  const os = require("node:os");
+	  const settings = { compaction: { reserveTokens: 6144, keepRecentTokens: 1024 } };
+	  // One-time courtesy: carry over a "small-local" default already saved
+	  // (via /model, before this directory existed) from the REAL global
+	  // settings, so creating this directory does not silently lose it.
+	  try {
+	    const old = JSON.parse(fs.readFileSync(path.join(os.homedir(), ".pi", "agent", "settings.json"), "utf8"));
+	    if (old.defaultProvider === "small-local" && old.defaultModel) {
+	      settings.defaultProvider = old.defaultProvider;
+	      settings.defaultModel = old.defaultModel;
+	    }
+	  } catch {}
+	  fs.writeFileSync(process.argv[1], JSON.stringify(settings, null, 2) + "\n");
+	' "$PI_HOME/settings.json"
+fi
+
 [[ -f "$ROSTER" ]] || { echo "pi-small: roster not found: $ROSTER" >&2; exit 1; }
+
+# Raise compaction.reserveTokens to what the roster needs, and ONLY raise it —
+# a value someone set higher on purpose is left alone. Computed by the same
+# lib/roster.ts function the tests check, not re-derived here. Run from $HERE so
+# the relative import resolves the same way under Git Bash and in the container.
+( cd "$HERE" && PI_SMALL_ROSTER="$ROSTER" node --input-type=module -e '
+  import { readFileSync, writeFileSync } from "node:fs";
+  import { loadRoster, requiredReserveTokens } from "./lib/roster.ts";
+  const path = process.argv[1];
+  const need = requiredReserveTokens(loadRoster());
+  const s = JSON.parse(readFileSync(path, "utf8"));
+  s.compaction ??= {};
+  if ((s.compaction.reserveTokens ?? 0) < need) {
+    console.error(`pi-small: compaction.reserveTokens ${s.compaction.reserveTokens ?? "unset"} -> ${need} (roster maxTokens needs it)`);
+    s.compaction.reserveTokens = need;
+    writeFileSync(path, JSON.stringify(s, null, 2) + "\n");
+  }
+' "$PI_HOME/settings.json" ) || echo "pi-small: could not check compaction.reserveTokens against the roster" >&2
 command -v "$PI_BIN" >/dev/null 2>&1 || { echo "pi-small: '$PI_BIN' not on PATH (npm i -g @earendil-works/pi-coding-agent)" >&2; exit 1; }
 
 # The startup model has to be named on the command line for pi to resolve a
 # provider/model pair before the session opens; the plugin picks the same one.
+# /model's own "set as default" writes defaultProvider/defaultModel into
+# PI_HOME/settings.json (pi-small's own, set above) — pi does not consult that
+# for a session started with an explicit --model (this one always is), so it
+# is read here instead. Without it, "set as default" looked like it did
+# nothing: the very next launch silently went back to the roster default.
 ALIAS="${PI_SMALL_MODEL:-$(node -e '
-  const j = JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8"));
+  const fs = require("node:fs");
+  const j = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+  const known = new Set(j.models.map((x) => x.alias));
+  try {
+    const settings = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
+    if (settings.defaultProvider === "small-local" && known.has(settings.defaultModel)) {
+      process.stdout.write(settings.defaultModel);
+      process.exit(0);
+    }
+  } catch {}
   const m = j.models.find((x) => x.default) || j.models[0];
   process.stdout.write(m.alias);
-' "$ROSTER")}"
+' "$ROSTER" "$PI_HOME/settings.json")}"
+
+# Exported so the plugin's own startup pick (extensions/small.ts, `initial`)
+# agrees with the --model flag below. Without this, an unset PI_SMALL_MODEL
+# left the plugin resolving its OWN default — the roster's `default: true`
+# entry, ignoring the saved-default/PI_SMALL_MODEL logic just run above — so
+# it started serving that model on session_start, then immediately tore it
+# down and restarted on the real target the instant pi's own --model flag
+# fired model_select. Visible as the wrong model loading first and getting
+# replaced a few seconds later.
+export PI_SMALL_MODEL="$ALIAS"
 
 # pi replaces its default system prompt only when the replacement is non-empty —
 # an empty string falls through to the full coding-agent prompt. A single space
 # is the emptiest prompt that actually replaces it. pi still appends one line,
 # "Current working directory: <cwd>", which cannot be suppressed from outside.
+# A model with its own roster.json `systemPrompt` overrides this at the plugin
+# level, per turn, regardless of what is passed here.
 SYSTEM_PROMPT="${PI_SMALL_SYSTEM_PROMPT:- }"
 
 exec "$PI_BIN" \

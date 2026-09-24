@@ -14,9 +14,20 @@
  *     the line, so the tool path can be driven by hand
  *   - anything else is answered with the sampler settings the request carried,
  *     so /sm-temp and /sm-ctx are visible in the reply itself
+ *   - /props reports the sampler it was started with (from its own argv), the
+ *     way llama-server does, so the startup verification can be exercised
+ *   - thinking follows the template switch: `chat_template_kwargs` on the
+ *     request, else `--chat-template-kwargs` on the command line, else off.
+ *     A thinking reply carries `reasoning_content`.
  *
  * Usage: node stub-server.mjs [llama-server flags...]
  *        PI_SMALL_STUB_ARGS_LOG=<path> to record argv as JSON.
+ *        PI_SMALL_STUB_IGNORE_THINKING_SWITCH=1 to think no matter what the
+ *        switch says — the real failure where `--reasoning-budget 0` was set
+ *        and the model kept thinking, for testing that it is DETECTED.
+ *        PI_SMALL_STUB_CRASH_ABOVE_CTX=<n> to exit(1) immediately instead of
+ *        starting, for any -c greater than <n> — simulates a GPU-memory crash
+ *        at load time, for testing ServerManager's context ladder fallback.
  */
 
 import { createServer } from "node:http";
@@ -34,6 +45,33 @@ const ctx = Number(flag("-c", "16384"));
 const port = Number(flag("--port", "8123"));
 const host = flag("--host", "127.0.0.1");
 const serverTemp = flag("--temp", "unset");
+const num = (name) => (flag(name) === undefined ? undefined : Number(flag(name)));
+const serverParams = {
+	temperature: num("--temp"),
+	top_p: num("--top-p"),
+	top_k: num("--top-k"),
+	min_p: num("--min-p"),
+	repeat_penalty: num("--repeat-penalty"),
+	presence_penalty: num("--presence-penalty"),
+};
+let serverKwargs = {};
+try {
+	serverKwargs = JSON.parse(flag("--chat-template-kwargs", "{}"));
+} catch {}
+
+/** Does this request think? Request kwargs win over the server's, as in llama-server. */
+function thinks(payload) {
+	if (process.env.PI_SMALL_STUB_IGNORE_THINKING_SWITCH === "1") return true;
+	const req = payload.chat_template_kwargs?.enable_thinking;
+	if (typeof req === "boolean") return req;
+	return serverKwargs.enable_thinking === true;
+}
+
+const crashAboveCtx = Number(process.env.PI_SMALL_STUB_CRASH_ABOVE_CTX);
+if (Number.isFinite(crashAboveCtx) && ctx > crashAboveCtx) {
+	console.log(`stub-server: simulating a GPU-memory crash at ctx=${ctx} (> PI_SMALL_STUB_CRASH_ABOVE_CTX=${crashAboveCtx})`);
+	process.exit(1);
+}
 
 const argsLog = process.env.PI_SMALL_STUB_ARGS_LOG;
 if (argsLog) {
@@ -100,6 +138,7 @@ function nonStreaming(res, payload) {
 					],
 				}
 			: { role: "assistant", content: r.text };
+	if (thinks(payload)) message.reasoning_content = "stub thoughts";
 	json(res, 200, {
 		id: "chatcmpl-stub",
 		object: "chat.completion",
@@ -126,6 +165,7 @@ function streaming(res, payload) {
 	};
 
 	send({ ...base, choices: [{ index: 0, delta: { role: "assistant" }, finish_reason: null }] });
+	if (thinks(payload)) send({ ...base, choices: [{ index: 0, delta: { reasoning_content: "stub thoughts" }, finish_reason: null }] });
 
 	if (r.kind === "tool") {
 		send({
@@ -175,7 +215,7 @@ createServer((req, res) => {
 		// PI_SMALL_STUB_REPORT_CTX fakes llama-server capping -c at the model's
 		// training context, which is the case the plugin must never mis-read.
 		return json(res, 200, {
-			default_generation_settings: { n_ctx: Number(process.env.PI_SMALL_STUB_REPORT_CTX) || ctx },
+			default_generation_settings: { n_ctx: Number(process.env.PI_SMALL_STUB_REPORT_CTX) || ctx, params: serverParams },
 			model_path: `stub/${alias}`,
 			chat_template: "stub",
 		});
@@ -190,7 +230,7 @@ createServer((req, res) => {
 			} catch {
 				return json(res, 400, { error: "bad json" });
 			}
-			console.log(`stub-server: chat request temp=${payload.temperature} top_p=${payload.top_p} top_k=${payload.top_k} stream=${!!payload.stream} tools=${(payload.tools ?? []).length}`);
+			console.log(`stub-server: chat request temp=${payload.temperature} top_p=${payload.top_p} top_k=${payload.top_k} stream=${!!payload.stream} tools=${(payload.tools ?? []).length} kwargs=${JSON.stringify(payload.chat_template_kwargs ?? null)}`);
 			console.log(`stub-server: system prompt = ${JSON.stringify(payload.messages?.find((m) => m.role === "system")?.content ?? null)}`);
 			return payload.stream ? streaming(res, payload) : nonStreaming(res, payload);
 		});

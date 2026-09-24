@@ -14,7 +14,7 @@
 	},
 	"scripts": {
 		"check": "node check-roster.mjs",
-		"test": "node test/plugin-test.ts",
+		"test": "node test/plugin-test.ts && node test/serve-test.ts",
 		"typecheck": "tsc --noEmit -p tsconfig.json"
 	},
 	"peerDependencies": {
