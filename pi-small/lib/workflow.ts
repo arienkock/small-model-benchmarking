@@ -74,13 +74,19 @@ export interface WorkflowConfig {
 	logic: { min: number; max: number };
 	/** Fresh-context attempts per step before the workflow stops. */
 	attempts: { planning: number; implement: number; integrate: number };
-	/** Same-session nudges when a session ends without a valid submission. */
-	nudges: number;
 	/** report_done refusals inside one session before the tool gives up and ends it. */
 	doneRefusals: number;
-	/** Wall-clock limit per agent run, minutes. */
+	/**
+	 * Wall-clock limit per session, minutes. 15, down from 40: in the 2026-09-24
+	 * runs sessions that reached 40 minutes had not recovered, and a fresh attempt
+	 * did better.
+	 */
 	stepTimeoutMin: number;
-	/** Limit for one run of the test suite, seconds. */
+	/**
+	 * Limit for one run of the test suite, seconds. 60, down from 300: a suite
+	 * that hangs (a server a test never stops) cost MiniCPM5 five minutes per
+	 * check on 2026-09-24.
+	 */
 	testTimeoutSec: number;
 	/**
 	 * Appended to the model's system prompt in every workflow session ("" = none).
@@ -102,10 +108,9 @@ export const DEFAULT_CONFIG: WorkflowConfig = {
 	taskScenarios: { minHappy: 1, minUnhappy: 1, max: 10 },
 	logic: { min: 1, max: 12 },
 	attempts: { planning: 3, implement: 3, integrate: 3 },
-	nudges: 2,
 	doneRefusals: 4,
-	stepTimeoutMin: 40,
-	testTimeoutSec: 300,
+	stepTimeoutMin: 15,
+	testTimeoutSec: 60,
 	systemPrompt: TERSE_STYLE,
 };
 
@@ -717,14 +722,4 @@ export function buildPrompt(state: WorkflowState, step: NextStep, cfg: WorkflowC
 	}
 	if (feedback) parts.push("", "## A previous attempt at this step failed", "", feedback);
 	return parts.join("\n") + "\n";
-}
-
-/** Sent into the SAME session when it ended without a valid submission. */
-export function nudgePrompt(step: NextStep, detail?: string): string {
-	const tool = STEP_TOOL[step.kind];
-	return (
-		`You have not finished this step yet: the tool \`${tool}\` was not called successfully.` +
-		(detail ? `\n\n${detail}\n` : " ") +
-		(STEP_TOOLSET[step.kind] === "planning" ? `Call \`${tool}\` now with your answer.` : `Fix what is wrong, run the tests, then call \`${tool}\`.`)
-	);
 }

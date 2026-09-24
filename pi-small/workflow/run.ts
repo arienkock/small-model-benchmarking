@@ -29,22 +29,29 @@
  *   --port N --api-key K --image NAME
  *   --resume           continue the run in --run-dir from its state.json
  *
+ * One pi-small process serves the whole run (pi's RPC mode, ./pi-rpc.ts): every
+ * step and every retry is a new, empty session in it. The harness's checks run in
+ * their own short-lived no-network container; they are a test runner, not an agent.
+ *
  * The run directory:
  *   state.json    the workflow state (the source of truth; --resume reads it)
  *   spec.md       the enriched task as it stands
  *   events.jsonl  every step start, run, judgement, with timings
- *   steps/NN-<kind>[-Tk]-aN/   prompt(s), step.json, check.json, out.json,
- *                 pi stdout/stderr, check reports, copies of the session logs
+ *   agent.events.jsonl / agent.stderr.log   the pi process's RPC events and stderr
+ *   harness/      the step files the agent reads now (mounted at /harness)
+ *   steps/NN-<kind>[-Tk]-aN/   the prompt, step.json, check.json, out.json,
+ *                 check reports, copies of the session logs
  *   grade.json    the task grader's output, if the task has one
  *   ws/           the workspace the model worked in
  */
 
 import { spawn, spawnSync } from "node:child_process";
-import { copyFileSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync, appendFileSync } from "node:fs";
+import { appendFileSync, copyFileSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { type CheckReport, type CheckSpec, DEFAULT_CONFIG, mergeConfig, profileOf, renderSpec, type TaskDefinition, taskDefinitionErrors, type WorkflowState } from "../lib/workflow.ts";
 import { type AgentRun, runWorkflow, type StepDir, type WorkflowEnv } from "../lib/workflow-runner.ts";
+import { PiRpc } from "./pi-rpc.ts";
 
 const PLUGIN_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -175,7 +182,43 @@ const docker = (argv: string[], opts: { input?: string; timeoutMs: number; name:
 // visible to the agent — it has to pass them — but the rest of the task
 // directory, the grader above all, is not.
 const taskChecks = existsSync(join(taskDir, "checks")) ? ["-v", `${join(taskDir, "checks")}:/task/checks:ro`] : [];
-const mounts = (stepHost: string) => ["-v", `${ws}:/workspace`, "-v", `${PLUGIN_DIR}:/opt/pi-small:ro`, "-v", `${stepHost}:/harness`, ...taskChecks, "-w", "/workspace"];
+const mounts = (harness: string) => ["-v", `${ws}:/workspace`, "-v", `${PLUGIN_DIR}:/opt/pi-small:ro`, "-v", `${harness}:/harness`, ...taskChecks, "-w", "/workspace"];
+
+// The agent's /harness: one fixed directory, rewritten with the current step's
+// files before each session (the plugin reads /harness/step.json when the new
+// session starts), copied to the step's own directory afterwards.
+const harnessDir = join(runDir, "harness");
+mkdirSync(harnessDir, { recursive: true });
+const HARNESS_FILES = ["step.json", "check.json", "out.json", "out.json.draft.json"];
+
+let agent: PiRpc | null = null;
+let agentStarts = 0;
+function startAgent(): PiRpc {
+	const name = `wf-${process.pid}-agent-${++agentStarts}`;
+	const a = new PiRpc(
+		[
+			"run", "--rm", "-i", "--name", name,
+			...mounts(harnessDir),
+			"-e", "HOME=/workspace/.home",
+			"-e", "PI_SMALL_REMOTE=1",
+			"-e", "PI_SMALL_HOST=host.docker.internal",
+			"-e", `PI_SMALL_PORT=${port}`,
+			"-e", `PI_SMALL_API_KEY=${apiKey}`,
+			...(model ? ["-e", `PI_SMALL_MODEL=${model}`] : []),
+			...(thinking ? ["-e", `PI_SMALL_THINKING=${thinking}`] : []),
+			"-e", "PI_SMALL_WORKFLOW_STEP=/harness/step.json",
+			"--add-host=host.docker.internal:host-gateway",
+			image,
+			"bash", "/opt/pi-small/bin/pi-small", "--mode", "rpc",
+		],
+		name,
+		join(runDir, "agent.events.jsonl"),
+		join(runDir, "agent.stderr.log"),
+	);
+	a.start();
+	log(`agent: pi-small started in RPC mode (${name})${agentStarts > 1 ? " — a restart, the previous process died" : ""}`);
+	return a;
+}
 
 /** Copy session files written during a run (pi's own + pi-small's log) into the step directory. */
 function collectSessions(stepHost: string, since: number) {
@@ -196,7 +239,6 @@ function collectSessions(stepHost: string, since: number) {
 }
 
 const hostDirs = new Map<string, string>();
-let agentRuns = 0;
 
 const env: WorkflowEnv = {
 	checkScript: "/opt/pi-small/workflow/check.py",
@@ -212,33 +254,43 @@ const env: WorkflowEnv = {
 	writeStepFile(dir, name, data) {
 		writeFileSync(join(hostDirs.get(dir.name)!, name), JSON.stringify(data, null, 2));
 	},
-	async runAgent(dir, prompt, resume, timeoutMs): Promise<AgentRun> {
+	async runAgent(dir, prompt, timeoutMs): Promise<AgentRun> {
 		const host = hostDirs.get(dir.name)!;
-		const n = ++agentRuns;
-		writeFileSync(join(host, `prompt-${n}${resume ? "-nudge" : ""}.md`), prompt);
-		const name = `wf-${process.pid}-${n}`;
+		writeFileSync(join(host, "prompt.md"), prompt);
+		for (const f of HARNESS_FILES) {
+			const src = join(host, f);
+			if (existsSync(src)) copyFileSync(src, join(harnessDir, f));
+			else rmSync(join(harnessDir, f), { force: true });
+		}
 		const t0 = Date.now();
-		const r = await docker(
-			[
-				"run", "--rm", "-i", "--name", name,
-				...mounts(host),
-				"-e", "HOME=/workspace/.home",
-				"-e", "PI_SMALL_REMOTE=1",
-				"-e", "PI_SMALL_HOST=host.docker.internal",
-				"-e", `PI_SMALL_PORT=${port}`,
-				"-e", `PI_SMALL_API_KEY=${apiKey}`,
-				...(model ? ["-e", `PI_SMALL_MODEL=${model}`] : []),
-				...(thinking ? ["-e", `PI_SMALL_THINKING=${thinking}`] : []),
-				"-e", "PI_SMALL_WORKFLOW_STEP=/harness/step.json",
-				"--add-host=host.docker.internal:host-gateway",
-				image,
-				"bash", "/opt/pi-small/bin/pi-small", "-p", ...(resume ? ["--continue"] : []),
-			],
-			{ input: prompt, timeoutMs, name, stdout: join(host, "pi.stdout.log"), stderr: join(host, "pi.stderr.log") },
-		);
+		let timedOut = false;
+		let error: string | undefined;
+		if (!agent?.alive) agent = startAgent();
+		try {
+			// A fresh, empty session; the plugin reloads and reads this step's file.
+			await agent.send({ type: "new_session" });
+			const settled = agent.waitFor((ev) => ev.type === "agent_settled", timeoutMs);
+			const r = await agent.send({ type: "prompt", message: prompt });
+			if (!r.success) throw new Error(`prompt rejected: ${JSON.stringify(r).slice(0, 300)}`);
+			if (!(await settled)) {
+				timedOut = true;
+				const stopped = agent.waitFor((ev) => ev.type === "agent_settled", 60_000);
+				await agent.send({ type: "abort" }, 30_000).catch(() => {});
+				if (!(await stopped.catch(() => false))) {
+					log("  the session did not stop after abort — restarting the agent process");
+					agent.kill();
+				}
+			}
+		} catch (e: any) {
+			error = e.message;
+			log(`  agent error: ${error} — the process will be restarted for the next session`);
+			agent.kill();
+		}
+		for (const f of HARNESS_FILES.slice(2)) if (existsSync(join(harnessDir, f))) copyFileSync(join(harnessDir, f), join(host, f));
 		collectSessions(host, t0);
-		log(`  agent run ${resume ? "(nudge) " : ""}exited ${r.code}${r.timedOut ? " (TIMED OUT)" : ""} after ${(r.ms / 1000).toFixed(0)} s`);
-		return { exitCode: r.code, timedOut: r.timedOut, durationMs: r.ms };
+		const ms = Date.now() - t0;
+		log(`  session ended after ${(ms / 1000).toFixed(0)} s${timedOut ? " (TIMED OUT)" : ""}${error ? ` (error: ${error})` : ""}`);
+		return { exitCode: error ? 1 : 0, timedOut, durationMs: ms };
 	},
 	readOut(dir) {
 		const p = join(hostDirs.get(dir.name)!, "out.json");
@@ -285,6 +337,7 @@ const deadline = deadlineArg ? (/^\d+$/.test(deadlineArg) ? Number(deadlineArg) 
 if (deadline !== undefined && !Number.isFinite(deadline)) throw new Error(`--deadline ${deadlineArg} is not a time`);
 if (deadline !== undefined) log(`deadline ${new Date(deadline).toISOString()} (${((deadline - Date.now()) / 60_000).toFixed(0)} min from now)`);
 const final = await runWorkflow(env, { config, task, profile: profileOf(def), preexistingCode: state ? state.preexistingCode : workspaceHasFiles(), state, deadline });
+await (agent as PiRpc | null)?.close();
 const minutes = ((Date.now() - t0) / 60_000).toFixed(1);
 event({ type: "workflow_end", status: final.status, failure: final.failure, minutes: Number(minutes) });
 log(`workflow ${final.status.toUpperCase()} after ${minutes} min${final.failure ? ` — ${final.failure.split("\n")[0]}` : ""}`);

@@ -5,7 +5,7 @@
  *
  * Covers the validators (with the mistakes small models actually make), the
  * step order, the runner's control flow against a fake environment (accept,
- * nudge, fresh retry with feedback, give up, integration), check.py on tiny
+ * fresh retry with feedback, give up, deadline, integration), check.py on tiny
  * workspaces, and the submit tool the plugin registers. The same flow with pi,
  * docker and a scripted model is test/workflow-e2e.ts.
  */
@@ -211,21 +211,21 @@ await test("task.json problems are caught before any model runs", () => {
 
 // ---------------------------------------------------------------- runner --
 
-type Script = (step: StepDir, prompt: string, resume: boolean) => { out?: any; check?: CheckReport; timedOut?: boolean };
+type Script = (step: StepDir, prompt: string) => { out?: any; check?: CheckReport; timedOut?: boolean };
 
 function fakeEnv(script: Script) {
 	const events: any[] = [];
 	const outs = new Map<string, any>();
 	const checks = new Map<string, CheckReport>();
-	const prompts: Array<{ step: string; prompt: string; resume: boolean; timeoutMs: number }> = [];
+	const prompts: Array<{ step: string; prompt: string; timeoutMs: number }> = [];
 	let saved: WorkflowState | undefined;
 	const env: WorkflowEnv = {
 		checkScript: "/check.py",
 		prepareStep: (label) => ({ name: label, out: `/h/${label}/out.json`, checkSpecPath: `/h/${label}/check.json` }),
 		writeStepFile: () => {},
-		async runAgent(dir, prompt, resume, timeoutMs): Promise<AgentRun> {
-			prompts.push({ step: dir.name, prompt, resume, timeoutMs });
-			const r = script(dir, prompt, resume);
+		async runAgent(dir, prompt, timeoutMs): Promise<AgentRun> {
+			prompts.push({ step: dir.name, prompt, timeoutMs });
+			const r = script(dir, prompt);
 			if (r.out !== undefined) outs.set(dir.name, r.out);
 			if (r.check) checks.set(dir.name, r.check);
 			return { exitCode: 0, timedOut: !!r.timedOut, durationMs: 1 };
@@ -262,48 +262,39 @@ await test("runner: a clean run walks every step and ends completed", async () =
 	assert.deepEqual(s.tasks.map((t) => t.status), ["implemented", "integrated"]);
 });
 
-await test("runner: a session that ends without submitting is nudged in place", async () => {
-	let first = true;
-	const f = fakeEnv((dir, _p, resume) => {
-		if (kindOf(dir.name) === "breakdown" && first) {
-			first = false;
-			return {};
-		}
+await test("runner: a session that ends without submitting is retried FRESH, with the reason", async () => {
+	const f = fakeEnv((dir) => (kindOf(dir.name) === "breakdown" && dir.name.endsWith("a1") ? {} : { out: answerFor(dir.name) }));
+	const s = await runWorkflow(f.env, { config: cfg, task: "x", profile: PROFILE, preexistingCode: false });
+	assert.equal(s.status, "completed");
+	const b = f.prompts.filter((p) => p.step.includes("breakdown"));
+	assert.deepEqual(b.map((p) => p.step.replace(/^\d+-/, "")), ["breakdown-a1", "breakdown-a2"], "one session per attempt, no continuation");
+	assert.match(b[1].prompt, /^# Workflow step: breakdown\n/, "the retry is a complete step prompt, not a follow-up message");
+	assert.match(b[1].prompt, /## A previous attempt at this step failed\n\nThe session ended without a successful call to `submit_breakdown`/);
+});
+
+await test("runner: a failed coding attempt is retried fresh with the check output as feedback", async () => {
+	const f = fakeEnv((dir) => {
+		if (dir.name.includes("implement-T1-a1")) return { out: good.done, check: { ok: false, problems: ["the test suite failed"], tests: { rc: 1, tail: "AssertionError: 3 != 2" } } };
 		return { out: answerFor(dir.name) };
 	});
 	const s = await runWorkflow(f.env, { config: cfg, task: "x", profile: PROFILE, preexistingCode: false });
 	assert.equal(s.status, "completed");
-	const b = f.prompts.filter((p) => p.step.includes("breakdown"));
-	assert.equal(b.length, 2);
-	assert.equal(b[1].resume, true);
-	assert.match(b[1].prompt, /not called successfully/);
-});
-
-await test("runner: after the nudges, a fresh attempt gets the failure as feedback", async () => {
-	const nudges = mergeConfig(cfg, { nudges: 1 });
-	const f = fakeEnv((dir) => {
-		if (dir.name.includes("implement-T1-a1")) return { out: good.done, check: { ok: false, problems: ["the test suite failed: 1 failure(s)"], tests: { ran: 2, failures: 1, errors: 0, rc: 1, tail: "AssertionError: 3 != 2" } } };
-		return { out: answerFor(dir.name) };
-	});
-	const s = await runWorkflow(f.env, { config: nudges, task: "x", profile: PROFILE, preexistingCode: false });
-	assert.equal(s.status, "completed");
 	const impl = f.prompts.filter((p) => p.step.includes("implement-T1"));
-	assert.deepEqual(impl.map((p) => [p.step.replace(/^\d+-/, ""), p.resume]), [["implement-T1-a1", false], ["implement-T1-a1", true], ["implement-T1-a2", false]]);
-	assert.match(impl[1].prompt, /AssertionError: 3 != 2/);
-	assert.match(impl[2].prompt, /## A previous attempt at this step failed/);
-	assert.match(impl[2].prompt, /still in \/workspace/);
+	assert.deepEqual(impl.map((p) => p.step.replace(/^\d+-/, "")), ["implement-T1-a1", "implement-T1-a2"]);
+	assert.match(impl[1].prompt, /## A previous attempt at this step failed[\s\S]*AssertionError: 3 != 2/);
+	assert.match(impl[1].prompt, /still in \/workspace/);
 });
 
 await test("runner: an invalid submission is re-validated by the host, whatever the tool said", async () => {
 	const f = fakeEnv((dir) => (kindOf(dir.name) === "scenarios" && dir.name.endsWith("a1") ? { out: { accepted: true, args: { scenarios: SIX.slice(0, 2) } } } : { out: answerFor(dir.name) }));
-	const s = await runWorkflow(f.env, { config: mergeConfig(cfg, { nudges: 0 }), task: "x", profile: PROFILE, preexistingCode: false });
+	const s = await runWorkflow(f.env, { config: cfg, task: "x", profile: PROFILE, preexistingCode: false });
 	assert.equal(s.status, "completed");
 	assert.match(f.prompts[1].prompt, /at least 3 unhappy-path scenarios/);
 });
 
 await test("runner: out of attempts stops the workflow and marks the task failed", async () => {
 	const f = fakeEnv((dir) => (dir.name.includes("implement-T2") ? { out: good.done, check: { ok: false, problems: ["no test method is named for scenario(s) S4"] } } : { out: answerFor(dir.name) }));
-	const s = await runWorkflow(f.env, { config: mergeConfig(cfg, { nudges: 0, attempts: { implement: 2 } }), task: "x", profile: PROFILE, preexistingCode: false });
+	const s = await runWorkflow(f.env, { config: mergeConfig(cfg, { attempts: { implement: 2 } }), task: "x", profile: PROFILE, preexistingCode: false });
 	assert.equal(s.status, "failed");
 	assert.match(s.failure!, /implement-T2 not accepted after 2 attempt/);
 	assert.deepEqual(s.tasks.map((t) => t.status), ["implemented", "failed"]);
@@ -311,7 +302,7 @@ await test("runner: out of attempts stops the workflow and marks the task failed
 	assert.ok(!f.prompts.some((p) => p.step.includes("integrate")));
 });
 
-await test("runner: a timed-out session is not nudged", async () => {
+await test("runner: a timed-out session is retried fresh, told it ran out of time", async () => {
 	const f = fakeEnv((dir) => (kindOf(dir.name) === "scenarios" && dir.name.endsWith("a1") ? { timedOut: true } : { out: answerFor(dir.name) }));
 	const s = await runWorkflow(f.env, { config: cfg, task: "x", profile: PROFILE, preexistingCode: false });
 	assert.equal(s.status, "completed");
@@ -359,15 +350,13 @@ await test("runner: with no task test command, the breakdown's own becomes the c
 await test("runner: the deadline caps each session and stops the run between steps", async () => {
 	let clock = 1_000_000;
 	const f = fakeEnv((dir) => {
-		clock += 10 * 60_000; // every session takes 10 minutes
+		clock += 4 * 60_000; // every session takes 4 minutes
 		return { out: answerFor(dir.name) };
 	});
-	const s = await runWorkflow(f.env, { config: cfg, task: "x", profile: PROFILE, preexistingCode: false, now: () => clock, deadline: 1_000_000 + 25 * 60_000 });
+	const s = await runWorkflow(f.env, { config: cfg, task: "x", profile: PROFILE, preexistingCode: false, now: () => clock, deadline: 1_000_000 + 10 * 60_000 });
 	assert.equal(s.status, "stopped");
 	assert.match(s.failure!, /time budget ran out before task_plan-T2/);
-	assert.equal(f.prompts.length, 3);
-	assert.equal(f.prompts[0].timeoutMs, 25 * 60_000, "first session capped by the budget, not the 40-minute step limit");
-	assert.equal(f.prompts[2].timeoutMs, 5 * 60_000);
+	assert.deepEqual(f.prompts.map((p) => p.timeoutMs / 60_000), [10, 6, 2], "each session capped by what is left of the budget, under the 15-minute step limit");
 });
 
 // -------------------------------------------------------------- check.py --
@@ -510,7 +499,7 @@ await test("tool: a bad item rejects only its batch, named within the call", asy
 	assert.equal(JSON.parse(readFileSync(out, "utf8")).args.scenarios.length, 6);
 });
 
-await test("tool: the draft outlives the process, so a nudged session carries on", async () => {
+await test("tool: the draft outlives the tool instance (a new session reloads the plugin)", async () => {
 	const { step } = stepFile("scenarios");
 	await buildWorkflowTool(step).execute("1", { scenarios: SIX.slice(0, 4), done: false });
 	const r = await buildWorkflowTool(step).execute("2", { scenarios: SIX.slice(4), done: true });

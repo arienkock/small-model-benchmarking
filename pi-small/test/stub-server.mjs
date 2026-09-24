@@ -32,7 +32,8 @@
  *        `respond(payload)` is asked first and may return
  *        { kind: "tool", name, args } or { kind: "text", text }; returning
  *        nothing falls through to the behaviour above (so the probes still
- *        work). test/fixtures/workflow-script.mjs drives the workflow e2e test.
+ *        work). A response with `delayMs` is sent that much later (a slow
+ *        model). test/fixtures/workflow-script.mjs drives the workflow e2e test.
  */
 
 import { createServer } from "node:http";
@@ -241,7 +242,11 @@ createServer((req, res) => {
 			}
 			console.log(`stub-server: chat request temp=${payload.temperature} top_p=${payload.top_p} top_k=${payload.top_k} stream=${!!payload.stream} tools=${(payload.tools ?? []).length} kwargs=${JSON.stringify(payload.chat_template_kwargs ?? null)}`);
 			console.log(`stub-server: system prompt = ${JSON.stringify(payload.messages?.find((m) => m.role === "system")?.content ?? null)}`);
-			return payload.stream ? streaming(res, payload) : nonStreaming(res, payload);
+			// A scripted response may carry delayMs: a model that takes that long to
+			// answer, for testing the harness's session time limit.
+			const delay = script?.respond(payload)?.delayMs ?? 0;
+			const answer = () => (res.destroyed ? undefined : payload.stream ? streaming(res, payload) : nonStreaming(res, payload));
+			return delay ? setTimeout(answer, delay) : answer();
 		});
 		return;
 	}

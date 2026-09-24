@@ -4,8 +4,8 @@
  *   node test/workflow-e2e.ts            (on the machine with docker and the pi-small-agent image)
  *
  * The stub server plays the model from test/fixtures/workflow-script.mjs, so
- * everything else is the real thing: workflow/run.ts, docker, pi in the
- * container, the plugin registering each step's submit tool, check.py in a
+ * everything else is the real thing: workflow/run.ts, docker, ONE pi process in
+ * RPC mode for the whole run (a new session per step and retry), the plugin registering each step's submit tool, check.py in a
  * fresh no-network container, and the acceptance grader. The script takes each
  * recovery path once, and this test asserts that each one happened, not only
  * that the run ended well. The task is workflow/tasks/books-api, loaded from
@@ -64,18 +64,27 @@ assert.deepEqual(state.tasks[1].scenarios.map((s: any) => s.id), ["T2.S1", "T2.S
 
 // Each recovery path happened, in the step where the script put it.
 const step = (kind: string) => steps.find((s) => s.includes(kind))!;
-const scOut = read(`steps/${step("scenarios")}/out.json`);
+const scOut = read(`steps/${step("scenarios-a2")}/out.json`);
 assert.equal(scOut.refusals, 1, "the bad scenario batch should have been refused in-session");
 assert.equal(scOut.args.scenarios.length, 8, "the batches should have accumulated to 8 scenarios");
-assert.ok(existsSync(join(runDir, "steps", step("breakdown"), "prompt-2-nudge.md")) || readdirSync(join(runDir, "steps", step("breakdown"))).some((f) => f.includes("nudge")), "the breakdown should have needed a nudge");
+assert.ok(steps.includes(steps.find((x) => x.endsWith("breakdown-a1"))!) && steps.some((x) => x.endsWith("breakdown-a2")), "the breakdown should have needed a fresh second attempt");
+assert.match(readFileSync(join(runDir, "steps", step("breakdown-a2"), "prompt.md"), "utf8"), /## A previous attempt at this step failed/);
 assert.equal(read(`steps/${step("implement-T1")}/out.json`).refusals, 1, "report_done should have refused the failing T1 test once");
 assert.ok(steps.some((s) => s.includes("integrate-T2")), "T2 should have had an integration step");
 assert.ok(!steps.some((s) => s.includes("integrate-T1")), "T1 had nothing earlier to integrate with");
-assert.ok(steps.every((s) => !/-a2/.test(s)), `no step should have needed a fresh second attempt: ${steps.join(" ")}`);
+assert.deepEqual(steps.filter((s) => /-a2/.test(s)).map((s) => s.replace(/^\d+-/, "")), ["scenarios-a2", "breakdown-a2"], `second attempts: ${steps.join(" ")}`);
+// The hung session was cut off at the limit and retried fresh, told why.
+const events = readFileSync(join(runDir, "events.jsonl"), "utf8").trim().split("\n").map((l) => JSON.parse(l));
+assert.ok(events.some((e) => e.type === "step_run" && e.step.endsWith("scenarios-a1") && e.timedOut), "the hung scenarios session should have timed out");
+assert.match(readFileSync(join(runDir, "steps", step("scenarios-a2"), "prompt.md"), "utf8"), /stopped at the time limit/);
+// One agent process for the whole run: its RPC log shows a new_session per step and attempt.
+const agentEvents = readFileSync(join(runDir, "agent.events.jsonl"), "utf8").trim().split("\n").map((l) => JSON.parse(l));
+const newSessions = agentEvents.filter((e) => e.type === "response" && e.command === "new_session").length;
+assert.equal(newSessions, steps.length - 1, "a fresh session for every step and attempt (the final check is not a session)");
 
 // The workflow's system prompt reached the model: pi-small logs what each session was given.
-const logs = readdirSync(join(runDir, "steps", step("scenarios"), "sessions")).filter((f) => f.includes("pi-small"));
-const promptRec = logs.flatMap((f) => readFileSync(join(runDir, "steps", step("scenarios"), "sessions", f), "utf8").trim().split("\n").map((l) => JSON.parse(l))).find((r) => r.type === "system_prompt");
+const logs = readdirSync(join(runDir, "steps", step("scenarios-a2"), "sessions")).filter((f) => f.includes("pi-small"));
+const promptRec = logs.flatMap((f) => readFileSync(join(runDir, "steps", step("scenarios-a2"), "sessions", f), "utf8").trim().split("\n").map((l) => JSON.parse(l))).find((r) => r.type === "system_prompt");
 assert.ok(promptRec && /\+ workflow systemPrompt/.test(promptRec.source), JSON.stringify(promptRec));
 
 // The planning steps really had no coding tools, and the task's own settings reached the checks.

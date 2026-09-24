@@ -1,4 +1,4 @@
 {
-	"stepTimeoutMin": 5,
-	"testTimeoutSec": 120
+	"stepTimeoutMin": 1,
+	"testTimeoutSec": 60
 }

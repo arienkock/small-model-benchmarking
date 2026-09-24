@@ -111,8 +111,8 @@ export function buildWorkflowTool(step: StepFile) {
 	 * 16 concrete scenarios in ONE tool call spent its whole 4096-token response
 	 * thinking and deliberating about JSON escaping and never made the call
 	 * (Granite-4.2-3B, 2026-09-24, twice in a row). Valid batches accumulate in a
-	 * draft next to the out file — so a nudged session, which is a new process,
-	 * carries on from them — and the step completes on `done: true`, or on any
+	 * draft next to the out file, which outlives this tool instance (pi creates a
+	 * new plugin instance for every session) — and the step completes on `done: true`, or on any
 	 * call once the minimums are met if `done` is left out (one-shot still works).
 	 */
 	const draftPath = `${step.out}.draft.json`;

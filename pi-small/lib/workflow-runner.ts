@@ -3,17 +3,21 @@
  *
  * Everything with a side effect (running pi in a container, running the checks,
  * writing files) goes through `WorkflowEnv`, so the control flow — attempts,
- * nudges, feedback, when to stop — is tested with fakes (test/workflow-test.ts)
+ * feedback, the deadline, when to stop — is tested with fakes (test/workflow-test.ts)
  * and driven for real by ../workflow/run.ts.
  *
  * Per step:
- *   1. a fresh pi session gets the step prompt (spec rendered from the state);
+ *   1. a fresh session gets the step prompt (spec rendered from the state);
  *   2. the session ends; the host judges it itself — a planning step by
  *      re-validating the submission, a coding step by re-running check.py in a
  *      fresh container;
- *   3. not good enough: nudge the SAME session (pi --continue) up to
- *      `config.nudges` times, then start a FRESH session with the failure as
- *      feedback, up to `config.attempts.<kind>` times; then the workflow stops.
+ *   3. not good enough: another FRESH session with the failure as feedback, up
+ *      to `config.attempts.<kind>` times; then the workflow stops.
+ *
+ * Every retry starts from an empty context. Continuing the failed session
+ * ("nudging") was tried first and dropped: in the 2026-09-24 roster runs long
+ * sessions did not recover, while Granite fixed in 3 minutes, on a fresh
+ * attempt given the failure, what two 40-minute sessions had not.
  */
 
 import {
@@ -27,7 +31,6 @@ import {
 	initialState,
 	nextStep,
 	type NextStep,
-	nudgePrompt,
 	STEP_TOOL,
 	STEP_TOOLSET,
 	type StepFile,
@@ -57,8 +60,8 @@ export interface WorkflowEnv {
 	prepareStep(label: string): StepDir;
 	/** Write a JSON file into the step directory (step.json, check.json). */
 	writeStepFile(dir: StepDir, name: string, data: unknown): void;
-	/** Run pi with this prompt. `resume` continues the step's previous session. At most `timeoutMs`. */
-	runAgent(dir: StepDir, prompt: string, resume: boolean, timeoutMs: number): Promise<AgentRun>;
+	/** Run one fresh session with this prompt, for at most `timeoutMs`. */
+	runAgent(dir: StepDir, prompt: string, timeoutMs: number): Promise<AgentRun>;
 	/** The submit tool's out file, parsed, or null. */
 	readOut(dir: StepDir): any | null;
 	/** Run check.py against the workspace in a fresh container. */
@@ -142,15 +145,9 @@ export async function runWorkflow(env: WorkflowEnv, opts: RunOptions): Promise<W
 
 			const prompt = buildPrompt(state, step, cfg, feedback);
 			env.event({ type: "step_start", step: dir.name, kind: step.kind, taskId: step.taskId, attempt, promptChars: prompt.length });
-			let run = await env.runAgent(dir, prompt, false, sessionMs());
-			let judged = await judge(env, dir, step, stepFile, checkSpec, run);
-			env.event({ type: "step_run", step: dir.name, nudge: 0, ...run, ok: judged.ok, detail: judged.ok ? undefined : judged.detail });
-
-			for (let nudge = 1; !judged.ok && nudge <= cfg.nudges && !run.timedOut && now() < deadline; nudge++) {
-				run = await env.runAgent(dir, nudgePrompt(step, judged.detail), true, sessionMs());
-				judged = await judge(env, dir, step, stepFile, checkSpec, run);
-				env.event({ type: "step_run", step: dir.name, nudge, ...run, ok: judged.ok, detail: judged.ok ? undefined : judged.detail });
-			}
+			const run = await env.runAgent(dir, prompt, sessionMs());
+			const judged = await judge(env, dir, step, stepFile, checkSpec, run);
+			env.event({ type: "step_run", step: dir.name, ...run, ok: judged.ok, detail: judged.ok ? undefined : judged.detail });
 
 			if (judged.ok) accepted = judged;
 			else if (now() >= deadline) return stopped(state, `during ${stepLabel(step)} attempt ${attempt}`);

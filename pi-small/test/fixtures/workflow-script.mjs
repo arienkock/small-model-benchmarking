@@ -7,8 +7,11 @@
  * many assistant turns the session already has. The sequences deliberately
  * take every recovery path the harness has, once:
  *
- *   scenarios     in batches: 5 happy, then a batch with a bad item -> tool error, then the 3 unhappy with done: true
- *   breakdown     ends with prose and no tool call -> host nudges (pi --continue) -> valid
+ *   scenarios     1st attempt: the "model" takes 10 minutes to answer, past the session limit -> the harness
+ *                 aborts the session and retries fresh; the retry submits in batches: 5 happy, then a
+ *                 batch with a bad item -> tool error, then the 3 unhappy with done: true
+ *   breakdown     ends with prose and no tool call -> the host retries in a FRESH session, whose
+ *                 prompt carries the failure -> valid
  *   implement T1  writes a failing test -> report_done refused by check.py -> fixes -> accepted
  *   integrate T2  T2 has an earlier task, so the harness asks for integration tests
  *
@@ -41,13 +44,14 @@ const SCENARIOS = [
 ];
 
 const SEQ = {
-	scenarios: [
+	scenarios: [{ kind: "text", text: "Still thinking.", delayMs: 600_000 }],
+	"scenarios retry": [
 		tool("submit_scenarios", { scenarios: SCENARIOS.filter((s) => s.kind === "happy"), done: false }),
 		tool("submit_scenarios", { scenarios: [{ ...SCENARIOS[5], then: "" }], done: false }),
 		tool("submit_scenarios", { scenarios: SCENARIOS.filter((s) => s.kind === "unhappy"), done: true }),
 	],
-	breakdown: [
-		say("I would build an in-memory store first and the HTTP layer second."),
+	breakdown: [say("I would build an in-memory store first and the HTTP layer second.")],
+	"breakdown retry": [
 		tool("submit_breakdown", {
 			tasks: [
 				{ title: "In-memory book store", goal: "store.py holds books in memory with validation, ids and search.", files: ["store.py", "tests/test_t1_store.py"], covers: [] },
@@ -94,7 +98,10 @@ export function respond(payload) {
 	const first = messages.find((m) => m.role === "user");
 	const m = /# Workflow step: (\w+)(?: (T\d+))?/.exec(textOf(first));
 	if (!m) return undefined; // not a workflow session (the plugin's probes): default stub behaviour
-	const seq = SEQ[m[2] ? `${m[1]} ${m[2]}` : m[1]];
+	const key = m[2] ? `${m[1]} ${m[2]}` : m[1];
+	// A fresh retry of a step: the same header, plus the harness's feedback section.
+	const retry = /## A previous attempt at this step failed/.test(textOf(first)) && SEQ[`${key} retry`];
+	const seq = retry || SEQ[key];
 	if (!seq) return say(`workflow-script: no sequence for ${m[0]}`);
 	const turn = messages.filter((x) => x.role === "assistant").length;
 	return seq[turn] ?? say("Nothing more to do.");
