@@ -28,7 +28,9 @@
  *                    any other.
  *   the system prompt — near-empty by default; a model's roster.json
  *                    `systemPrompt` (or defaults.systemPrompt) replaces it,
- *                    re-applied every turn so it follows /sm-model.
+ *                    re-applied every turn so it follows /sm-model. Every
+ *                    session also gets the terse response style appended
+ *                    (a workflow step sends its own, or none).
  *
  * PER-MODEL TOOL-CALL TEMPLATES. Every model packages its tool-call channel
  * differently and some GGUFs package it wrongly. `--jinja` (always on) makes
@@ -59,6 +61,7 @@ import { dirname, join, resolve } from "node:path";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { buildTool } from "../lib/tools.ts";
 import { buildWorkflowTool, loadStepFile } from "../lib/workflow-tool.ts";
+import { TERSE_STYLE } from "../lib/workflow.ts";
 import { proxyStatus, proxySwitch } from "../lib/proxy-client.ts";
 import { registerWorkflowCommand } from "../lib/workflow-command.ts";
 import {
@@ -855,20 +858,22 @@ export default function (pi: ExtensionAPI) {
 	// with no systemPrompt of its own (and no roster default) leaves
 	// event.systemPrompt untouched, so PI_SMALL_SYSTEM_PROMPT / the CLI's
 	// near-empty default still apply.
-	// A workflow step (PI_SMALL_WORKFLOW_STEP) may add its own text — by default
-	// the terse response style — APPENDED to whatever the model would otherwise
-	// get, so a model's own roster prompt (LFM's file-overwrite warning) survives.
+	// Every session gets the terse response style APPENDED to whatever the model
+	// would otherwise get, so a model's own roster prompt (LFM's file-overwrite
+	// warning) survives. Output tokens are the cost at 10-14 t/s. A workflow step
+	// (PI_SMALL_WORKFLOW_STEP) sends its own text instead — the terse style by
+	// default, or none when its config's systemPrompt is "".
 	pi.on("before_agent_start", (event: any, ctx: any) => {
 		const override = resolveSystemPrompt(mgr.state.spec, d);
 		const base = String(override ?? event?.systemPrompt ?? "");
-		const extra = workflowStep?.systemPrompt?.trim();
+		const extra = workflowStep ? workflowStep.systemPrompt?.trim() : TERSE_STYLE;
 		const effective = extra ? (base.trim() ? `${base.trimEnd()}\n\n${extra}` : extra) : base;
 		// pi does not persist the system prompt in its session record, so the
 		// only proof of what a session was actually given is what we log here.
 		const hash = createHash("sha256").update(effective).digest("hex").slice(0, 12);
 		if (hash !== lastPromptHash) {
 			lastPromptHash = hash;
-			const source = (override !== undefined ? "roster systemPrompt" : "PI_SMALL_SYSTEM_PROMPT / pi default") + (extra ? " + workflow systemPrompt" : "");
+			const source = (override !== undefined ? "roster systemPrompt" : "PI_SMALL_SYSTEM_PROMPT / pi default") + (extra ? (workflowStep ? " + workflow systemPrompt" : " + terse style") : "");
 			sessionLog.write({ type: "system_prompt", model: mgr.state.spec.alias, source, chars: effective.length, sha256: hash });
 			if (ctx) say(ctx, `pi-small: system prompt — ${source}, ${effective.length} chars, sha256 ${hash}`, "info");
 		}

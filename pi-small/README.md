@@ -161,6 +161,12 @@ What a model with no override actually receives is:
 That is the emptiest prompt reachable without patching pi. Override it globally
 with `PI_SMALL_SYSTEM_PROMPT`, or per model with roster.json `systemPrompt`.
 
+**Every session also gets a terse response style** (`TERSE_STYLE` in
+`lib/workflow.ts`), appended to the prompt above or to a model's override, so
+the override survives. These models generate at 10–14 tokens/s, so output
+tokens are the main cost. A workflow step sends its config's `systemPrompt`
+instead, which is the same text by default, or nothing when it is `""`.
+
 **The tools default to pi's own `bash`**, re-registered by the plugin rather
 than inherited, but a model's roster.json `tools` can ask for any combination
 of pi's built-ins (`bash`, `read`, `write`, `edit`, `grep`, `find`, `ls`) — see
@@ -362,7 +368,8 @@ any other model.
 re-resolved on every turn (`before_agent_start`) so it follows `/sm-model`. A
 model with no `systemPrompt` of its own and no `defaults.systemPrompt` leaves
 pi's prompt exactly as `PI_SMALL_SYSTEM_PROMPT` / the CLI set it — nothing
-changes for models that do not opt in. roster.json's LFM2.5 entry uses this for
+changes for models that do not opt in, apart from the terse style every session
+gets appended. roster.json's LFM2.5 entry uses this for
 a documented failure mode: it overwrote a file it had been given to read from,
 twice, in an earlier benchmark run, so its `systemPrompt` tells it to read a
 file before writing near it.

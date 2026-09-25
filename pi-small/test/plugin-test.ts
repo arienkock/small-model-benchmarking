@@ -14,6 +14,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadRoster } from "../lib/roster.ts";
+import { TERSE_STYLE } from "../lib/workflow.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PORT = 8199;
@@ -203,10 +204,10 @@ pass("/sm-temp changes the next request and does not restart the server");
 const beforeAgentStart = rec.handlers.get("before_agent_start");
 assert.deepEqual(
 	beforeAgentStart({ prompt: "hi", systemPrompt: "BASE" }, ctx),
-	{},
-	"Spark has no roster systemPrompt, so the chained prompt passes through unchanged",
+	{ systemPrompt: `BASE\n\n${TERSE_STYLE}` },
+	"Spark has no roster systemPrompt, so the chained prompt is kept and only the terse style is appended",
 );
-pass("/before_agent_start leaves the system prompt alone for a model with no override");
+pass("/before_agent_start keeps the prompt of a model with no override and appends the terse style");
 
 // --- model switch: restart, re-register, keep the sampler ------------------
 await rec.commands.get("sm-model").handler("Granite-4.2-3B-Q8_0", ctx);
@@ -502,7 +503,7 @@ const records = readFileSync(join(sessionDir, logFile!), "utf8").trim().split("\
 const types = new Set(records.map((r) => r.type));
 for (const t of ["session", "system_prompt", "response"]) assert.ok(types.has(t), `session log has a ${t} record: ${[...types].join(",")}`);
 const promptRec = records.find((r) => r.type === "system_prompt");
-assert.equal(promptRec.chars, "BASE PROMPT".length, "the prompt's length is recorded");
+assert.equal(promptRec.chars, `BASE PROMPT\n\n${TERSE_STYLE}`.length, "the prompt's length is recorded");
 assert.match(promptRec.sha256, /^[0-9a-f]{12}$/, "and its hash — pi does not persist the prompt itself");
 assert.ok(records.some((r) => r.type === "session" && r.thinking === "off" && r.sampler.temp === 0.7), "the session record carries the mode and the sampler actually used");
 pass("each session logs its settings, its effective system prompt (length + hash) and every response's cost");

@@ -109,7 +109,8 @@ directory). Each fresh session gets the parts of the spec it needs, rendered by
 **A terse response style for every session.** The workflow config's
 `systemPrompt` (default `TERSE_STYLE` in `lib/workflow.ts`) is appended to the
 model's own system prompt in every workflow session, so a model's roster
-prompt survives. The reason is cost. At about 14 tokens/s, Granite-4.2-3B's
+prompt survives. Plain pi-small sessions, `--freeform` included, get
+`TERSE_STYLE` too. The reason is cost. At about 14 tokens/s, Granite-4.2-3B's
 first run spent 78 of its 85 minutes generating. Set it to `""` in a task's
 `config` or with `--config` to turn it off.
 
