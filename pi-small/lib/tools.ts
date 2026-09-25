@@ -31,6 +31,9 @@ import {
 	type BashToolOptions,
 	type ToolDefinition,
 } from "@earendil-works/pi-coding-agent";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 /** One command-line guard: a match refuses the call with `message` instead of running it. */
 export interface CommandGuard {
@@ -54,21 +57,49 @@ export interface BashToolConfig extends BashToolOptions {
 	 * error tells the model to pass a `timeout` when a command really needs longer.
 	 */
 	defaultTimeoutSec?: number;
+	/**
+	 * Run each command from a file (`. <file>`) instead of as `bash -c <command>`
+	 * (default true). With -c the command text is the shell's own argv, so
+	 * `pkill -f "python3 app.py"` in a command that then restarts the server kills
+	 * the shell running it: the output vanishes and the model cannot tell why.
+	 * Qwen3.6 lost ~7-10 minutes of 15-minute free-form runs to exactly this on
+	 * 2026-09-25, twice. A real terminal does not work that way — the shell's
+	 * argv never holds what was typed — so this is fidelity, not help: same
+	 * command, same shell, same cwd, env, jobs and exit status.
+	 */
+	commandViaFile?: boolean;
 }
 
 function shQuote(s: string): string {
 	return `'${s.replace(/'/g, `'\\''`)}'`;
 }
 
-/** Turn `commandGuards` into a spawnHook that refuses a matching command instead of running it. */
+let commandFileCounter = 0;
+
+/** Write the command to a file and source it, so it is not in the shell's argv (see commandViaFile). */
+function viaFile(context: BashSpawnContext): BashSpawnContext {
+	const dir = join(tmpdir(), "pi-small-bash");
+	mkdirSync(dir, { recursive: true });
+	const file = join(dir, `cmd-${process.pid}-${++commandFileCounter}.sh`);
+	writeFileSync(file, context.command, { mode: 0o600 });
+	return { ...context, command: `. ${shQuote(file.replace(/\\/g, "/"))}` };
+}
+
+/**
+ * pi-small's spawnHook: `commandGuards` refuse a matching command instead of
+ * running it (checked against the command as the model wrote it); then, unless
+ * `commandViaFile` is false, the command runs from a file.
+ */
 function withGuards(options: BashToolConfig): BashToolOptions {
-	const { commandGuards, spawnHook, defaultTimeoutSec: _timeout, ...rest } = options;
-	if (!commandGuards || commandGuards.length === 0) return options;
-	const compiled = commandGuards.map((g) => ({ re: new RegExp(g.pattern, g.flags ?? "i"), message: g.message }));
+	const { commandGuards, commandViaFile, spawnHook, defaultTimeoutSec: _timeout, ...rest } = options;
+	const compiled = (commandGuards ?? []).map((g) => ({ re: new RegExp(g.pattern, g.flags ?? "i"), message: g.message }));
+	const useFile = commandViaFile !== false;
+	if (compiled.length === 0 && !useFile) return { ...rest, ...(spawnHook ? { spawnHook } : {}) };
 	const hook = (context: BashSpawnContext): BashSpawnContext => {
 		const hit = compiled.find((g) => g.re.test(context.command));
 		if (hit) return { ...context, command: `echo ${shQuote(hit.message)} 1>&2; exit 1` };
-		return spawnHook ? spawnHook(context) : context;
+		const next = spawnHook ? spawnHook(context) : context;
+		return useFile ? viaFile(next) : next;
 	};
 	return { ...rest, spawnHook: hook };
 }

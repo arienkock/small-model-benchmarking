@@ -409,6 +409,23 @@ try {
 	assert.doesNotMatch(ownTimeout, /default limit/, "a timeout the model chose itself gets no hint");
 	pass("tool options merge over the roster defaults; bash calls get a 20 s default timeout, and hitting it tells the model how to ask for more");
 
+	// --- bash runs commands from a file, so their text is not the shell's argv --
+	// `pkill -f "python3 app.py"` inside a command that restarts the server
+	// killed the shell running it (Qwen3.6, 2026-09-25).
+	const run = async (tool: any, command: string) => JSON.stringify((await tool.execute("t", { command }, undefined, undefined, undefined)).content);
+	const marker = `pi-small-marker-${process.pid}`;
+	const selfKill = `sleep 30 >/dev/null 2>&1 & pkill -f "${marker}|sleep 30"; echo survived-${marker}`;
+	assert.match(await run(buildTool("bash", tmpdir(), {}), selfKill), /survived-pi-small-marker/, "pkill -f on text in the command does not kill the shell running it");
+	if (process.platform === "linux") {
+		// Linux pkill (the container) signals its own ancestors; macOS pkill skips them without -a.
+		const viaArgv = await run(buildTool("bash", tmpdir(), { commandViaFile: false }), selfKill).catch((e: any) => String(e?.message ?? e));
+		assert.doesNotMatch(viaArgv, /survived-pi-small-marker/, `with commandViaFile false the old bash -c behaviour is back (the shell kills itself): ${viaArgv}`);
+	}
+	assert.match(await run(buildTool("bash", tmpdir(), {}), "cd /; x=41; echo $((x+1)) $PWD; false; echo status=$?"), /42 \/\\nstatus=1/, "cwd, variables and exit status behave as in bash -c");
+	const guarded = buildTool("bash", tmpdir(), { commandGuards: [{ pattern: "forbidden-thing", message: "no, not that" }] });
+	assert.match(await run(guarded, "echo forbidden-thing").catch((e: any) => String(e?.message ?? e)), /no, not that/, "guards still see the command as written");
+	pass("bash runs each command from a file: pkill -f on the command's own text no longer kills its shell; guards, cwd and exit status unchanged");
+
 	console.log(`\n${passed.length} checks passed. Logs: ${LOGS}`);
 } finally {
 	stopServer();
