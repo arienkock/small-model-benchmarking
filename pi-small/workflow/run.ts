@@ -306,6 +306,9 @@ if (def.grader && !args["no-grade"]) {
 	log(`grader: ${summary}`);
 }
 
-(proxyProc as ChildProcess | null)?.kill();
+if (proxyProc) {
+	(proxyProc as ChildProcess).kill();
+	spawnSync(process.execPath, [join(PLUGIN_DIR, "serve.mjs"), "--stop"], { env: { ...process.env, PI_SMALL_PORT: process.env.PI_SMALL_BACKEND_PORT ?? "8125" }, stdio: "ignore" });
+}
 log(`run directory: ${runDir}`);
 process.exit(final?.status === "completed" ? 0 : 1);
