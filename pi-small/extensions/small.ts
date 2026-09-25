@@ -63,7 +63,7 @@ import { buildSessionContext, convertToLlm, serializeConversation } from "@earen
 import { buildCompactionInstruction, buildCompactionPrompt } from "../lib/compaction.ts";
 import { buildTool } from "../lib/tools.ts";
 import { buildWorkflowTool, loadStepFile } from "../lib/workflow-tool.ts";
-import { TERSE_STYLE } from "../lib/workflow.ts";
+import { SESSION_STYLE } from "../lib/workflow.ts";
 import { proxyStatus, proxySwitch } from "../lib/proxy-client.ts";
 import { registerWorkflowCommand } from "../lib/workflow-command.ts";
 import {
@@ -865,7 +865,7 @@ export default function (pi: ExtensionAPI) {
 	// with no systemPrompt of its own (and no roster default) leaves
 	// event.systemPrompt untouched, so PI_SMALL_SYSTEM_PROMPT / the CLI's
 	// near-empty default still apply.
-	// Every session gets the terse response style APPENDED to whatever the model
+	// Every session gets the response style (SESSION_STYLE) APPENDED to whatever the model
 	// would otherwise get, so a model's own roster prompt (LFM's file-overwrite
 	// warning) survives. Output tokens are the cost at 10-14 t/s. A workflow step
 	// (PI_SMALL_WORKFLOW_STEP) sends its own text instead — the terse style by
@@ -875,7 +875,7 @@ export default function (pi: ExtensionAPI) {
 		const base = String(override ?? event?.systemPrompt ?? "");
 		// PI_SMALL_STYLE replaces the terse style text in a plain session (an
 		// experiment knob; "" = none).
-		const extra = workflowStep ? workflowStep.systemPrompt?.trim() : (process.env.PI_SMALL_STYLE ?? TERSE_STYLE).trim();
+		const extra = workflowStep ? workflowStep.systemPrompt?.trim() : (process.env.PI_SMALL_STYLE ?? SESSION_STYLE).trim();
 		const effective = extra ? (base.trim() ? `${base.trimEnd()}\n\n${extra}` : extra) : base;
 		// pi does not persist the system prompt in its session record, so the
 		// only proof of what a session was actually given is what we log here.

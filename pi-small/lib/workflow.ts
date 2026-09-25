@@ -197,6 +197,20 @@ export const TERSE_STYLE =
 	"No preamble, no restating the task, no summary of what you did or are about to do. " +
 	"Code, commands and tool arguments are as long as they need to be; everything else is short.";
 
+/**
+ * The style every PLAIN pi-small session gets (workflow steps send their
+ * config's systemPrompt instead): the terse style plus not rewriting whole
+ * files. Qwen3.6 free-form on books-api, 2026-09-25, 4 runs each: terse alone
+ * 9.9-14.7 min (a full heredoc rewrite of app.py costs ~2,000-2,700 output
+ * tokens, ~4 min, and runs did 2-3 of them); with these two sentences
+ * 5.8-11.2 min, mean 7.6, all 28/28.
+ */
+export const SESSION_STYLE =
+	TERSE_STYLE +
+	"\nOutput is slow here (about 10 tokens a second), so every token you write costs time. " +
+	"Never rewrite a whole file to change part of it: change only the lines that need changing (for example with a short python3 or sed replacement). " +
+	"Write a file once, run it, and fix what the results show.";
+
 export const DEFAULT_CONFIG: WorkflowConfig = {
 	scenarios: { minHappy: 3, minUnhappy: 3, max: 16 },
 	tasks: { min: 2, max: 6 },

@@ -161,10 +161,13 @@ What a model with no override actually receives is:
 That is the emptiest prompt reachable without patching pi. Override it globally
 with `PI_SMALL_SYSTEM_PROMPT`, or per model with roster.json `systemPrompt`.
 
-**Every session also gets a terse response style** (`TERSE_STYLE` in
+**Every session also gets a terse response style** (`SESSION_STYLE` in
 `lib/workflow.ts`), appended to the prompt above or to a model's override, so
 the override survives. These models generate at 10–14 tokens/s, so output
-tokens are the main cost. A workflow step sends its config's `systemPrompt`
+tokens are the main cost. It is `TERSE_STYLE` plus two sentences against
+rewriting whole files. On Qwen3.6 free-form they cut the mean time to done from
+about 13 to 7.6 minutes, all 28/28, because a full rewrite of a 7k-character file
+costs about 4 minutes and runs did two or three. A workflow step sends its config's `systemPrompt`
 instead, which is the same text by default, or nothing when it is `""`.
 `PI_SMALL_STYLE` replaces the text in a plain session (`workflow/run.ts`
 passes it into the container), for trying variants.
