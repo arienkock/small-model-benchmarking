@@ -12,8 +12,6 @@
  * summary call itself and hands pi the result (see extensions/small.ts).
  */
 
-export const COMPACTION_WORD_LIMIT = 400;
-
 export interface CompactionPromptOpts {
 	/** The conversation to summarize, already serialized as text. */
 	conversation: string;
@@ -21,10 +19,12 @@ export interface CompactionPromptOpts {
 	previousSummary?: string;
 	/** A review step also keeps its findings so far (lib/review.ts). */
 	review?: boolean;
+	/** Word limit for each of the two parts (roster `compactionWords`). */
+	words: number;
 }
 
 export function buildCompactionPrompt(o: CompactionPromptOpts): string {
-	const n = COMPACTION_WORD_LIMIT;
+	const n = o.words;
 	const parts = [
 		"The conversation below is being compacted: it will be replaced by what you write now, and you will continue the work from that alone. The task itself is kept, so do not restate it.",
 		"",

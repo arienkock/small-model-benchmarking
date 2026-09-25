@@ -147,6 +147,11 @@ export interface ModelSpec {
 	 * Leave unset to keep PI_SMALL_SYSTEM_PROMPT / pi's own default.
 	 */
 	systemPrompt?: string;
+	/**
+	 * Word limit for EACH part (lessons, next steps) of this model's compaction
+	 * summary (lib/compaction.ts). Overrides `defaults.compactionWords`.
+	 */
+	compactionWords?: number;
 }
 
 export interface RosterDefaults {
@@ -180,6 +185,8 @@ export interface RosterDefaults {
 	toolOptions: Record<string, Record<string, unknown>>;
 	/** Replaces the near-empty system prompt for every model that does not set its own. */
 	systemPrompt?: string;
+	/** See ModelSpec.compactionWords. DEFAULT_COMPACTION_WORDS (200) when unset. */
+	compactionWords?: number;
 	/**
 	 * Where llama.cpp keeps downloaded weights. MUST be a Windows path on the
 	 * bench laptop — this is passed in the environment, and MSYS does not
@@ -274,6 +281,13 @@ export function resolveToolOptions(spec: ModelSpec, d: RosterDefaults, kind: str
 /** This model's system-prompt override, if any: its own, else the roster default, else unset. */
 export function resolveSystemPrompt(spec: ModelSpec, d: RosterDefaults): string | undefined {
 	return spec.systemPrompt ?? d.systemPrompt;
+}
+
+export const DEFAULT_COMPACTION_WORDS = 200;
+
+/** This model's word limit per compaction-summary part: its own, else the roster default, else 200. */
+export function resolveCompactionWords(spec: ModelSpec, d: RosterDefaults): number {
+	return spec.compactionWords ?? d.compactionWords ?? DEFAULT_COMPACTION_WORDS;
 }
 
 /**

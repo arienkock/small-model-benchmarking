@@ -77,6 +77,7 @@ import {
 	resolveCtxLadder,
 	resolveMaxTokens,
 	resolveSampler,
+	resolveCompactionWords,
 	resolveSystemPrompt,
 	resolveThinking,
 	resolveToolOptions,
@@ -1069,6 +1070,7 @@ export default function (pi: ExtensionAPI) {
 			conversation: serializeConversation(convertToLlm([...messagesToSummarize, ...turnPrefixMessages])),
 			previousSummary,
 			review: workflowStep?.kind === "review",
+			words: resolveCompactionWords(mgr.state.spec, d),
 		});
 		const startedAt = Date.now();
 		try {

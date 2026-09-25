@@ -330,6 +330,7 @@ never touches another's config:
 | tool set | `tools` | `defaults.tools` (`["bash"]`) | model switch |
 | tool config / guards | `toolOptions` | `defaults.toolOptions` (`{}`) | model switch |
 | system prompt | `systemPrompt` | `defaults.systemPrompt` (unset) | takes effect next turn |
+| compaction summary word limit, per part | `compactionWords` | `defaults.compactionWords` (200) | next compaction |
 
 A model that sets none of these just inherits `defaults`, which is why most
 roster.json entries only mention weights and notes.
@@ -533,7 +534,8 @@ its context-ladder situation above.
 session. pi's default asks for a seven-section checkpoint (goal, constraints,
 done, in progress, blocked, decisions, next steps, context). At 10–14 tokens/s,
 that output is the expensive part, and most of it restates the task, which pi
-keeps anyway. pi-small asks for two parts of at most 400 words each:
+keeps anyway. pi-small asks for two parts with a word limit on each (roster
+`compactionWords`, 200 by default):
 **Lessons**, meaning whatever would be expensive to relearn, and **Next steps**.
 A review step also keeps its findings so far. pi's `customInstructions` can
 only append to its prompt, so the plugin's `session_before_compact` hook makes

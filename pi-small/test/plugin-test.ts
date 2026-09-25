@@ -516,8 +516,8 @@ pass("a response cut off at max_tokens is reported, and one with no answer at al
 	const out = await compactHook(event("## Lessons\nold lesson"), cctx);
 	assert.deepEqual(out?.compaction, { summary: "## Lessons\nx\n## Next steps\ny", firstKeptEntryId: "entry-7", tokensBefore: 12000, usage: { output: 9 } });
 	const prompt = calls[0].c.messages[0].content[0].text;
-	assert.match(prompt, /## Lessons\nAt most 400 words/, prompt);
-	assert.match(prompt, /## Next steps\nAt most 400 words/, prompt);
+	assert.match(prompt, /## Lessons\nAt most 200 words/, "200 words per part unless the roster says otherwise");
+	assert.match(prompt, /## Next steps\nAt most 200 words/, prompt);
 	assert.match(prompt, /<previous-summary>\n## Lessons\nold lesson\n<\/previous-summary>/, "the previous summary is carried forward");
 	assert.match(prompt, /<conversation>[\s\S]*build the thing[\s\S]*<\/conversation>/, "the conversation is included");
 	assert.doesNotMatch(prompt, /Findings so far/, "only review steps are asked for findings");
@@ -525,7 +525,7 @@ pass("a response cut off at max_tokens is reported, and one with no answer at al
 	reply = { content: [{ type: "text", text: "## Lessons\ncut o" }], stopReason: "length", usage: {} };
 	assert.equal(await compactHook(event(), cctx), undefined, "a summary cut off at the token cap falls back to pi's compaction");
 }
-pass("compaction uses pi-small's two-part prompt (lessons, next steps; 400 words each) and falls back to pi's when it fails");
+pass("compaction uses pi-small's two-part prompt (lessons, next steps; 200 words each by default) and falls back to pi's when it fails");
 
 // The session log: settings, effective system prompt, every response.
 rec3.handlers.get("before_agent_start")({ prompt: "hi", systemPrompt: "BASE PROMPT" }, ctx3);
