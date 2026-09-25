@@ -1,5 +1,5 @@
 {
-	"_about": "Overnight 2026-09-24/25: the rotation (Nanbeige left out: slow, and it contributed nothing), 10 turns per session, minimal feedback. Attempts are effectively unlimited; --deadline ends the run. Coding steps get bash + edit (from iteration 2). Retries start from the attempt with the most passing tests so far, told only its verdict; from the step's start, with no feedback, until some test passes (iteration 3 used plain reset; best from iteration 4). Feedback level focus (from iteration 5, resumed): the verdict plus the name of one failing test.",
+	"_about": "Overnight 2026-09-24/25: the rotation (Nanbeige left out: slow, and it contributed nothing), 10 turns per session, minimal feedback. Attempts are effectively unlimited; --deadline ends the run. Coding steps get bash + edit (from iteration 2). Retries start from the attempt with the most passing tests so far, told only its verdict; from the step's start, with no feedback, until some test passes (iteration 3 used plain reset; best from iteration 4). Feedback level focus (from iteration 5, resumed): the verdict plus the name of one failing test. Then feedback level failures (iteration 5, second resume): one line per failing test with its last error line, as the comparison with focus.",
 	"models": [
 		"Granite-4.2-3B-Q8_0",
 		"Spark-X2.5-4B-Q6_K",
@@ -7,7 +7,7 @@
 		"MiniCPM5-2B-Q8_0"
 	],
 	"maxTurns": 10,
-	"feedback": "focus",
+	"feedback": "failures",
 	"attempts": {
 		"planning": 1000,
 		"implement": 1000,
