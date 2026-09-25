@@ -150,7 +150,10 @@ export async function runWorkflow(env: WorkflowEnv, opts: RunOptions): Promise<W
 		const label = stepLabel(step);
 		const wsMode = toolset === "coding" && env.snapshotWorkspace && env.restoreWorkspace ? cfg.retryWorkspace : "keep";
 		const bestKey = `${label}.best`;
-		let best = wsMode === "best" && state.retry?.step === label && state.retry.score ? { score: state.retry.score, feedback: state.retry.feedback } : undefined;
+		const bestFeedback = (check: CheckReport) => `${describeCheck(check, cfg.feedback)}\n\nThe files from an earlier attempt are in /workspace; continue from them.`;
+		// Resumed: the saved best attempt's check is rendered again, so feedback follows the current config.
+		const saved = wsMode === "best" && state.retry?.step === label && state.retry.score ? state.retry : undefined;
+		let best = saved ? { score: saved.score!, feedback: saved.check ? bestFeedback(saved.check) : saved.feedback } : undefined;
 		if (wsMode !== "keep") {
 			env.snapshotWorkspace!(label);
 			feedback = best?.feedback;
@@ -198,8 +201,8 @@ export async function runWorkflow(env: WorkflowEnv, opts: RunOptions): Promise<W
 				const score = passingTests(judged.check);
 				if (score > (best?.score ?? 0)) {
 					env.snapshotWorkspace!(bestKey, true);
-					best = { score, feedback: `${describeCheck(judged.check!, cfg.feedback)}\n\nThe files from an earlier attempt are in /workspace; continue from them or replace them.` };
-					state = { ...state, retry: { step: label, feedback: best.feedback, score } };
+					best = { score, feedback: bestFeedback(judged.check!) };
+					state = { ...state, retry: { step: label, feedback: best.feedback, score, check: judged.check } };
 					env.saveState(state);
 				}
 				feedback = best?.feedback;

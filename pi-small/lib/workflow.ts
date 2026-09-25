@@ -107,10 +107,13 @@ export interface WorkflowConfig {
 	 *   minimal   what failed and the command to see why ("the test suite failed
 	 *             (`cmd` exited 1)"); nothing from the output. The model has to run
 	 *             the tests itself rather than guess from a fragment of an error.
-	 *   failures  plus one line per failing test (the task's failurePattern)
-	 *   output    plus the last lines of the output
+	 *   focus     minimal, plus the name of ONE failing test to start with (the
+	 *             task's failurePattern) — a pointer, not an explanation: the
+	 *             model still has to run it to see why it fails
+	 *   failures  minimal, plus one line per failing test with its error
+	 *   output    minimal, plus the last lines of the output
 	 */
-	feedback: "minimal" | "failures" | "output";
+	feedback: "minimal" | "focus" | "failures" | "output";
 	/** A model rotation (roster aliases): every failed session moves to the next. --models overrides it. */
 	models?: string[];
 	/**
@@ -276,7 +279,7 @@ export interface WorkflowState {
 	scenarios: Scenario[];
 	tasks: WfTask[];
 	/** The feedback for the next attempt at `step`, kept so --resume retries with it (and, for retryWorkspace "best", the best attempt's score). */
-	retry?: { step: string; feedback: string; score?: number };
+	retry?: { step: string; feedback: string; score?: number; check?: CheckReport };
 }
 
 export function initialState(task: string, preexistingCode: boolean, profile: TaskProfile = {}): WorkflowState {
@@ -624,6 +627,10 @@ export function describeCheck(r: CheckReport, level: WorkflowConfig["feedback"] 
 	const lines = ["The harness checks did NOT pass:", ...r.problems.map((p) => `- ${p}`)];
 	if (level === "minimal") return lines.join("\n");
 	const failures = r.tests?.failures ?? [];
+	if (level === "focus") {
+		if (failures.length && !r.tests?.timedOut) lines.push("", `Start with the failing test \`${failures[0].test}\`.`);
+		return lines.join("\n");
+	}
 	if (level === "failures" && failures.length && !r.tests?.timedOut) {
 		// Tests failing the same way are one line: seven "Connection refused" lines say no more than one.
 		const byError = new Map<string, string[]>();

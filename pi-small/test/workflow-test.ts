@@ -540,6 +540,8 @@ await test("check.py + describeCheck: a failure pattern turns the output into on
 	const same = (test: string) => ({ test, error: "URLError: Connection refused" });
 	const grouped = describeCheck({ ok: false, problems: ["the test suite failed"], tests: { rc: 1, failures: [same("t1"), same("t2"), same("t3"), { test: "t4", error: "KeyError: id" }] } });
 	assert.match(grouped, /- t1, t2 and 1 more: URLError: Connection refused\n- t4: KeyError: id/);
+	const focus = describeCheck({ ok: false, problems: ["the test suite failed"], tests: { rc: 1, failures: [same("t1"), { test: "t4", error: "KeyError: id" }] } }, "focus");
+	assert.equal(focus, "The harness checks did NOT pass:\n- the test suite failed\n\nStart with the failing test `t1`.", "focus: one test name, no error text");
 });
 
 await test("check.py: with a count pattern, a suite that runs nothing fails", () => {
