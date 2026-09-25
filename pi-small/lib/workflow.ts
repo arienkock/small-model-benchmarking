@@ -302,7 +302,7 @@ export interface CheckSpec {
 	testFiles?: string[];
 	testCountPattern?: string;
 	failurePattern?: string;
-	/** Scenarios so far (plus one per integration step): the suite must run at least this many tests. */
+	/** Scenarios so far: the suite must run at least this many tests. */
 	minTests: number;
 	/** Why minTests is what it is, for the message when too few tests ran. */
 	minTestsWhy?: string;
@@ -604,8 +604,11 @@ export function checkSpecFor(state: WorkflowState, kind: "implement" | "integrat
 		testFiles: state.profile.testFiles,
 		testCountPattern: state.profile.testCountPattern,
 		failurePattern: state.profile.failurePattern,
-		minTests: requiredTokensThrough(state, taskId, kind).length,
-		minTestsWhy: kind === "integrate" ? "one per scenario so far, plus the integration tests this step asks for" : "one per scenario so far",
+		// One test per scenario, cumulative. Integration steps add no count of their own:
+		// "+1 per integration step" left integrate-T2 stuck at 9 of 10 with a
+		// passing suite for nine attempts (2026-09-25).
+		minTests: requiredTokensThrough(state, taskId, kind).filter((t) => !/^I\d+$/.test(t)).length,
+		minTestsWhy: "one per scenario so far",
 		checks: state.profile.checks ?? [],
 	};
 }

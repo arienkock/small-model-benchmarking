@@ -51,9 +51,16 @@ def call(method, path, body=None, raw=None):
 
 
 checks = []
+ids = {}  # the books the create checks made: later checks need them
 
 
-def check(name, fn):
+def check(name, fn, needs=()):
+    # A check whose data an earlier check failed to create is SKIPPED, not
+    # failed: one broken create must not cost every later check a point.
+    missing = [k for k in needs if k not in ids]
+    if missing:
+        checks.append({"name": name, "ok": False, "skipped": True, "detail": f"skipped: needs book {', '.join(missing)}, which an earlier check did not create"})
+        return
     try:
         detail = fn()
         checks.append({"name": name, "ok": True, "detail": detail or ""})
@@ -107,6 +114,7 @@ def main():
             pass
     result["total"] = len(checks)
     result["passed"] = sum(c["ok"] for c in checks)
+    result["skipped"] = sum(bool(c.get("skipped")) for c in checks)
     print(json.dumps(result))
     sys.exit(0 if result["startup"]["ok"] and result["passed"] == result["total"] else 1)
 
@@ -115,7 +123,7 @@ def run_checks():
     b1 = {"title": "Dune", "author": "Frank Herbert", "isbn": "9780441013593", "synopsis": "Desert planet politics."}
     b2 = {"title": "Emma", "author": "Jane Austen", "isbn": "9780141439587"}
     b3 = {"title": "Persuasion", "author": "Jane Austen", "isbn": "9780141439686", "synopsis": "A second chance at love."}
-    ids = {}
+    fields = lambda b: {k: b.get(k) for k in ("id", "title", "author", "isbn", "synopsis")} if isinstance(b, dict) else b
 
     def create_1():
         s, b, h = call("POST", "/books", b1)
@@ -139,9 +147,10 @@ def run_checks():
     def get_one():
         s, b, h = call("GET", f"/books/{ids['b1']}")
         expect(s == 200, f"GET -> {s}")
-        expect(b == {**b1, "id": ids["b1"]}, f"GET returned {b!r}")
+        # The book's own fields, as create checks them: an extra field is not an error.
+        expect(fields(b) == {**b1, "id": ids["b1"]}, f"GET returned {b!r}")
         expect("application/json" in (h.get("Content-Type") or ""), f"Content-Type is {h.get('Content-Type')!r}")
-    check("get by id returns the book as JSON", get_one)
+    check("get by id returns the book as JSON", get_one, needs=["b1"])
 
     check("get unknown id -> 404 error", lambda: is_error(*call("GET", "/books/999999")[:2], 404))
     check("get non-integer id -> 400 error", lambda: is_error(*call("GET", "/books/abc")[:2], 400))
@@ -151,7 +160,7 @@ def run_checks():
         s, b, _ = call("GET", "/books")
         expect(s == 200 and isinstance(b, list), f"GET /books -> {s} {b!r}")
         expect([x.get("id") for x in b] == sorted(ids.values()), f"list not all books by id: {[x.get('id') for x in b]}")
-    check("list returns all books ordered by id", list_all)
+    check("list returns all books ordered by id", list_all, needs=["b1", "b2", "b3"])
 
     def filt(query, expected_keys):
         s, b, _ = call("GET", "/books?" + query)
@@ -159,26 +168,28 @@ def run_checks():
         got = sorted(x.get("id") for x in b)
         want = sorted(ids[k] for k in expected_keys)
         expect(got == want, f"?{query} returned ids {got}, expected {want}")
-    check("filter author substring, case-insensitive", lambda: filt("author=austen", ["b2", "b3"]))
-    check("filter title", lambda: filt("title=DUNE", ["b1"]))
-    check("filter isbn", lambda: filt("isbn=439686", ["b3"]))
-    check("filter synopsis", lambda: filt("synopsis=love", ["b3"]))
-    check("filter id", lambda: filt(f"id={ids.get('b2', 0)}", ["b2"]))
-    check("filters combine with AND", lambda: filt("author=austen&title=emma", ["b2"]))
-    check("q searches all text fields", lambda: filt("q=planet", ["b1"]))
-    check("filter with no match -> empty list", lambda: filt("author=tolkien", []))
+    # Every filter check needs all three books: each asserts which ids come back.
+    all3 = ["b1", "b2", "b3"]
+    check("filter author substring, case-insensitive", lambda: filt("author=austen", ["b2", "b3"]), needs=all3)
+    check("filter title", lambda: filt("title=DUNE", ["b1"]), needs=all3)
+    check("filter isbn", lambda: filt("isbn=439686", ["b3"]), needs=all3)
+    check("filter synopsis", lambda: filt("synopsis=love", ["b3"]), needs=all3)
+    check("filter id", lambda: filt(f"id={ids.get('b2', 0)}", ["b2"]), needs=all3)
+    check("filters combine with AND", lambda: filt("author=austen&title=emma", ["b2"]), needs=all3)
+    check("q searches all text fields", lambda: filt("q=planet", ["b1"]), needs=all3)
+    check("filter with no match -> empty list", lambda: filt("author=tolkien", []), needs=all3)
     check("unknown query parameter -> 400", lambda: is_error(*call("GET", "/books?colour=red")[:2], 400))
 
     def put_ok():
         new = {"title": "Dune Messiah", "author": "Frank Herbert", "isbn": "9780593098233", "synopsis": ""}
         s, b, _ = call("PUT", f"/books/{ids['b1']}", new)
-        expect(s == 200 and b == {**new, "id": ids["b1"]}, f"PUT -> {s} {b!r}")
+        expect(s == 200 and fields(b) == {**new, "id": ids["b1"]}, f"PUT -> {s} {b!r}")
         s, b, _ = call("GET", f"/books/{ids['b1']}")
         expect(b.get("title") == "Dune Messiah", f"update not persisted: {b!r}")
-    check("update replaces the fields and persists", put_ok)
+    check("update replaces the fields and persists", put_ok, needs=["b1"])
 
     check("update unknown id -> 404", lambda: is_error(*call("PUT", "/books/999999", b2)[:2], 404))
-    check("update missing required field -> 400", lambda: is_error(*call("PUT", f"/books/{ids['b2']}", {"title": "X", "author": "Y"})[:2], 400))
+    check("update missing required field -> 400", lambda: is_error(*call("PUT", f"/books/{ids['b2']}", {"title": "X", "author": "Y"})[:2], 400), needs=["b2"])
     check("create missing title -> 400", lambda: is_error(*call("POST", "/books", {"author": "A", "isbn": "1"})[:2], 400))
     check("create empty author -> 400", lambda: is_error(*call("POST", "/books", {"title": "T", "author": "", "isbn": "1"})[:2], 400))
     check("create wrong type -> 400", lambda: is_error(*call("POST", "/books", {"title": 5, "author": "A", "isbn": "1"})[:2], 400))
@@ -192,13 +203,13 @@ def run_checks():
         expect(call("GET", f"/books/{ids['b3']}")[0] == 404, "deleted book still readable")
         s, b, _ = call("GET", "/books")
         expect(ids["b3"] not in [x.get("id") for x in b], "deleted book still listed")
-    check("delete returns 204 and removes the book", delete_ok)
+    check("delete returns 204 and removes the book", delete_ok, needs=["b3"])
     check("delete unknown id -> 404", lambda: is_error(*call("DELETE", "/books/999999")[:2], 404))
 
     def ids_not_reused():
         s, b, _ = call("POST", "/books", b3)
         expect(s == 201 and b.get("id") > ids["b3"], f"new id {b.get('id') if isinstance(b, dict) else b} should be greater than deleted {ids['b3']}")
-    check("ids are not reused after delete", ids_not_reused)
+    check("ids are not reused after delete", ids_not_reused, needs=["b3"])
 
 
 if __name__ == "__main__":

@@ -19,6 +19,7 @@ import { fileURLToPath } from "node:url";
 import { buildWorkflowTool } from "../lib/workflow-tool.ts";
 import { type AgentRun, passingTests, runWorkflow, type StepDir, type WorkflowEnv } from "../lib/workflow-runner.ts";
 import {
+	checkSpecFor,
 	describeCheck,
 	buildPrompt,
 	type CheckReport,
@@ -162,6 +163,7 @@ await test("required tokens are cumulative, tokenised, and include integration o
 	assert.deepEqual(requiredTokensThrough(p, "T1"), ["S1", "S4", "T1_S1"]);
 	assert.deepEqual(requiredTokensThrough(p, "T2", "implement"), ["S1", "S4", "T1_S1", "S2", "S3", "S5", "S6"]);
 	assert.deepEqual(requiredTokensThrough(p, "T2", "integrate"), ["S1", "S4", "T1_S1", "S2", "S3", "S5", "S6", "I2"]);
+	assert.equal(checkSpecFor(p, "integrate", "T2", cfg).minTests, checkSpecFor(p, "implement", "T2", cfg).minTests, "an integration step adds no test count of its own");
 	const pre = planned(true);
 	assert.deepEqual(requiredTokensThrough(pre, "T2", "implement"), ["S1", "S4", "I1", "S2", "S3", "S5", "S6"], "T1's integration is due before T2");
 });

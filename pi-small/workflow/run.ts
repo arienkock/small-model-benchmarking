@@ -300,7 +300,7 @@ if (def.grader && !args["no-grade"]) {
 	let summary = `exit ${r.status}`;
 	try {
 		const g = JSON.parse(out.trim().split("\n").pop() ?? "");
-		summary = g.startup && !g.startup.ok ? "server did not start" : `${g.passed}/${g.total} checks passed`;
+		summary = g.startup && !g.startup.ok ? "server did not start" : `${g.passed}/${g.total} checks passed${g.skipped ? ` (${g.skipped} skipped: a check they depend on failed)` : ""}`;
 	} catch {}
 	appendFileSync(join(runDir, "events.jsonl"), JSON.stringify({ ts: new Date().toISOString(), type: "grade", summary, exitCode: r.status }) + "\n");
 	log(`grader: ${summary}`);
