@@ -263,6 +263,8 @@ function startAgent(): PiRpc {
 		...(freeform ? {} : { PI_SMALL_WORKFLOW_STEP: stepFilePath }),
 		...(model ? { PI_SMALL_MODEL: model } : {}),
 		...(thinking ? { PI_SMALL_THINKING: thinking } : {}),
+		// Passed through for free-form experiments: replaces the terse style text.
+		...(process.env.PI_SMALL_STYLE !== undefined ? { PI_SMALL_STYLE: process.env.PI_SMALL_STYLE } : {}),
 	};
 	const events = join(runDir, "agent.events.jsonl");
 	const stderr = join(runDir, "agent.stderr.log");

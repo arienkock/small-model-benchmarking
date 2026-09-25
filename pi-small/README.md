@@ -166,6 +166,8 @@ with `PI_SMALL_SYSTEM_PROMPT`, or per model with roster.json `systemPrompt`.
 the override survives. These models generate at 10–14 tokens/s, so output
 tokens are the main cost. A workflow step sends its config's `systemPrompt`
 instead, which is the same text by default, or nothing when it is `""`.
+`PI_SMALL_STYLE` replaces the text in a plain session (`workflow/run.ts`
+passes it into the container), for trying variants.
 
 **The tools default to pi's own `bash`**, re-registered by the plugin rather
 than inherited, but a model's roster.json `tools` can ask for any combination

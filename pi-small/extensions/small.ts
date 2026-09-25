@@ -873,14 +873,16 @@ export default function (pi: ExtensionAPI) {
 	pi.on("before_agent_start", (event: any, ctx: any) => {
 		const override = resolveSystemPrompt(mgr.state.spec, d);
 		const base = String(override ?? event?.systemPrompt ?? "");
-		const extra = workflowStep ? workflowStep.systemPrompt?.trim() : TERSE_STYLE;
+		// PI_SMALL_STYLE replaces the terse style text in a plain session (an
+		// experiment knob; "" = none).
+		const extra = workflowStep ? workflowStep.systemPrompt?.trim() : (process.env.PI_SMALL_STYLE ?? TERSE_STYLE).trim();
 		const effective = extra ? (base.trim() ? `${base.trimEnd()}\n\n${extra}` : extra) : base;
 		// pi does not persist the system prompt in its session record, so the
 		// only proof of what a session was actually given is what we log here.
 		const hash = createHash("sha256").update(effective).digest("hex").slice(0, 12);
 		if (hash !== lastPromptHash) {
 			lastPromptHash = hash;
-			const source = (override !== undefined ? "roster systemPrompt" : "PI_SMALL_SYSTEM_PROMPT / pi default") + (extra ? (workflowStep ? " + workflow systemPrompt" : " + terse style") : "");
+			const source = (override !== undefined ? "roster systemPrompt" : "PI_SMALL_SYSTEM_PROMPT / pi default") + (extra ? (workflowStep ? " + workflow systemPrompt" : process.env.PI_SMALL_STYLE !== undefined ? " + PI_SMALL_STYLE" : " + terse style") : "");
 			sessionLog.write({ type: "system_prompt", model: mgr.state.spec.alias, source, chars: effective.length, sha256: hash });
 			if (ctx) say(ctx, `pi-small: system prompt — ${source}, ${effective.length} chars, sha256 ${hash}`, "info");
 		}
