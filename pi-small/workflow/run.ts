@@ -7,6 +7,7 @@
  *   node workflow/run.ts --task … --model … --local        # no docker: pi runs here (development)
  *   node workflow/run.ts --resume --run-dir workflow-runs/<dir>
  *   node workflow/run.ts --task … --models A,B --review completeness,correctness --seed-ws some/existing-code
+ *   node workflow/run.ts --task … --models A,B --fix --seed-ws some/existing-code --config workflow/configs/fix-loop.json
  *
  * The harness is task-agnostic; everything about a particular task — its text,
  * how to run its tests, extra checks, a grader, starting code — comes from the
@@ -42,6 +43,12 @@
  *                      staged workflow: every model in --models reviews the workspace
  *                      once per listed variant (keys of REVIEW_VARIANTS — completeness,
  *                      correctness, fidelity, all). No --resume, no grader.
+ *   --fix              run the fix loop (../lib/fix-loop.ts) on the workspace instead of the
+ *                      staged workflow: probe (the task's checks + config.fixChecks) →
+ *                      review → fix, until only low-priority findings remain. --models
+ *                      is the fixer rotation. No --resume; graded like a workflow run.
+ *   --reviewers A,B    --fix: the reviewer rotation (default: --models)
+ *   --review-variant V --fix: the review prompt (default "all")
  *   --no-grade         skip the task's grader (ignored with --review; it never grades)
  *   --no-serve         do not start a proxy: one must already answer on --port
  *   --local            run pi (and the grader) here instead of in the container
@@ -54,6 +61,7 @@
  *   run.json, run-spec.json   what was asked for; what the plugin was given
  *   state.json, spec.md       the workflow state (--resume reads it); the enriched task
  *   reviews.json               --review only: one ReviewResult per model/variant/repeat
+ *   fix-loop.json              --fix only: every round's probe, review, selection and fixes
  *   events.jsonl, workflow.log    every step, session and check, with timings
  *   agent.events.jsonl / agent.stderr.log   the pi process's RPC events and stderr
  *   proxy.log                 the host proxy, when this script started it
@@ -72,6 +80,7 @@ import { appendFileSync, cpSync, existsSync, mkdirSync, openSync, readdirSync, r
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { proxyStatus } from "../lib/proxy-client.ts";
+import { countByPriority, type FixLoopResult } from "../lib/fix-loop.ts";
 import { REVIEW_VARIANTS, type ReviewResult } from "../lib/review.ts";
 import type { RunSpec } from "../lib/workflow-command.ts";
 import { DEFAULT_CONFIG, mergeConfig, profileOf, type TaskDefinition, taskDefinitionErrors, type WorkflowState } from "../lib/workflow.ts";
@@ -87,7 +96,7 @@ function parseArgs(argv: string[]) {
 		const a = argv[i];
 		if (!a.startsWith("--")) throw new Error(`unexpected argument ${a}`);
 		const key = a.slice(2);
-		if (["no-serve", "no-build", "build", "resume", "help", "no-grade", "local"].includes(key)) o[key] = true;
+		if (["no-serve", "no-build", "build", "resume", "help", "no-grade", "local", "fix"].includes(key)) o[key] = true;
 		else o[key] = argv[++i] ?? "";
 	}
 	return o;
@@ -114,6 +123,14 @@ const reviewVariants = args.review ? (args.review as string).split(",").map((v) 
 const unknownVariants = reviewVariants.filter((v) => !(v in REVIEW_VARIANTS));
 if (unknownVariants.length) throw new Error(`--review: unknown variant(s) ${unknownVariants.join(", ")} — one of ${Object.keys(REVIEW_VARIANTS).join(", ")}`);
 const reviewMode = reviewVariants.length > 0;
+const fixMode = !!args.fix;
+const reviewers = args.reviewers ? (args.reviewers as string).split(",").map((m) => m.trim()).filter(Boolean) : rotation;
+const reviewVariant = (args["review-variant"] as string) || "all";
+if (fixMode) {
+	if (reviewMode || args.resume) throw new Error("--fix cannot be combined with --review or --resume");
+	if (!rotation.length) throw new Error("--fix needs --models (the fixer rotation)");
+	if (!(reviewVariant in REVIEW_VARIANTS)) throw new Error(`--review-variant: unknown variant ${reviewVariant} — one of ${Object.keys(REVIEW_VARIANTS).join(", ")}`);
+}
 
 mkdirSync(join(runDir, "steps"), { recursive: true });
 mkdirSync(ws, { recursive: true });
@@ -133,7 +150,9 @@ const taskDir = dirname(taskJson);
 const def: TaskDefinition = JSON.parse(readFileSync(taskJson, "utf8"));
 const defErrors = taskDefinitionErrors(def);
 if (defErrors.length) throw new Error(`${taskJson}:\n- ${defErrors.join("\n- ")}`);
-const config = mergeConfig(mergeConfig(DEFAULT_CONFIG, def.config ?? {}), args.config ? JSON.parse(readFileSync(args.config as string, "utf8")) : {});
+const loadedConfig = mergeConfig(mergeConfig(DEFAULT_CONFIG, def.config ?? {}), args.config ? JSON.parse(readFileSync(args.config as string, "utf8")) : {});
+// Check commands name the plugin by its container path; --local runs them here.
+const config = local ? JSON.parse(JSON.stringify(loadedConfig).replaceAll("/opt/pi-small", PLUGIN_DIR)) : loadedConfig;
 
 let task = "";
 if (state) {
@@ -287,6 +306,7 @@ const runSpec: RunSpec = {
 	deadline,
 	state,
 	review: reviewMode ? { variants: reviewVariants } : undefined,
+	fix: fixMode ? { reviewers, fixers: rotation, variant: reviewVariant } : undefined,
 };
 writeFileSync(join(runDir, "run-spec.json"), JSON.stringify(runSpec, null, 2));
 
@@ -324,8 +344,23 @@ if (reviewMode) {
 	// review changes no files. (--no-grade is a no-op here, not an error.)
 	exitCode = reviews.length > 0 ? 0 : 1;
 } else {
-	const final: WorkflowState | null = existsSync(join(runDir, "state.json")) ? JSON.parse(readFileSync(join(runDir, "state.json"), "utf8")) : null;
-	log(`workflow ${final?.status?.toUpperCase() ?? "DID NOT START"} after ${((Date.now() - t0) / 60_000).toFixed(1)} min${final?.failure ? ` — ${final.failure.split("\n")[0]}` : ""}`);
+	let ok: boolean;
+	if (fixMode) {
+		const p = join(runDir, "fix-loop.json");
+		const result: FixLoopResult | null = existsSync(p) ? JSON.parse(readFileSync(p, "utf8")) : null;
+		log(`fix loop ${result?.status?.toUpperCase() ?? "DID NOT START"} after ${((Date.now() - t0) / 60_000).toFixed(1)} min${result ? `, ${result.rounds.length} round(s)` : ""}`);
+		for (const r of result?.rounds ?? []) {
+			const source = r.machineFindings.length ? `probe: ${r.machineFindings.length} finding(s)` : r.review ? `review (${r.review.model}): ${r.review.ok ? countByPriority(r.review.findings) : "no submission"}` : "no review";
+			const fixes = r.fixes.map((f) => `${f.model ?? "?"} ${f.ok ? "ok" : "FAILED"}`).join(", ");
+			log(`  round ${r.round}: ${source}${r.selected.length ? `; fixing ${r.selected.length}: ${fixes || "not attempted"}` : ""}`);
+		}
+		if (result) log(`  remaining: ${countByPriority(result.remaining)}`);
+		ok = result?.status === "clean";
+	} else {
+		const final: WorkflowState | null = existsSync(join(runDir, "state.json")) ? JSON.parse(readFileSync(join(runDir, "state.json"), "utf8")) : null;
+		log(`workflow ${final?.status?.toUpperCase() ?? "DID NOT START"} after ${((Date.now() - t0) / 60_000).toFixed(1)} min${final?.failure ? ` — ${final.failure.split("\n")[0]}` : ""}`);
+		ok = final?.status === "completed";
+	}
 
 	// ------------------------------------------------------------- the grader --
 
@@ -346,7 +381,7 @@ if (reviewMode) {
 		appendFileSync(join(runDir, "events.jsonl"), JSON.stringify({ ts: new Date().toISOString(), type: "grade", summary, exitCode: r.status }) + "\n");
 		log(`grader: ${summary}`);
 	}
-	exitCode = final?.status === "completed" ? 0 : 1;
+	exitCode = ok ? 0 : 1;
 }
 
 if (proxyProc) {

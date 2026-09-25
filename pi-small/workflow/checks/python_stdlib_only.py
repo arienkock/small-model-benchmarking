@@ -22,14 +22,15 @@ def main():
     local = set()
     for root, dirs, files in os.walk(ws):
         dirs[:] = [d for d in dirs if d not in SKIP_DIRS and not d.startswith(".")]
-        local.update(f[:-3] for f in files if f.endswith(".py"))
+        local.update(f[:-3] for f in files if f.endswith(".py") and not f.startswith("._"))
         local.update(dirs)
     allowed = set(sys.stdlib_module_names) | local | {"__future__"}
     bad = []
     for root, dirs, files in os.walk(ws):
         dirs[:] = [d for d in dirs if d not in SKIP_DIRS and not d.startswith(".")]
         for f in files:
-            if not f.endswith(".py"):
+            # ._x.py: macOS AppleDouble metadata a tar from a Mac leaves behind, not code.
+            if not f.endswith(".py") or f.startswith("._"):
                 continue
             path = os.path.join(root, f)
             rel = os.path.relpath(path, ws).replace(os.sep, "/")
@@ -37,6 +38,9 @@ def main():
                 tree = ast.parse(open(path, encoding="utf-8", errors="replace").read(), rel)
             except SyntaxError as e:
                 bad.append(f"{rel}: syntax error on line {e.lineno}")
+                continue
+            except ValueError as e:  # e.g. null bytes: not Python source at all
+                bad.append(f"{rel}: not Python source ({e})")
                 continue
             for node in ast.walk(tree):
                 mods = [a.name for a in node.names] if isinstance(node, ast.Import) else (

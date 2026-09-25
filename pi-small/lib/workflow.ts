@@ -49,13 +49,15 @@ export interface WfTask {
 }
 
 /**
- * "review" is not a step of the staged (scenarios → … → integrate) workflow:
- * it is the standalone review-only experiment (../lib/review.ts), which reuses
- * this same step-file / submit-tool machinery (a step file on disk, one submit
- * tool the plugin registers, the host re-validating whatever came back) rather
- * than duplicating it. It never appears in `nextStep`/`applySubmission` below.
+ * "review" and "fix" are not steps of the staged (scenarios → … → integrate)
+ * workflow: "review" is the standalone review-only experiment
+ * (../lib/review.ts) and "fix" the fix loop's coding session
+ * (../lib/fix-loop.ts). Both reuse this same step-file / submit-tool machinery
+ * (a step file on disk, one submit tool the plugin registers, the host
+ * re-validating whatever came back) rather than duplicating it. Neither
+ * appears in `nextStep`/`applySubmission` below.
  */
-export type StepKind = "scenarios" | "breakdown" | "task_plan" | "implement" | "integrate" | "review";
+export type StepKind = "scenarios" | "breakdown" | "task_plan" | "implement" | "integrate" | "review" | "fix";
 
 export const STEP_TOOL: Record<StepKind, string> = {
 	scenarios: "submit_scenarios",
@@ -64,6 +66,7 @@ export const STEP_TOOL: Record<StepKind, string> = {
 	implement: "report_done",
 	integrate: "report_done",
 	review: "submit_findings",
+	fix: "report_done",
 };
 
 /** Which tools a step's session gets besides its submit tool. */
@@ -74,6 +77,7 @@ export const STEP_TOOLSET: Record<StepKind, "planning" | "coding"> = {
 	implement: "coding",
 	integrate: "coding",
 	review: "planning",
+	fix: "coding",
 };
 
 export interface WorkflowConfig {
@@ -148,6 +152,31 @@ export interface WorkflowConfig {
 	 */
 	reviewContinuations?: number;
 	/**
+	 * The fix loop (../lib/fix-loop.ts): at most this many fix rounds, each
+	 * "probe → (review) → fix", plus one last probe and review to see where
+	 * things ended up.
+	 */
+	fixRounds?: number;
+	/**
+	 * Findings handed to one fix session, most important first. Small models
+	 * lose track of a long list; the rest wait for the next round.
+	 */
+	fixBatch?: number;
+	/**
+	 * Fix sessions per round (next model in the rotation each time, workspace
+	 * reverted to the round's start in between) before the loop gives up as
+	 * "stuck": the next round would only select the same findings again.
+	 */
+	fixAttempts?: number;
+	/**
+	 * Checks the fix loop runs at the start of every round on top of the task's
+	 * own (profile.checks), e.g. workflow/checks/http_fuzz.py. Their failures
+	 * become findings, not a gate: a fix session only has to keep the suite and
+	 * the task's own checks passing. A check whose output has "FAIL" lines gives
+	 * one finding per FAIL block.
+	 */
+	fixChecks?: Array<{ name: string; command: string }>;
+	/**
 	 * What a retried coding step starts from:
 	 *   keep   the previous attempt's files, and its failure as feedback
 	 *   reset  the workspace as it was when the step started, and no feedback: the
@@ -182,6 +211,9 @@ export const DEFAULT_CONFIG: WorkflowConfig = {
 	feedback: "minimal",
 	retryWorkspace: "keep",
 	reviewContinuations: 1,
+	fixRounds: 4,
+	fixBatch: 3,
+	fixAttempts: 2,
 };
 
 export function mergeConfig(base: WorkflowConfig, over: any): WorkflowConfig {
@@ -527,6 +559,7 @@ export function validateSubmission(step: Pick<StepFile, "kind" | "taskId" | "con
 			return validateTaskPlan(args, step.config, step.taskId ?? "T?");
 		case "implement":
 		case "integrate":
+		case "fix":
 			return validateDone(args);
 		default:
 			return { ok: false, errors: [`no validator for step kind "${step.kind}".`] };

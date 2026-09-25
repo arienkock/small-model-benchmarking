@@ -166,6 +166,53 @@ test/review-e2e.ts [--local]` is the real thing, the same way
 under two variants, asserting the scripted findings AND that the workspace is
 still byte-for-byte the seed afterwards.
 
+## The fix loop
+
+Fixes an EXISTING workspace until only low-priority findings remain.
+`../lib/fix-loop.ts` (`runFixLoop`) drives it, not the staged workflow:
+
+    node workflow/run.ts --task tasks/books-api --models A,B --fix \
+        --seed-ws path/to/existing/code --config workflow/configs/fix-loop.json
+
+Each round:
+
+1. **Probe.** `check.py` runs the task's suite and checks, plus
+   `config.fixChecks` (`configs/fix-loop.json` adds `checks/http_fuzz.py`).
+   A failing suite is one high-priority finding; a failing check is one finding
+   per `FAIL` block in its output (the fuzzer prints one per crash site).
+2. **Review**, only when the probe found nothing: one reviewer session
+   (`reviewSession` in `lib/review.ts`, with the wrap-up nudge and
+   continuations), with the `--review-variant` prompt (default `all`), told
+   that the machine checks already pass. The workspace is restored afterwards.
+3. **Fix.** Nothing high or medium left: the loop ends `clean`. Otherwise the
+   top `config.fixBatch` findings go to one coding session (step kind `fix`,
+   `report_done`). The host then re-runs the **gate**: the suite, with no
+   fewer tests than the first probe found, and the task's own checks — not
+   `fixChecks`, whose failures are findings, not a bar. A failed attempt is
+   reverted to the round's start, and the next model in `--models` retries
+   with the same findings plus the check's verdict, up to `config.fixAttempts`
+   times; then the loop stops `stuck`.
+
+After `config.fixRounds` fixes, a last probe and review record where things
+ended up (`rounds_exhausted`). Other end states: `no_review` (no reviewer in
+`--reviewers`, default `--models`, submitted) and `stopped` (`--deadline`).
+`fix-loop.json` in the run directory has every round: the probe, the review,
+what was selected, and each fix attempt. The run is graded like a workflow run,
+and `run.ts` exits 0 only when the loop ends `clean`.
+
+Why this order: in the 2026-09-25 review experiment
+(`../../pi-small-review-scoring-20260925.md`), the fuzzer found every crash in
+the workspace in 6 s with no model, while the reviewers were needed for
+spec-level defects (a 404 where the task says 400, a field that is never
+type-checked).
+
+Tests: `node test/fix-loop-test.ts` covers the control flow against a fake
+`WorkflowEnv`. `node test/fix-e2e.ts [--local]` runs it for real with a scripted
+model (`test/fixtures/fix-script.mjs`) on `books-reference` with one crash put
+back in. It covers the fuzzer finding the crash, a broken first fix that is
+reverted, the retry on the next model, a review finding that gets fixed, and
+the end state `clean`, graded 28/28.
+
 ## The run directory
 
     workflow-runs/<timestamp>-<model>/
@@ -185,6 +232,8 @@ still byte-for-byte the seed afterwards.
         check.json    what check.py was asked to verify
         out.json      what the submit tool recorded (accepted or not, refusals)
         check-report-*.json   the host's own check runs
+      reviews.json    --review: one ReviewResult per model/variant/repeat
+      fix-loop.json   --fix: every round's probe, review, selection and fix attempts
       grade.json      the task grader's output, if it has one
       home/           the agent's HOME: pi's session files and pi-small's session
                       logs, kept out of the workspace so a model listing it does
@@ -202,8 +251,10 @@ still byte-for-byte the seed afterwards.
 | `../lib/workflow.ts` | steps, validators, spec rendering, prompts. No I/O |
 | `../lib/workflow-runner.ts` | the loop: fresh attempts, feedback, deadline, stop. I/O through an interface |
 | `../lib/workflow-tool.ts` | the submit tool the plugin registers in the container |
+| `../lib/review.ts` | review-only runs, and the one review session the fix loop also uses |
+| `../lib/fix-loop.ts` | the fix loop: probe → review → fix, until only low-priority findings remain |
 | `check.py` | the harness's verdict on a workspace (runs in the sandbox) |
-| `checks/` | reusable task checks a task.json may opt into (e.g. Python stdlib-only) |
+| `checks/` | reusable checks: Python stdlib-only, and `http_fuzz.py`, a spec-agnostic crash fuzzer for `http.server` apps |
 | `tasks/<name>/` | pluggable tasks: `task.json`, the prompt, the grader. See `tasks/README.md` |
 
 Tests:

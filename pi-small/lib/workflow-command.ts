@@ -27,6 +27,7 @@ import { join } from "node:path";
 import { type ProxyEndpoint, proxySwitch } from "./proxy-client.ts";
 import { restoreWorkspace, snapshotWorkspace } from "./workspace-snapshot.ts";
 import { loadRoster, resolveThinking } from "./roster.ts";
+import { countByPriority, runFixLoop } from "./fix-loop.ts";
 import { runReviews } from "./review.ts";
 import { type AgentRun, runWorkflow, type SessionLimits, type StepDir, type WorkflowEnv, type WrapUp } from "./workflow-runner.ts";
 import { type CheckReport, type CheckSpec, renderSpec, type TaskProfile, type WorkflowConfig, type WorkflowState } from "./workflow.ts";
@@ -51,6 +52,11 @@ export interface RunSpec {
 	 * workspace, snapshotted once at the start.
 	 */
 	review?: { variants: string[]; repeats?: number };
+	/**
+	 * Set: this run is the fix loop (../lib/fix-loop.ts) on the existing
+	 * workspace — runFixLoop() drives it. Its record is fix-loop.json.
+	 */
+	fix?: { reviewers: string[]; fixers: string[]; variant?: string };
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -290,6 +296,29 @@ async function runInProcess(spec: RunSpec, startCtx: any, proxy: ProxyEndpoint, 
 		log(`review COMPLETED after ${minutes} min, ${results.length} session(s)`);
 		try {
 			say(cur, `review completed after ${minutes} min, ${results.length} session(s)`);
+		} catch {}
+		return;
+	}
+
+	if (spec.fix) {
+		env.event({ type: "workflow_start", fix: spec.fix, inProcess: true });
+		log(`fix loop: fixers ${spec.fix.fixers.join(" → ")}, reviewers ${spec.fix.reviewers.join(" → ")}`);
+		const result = await runFixLoop(env, {
+			config: spec.config,
+			task: spec.task,
+			profile: spec.profile,
+			reviewers: spec.fix.reviewers,
+			fixers: spec.fix.fixers,
+			variant: spec.fix.variant,
+			deadline: spec.deadline,
+		});
+		writeFileSync(join(runDir, "fix-loop.json"), JSON.stringify(result, null, 2));
+		const minutes = Number(((Date.now() - t0) / 60_000).toFixed(1));
+		// "completed" for the end marker run.ts waits on; the loop's own verdict is fixStatus.
+		env.event({ type: "workflow_end", status: "completed", fixStatus: result.status, minutes });
+		log(`fix loop ${result.status.toUpperCase()} after ${minutes} min, ${result.rounds.length} round(s); remaining: ${countByPriority(result.remaining)}`);
+		try {
+			say(cur, `fix loop ${result.status} after ${minutes} min`);
 		} catch {}
 		return;
 	}

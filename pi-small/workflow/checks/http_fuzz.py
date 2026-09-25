@@ -34,8 +34,8 @@ read the body (a reset on some platforms). Any 2xx/3xx/4xx is accepted, so "404 
 400" is out of scope — that takes a spec.
 
 Prints one entry per distinct failure (same exception at the same line counts
-once) with up to three requests that caused it, one per distinct message,
-simplest first; then, per source file, which lines inside functions no
+once; at most MAX_SHOWN of them) with up to three requests that caused it, one
+line each, one per distinct message, simplest first; then, per source file, which lines inside functions no
 request reached — often dead code, or a branch that needs a state the
 requests never set up. Exit 1 when anything failed.
 """
@@ -59,6 +59,12 @@ MUTANTS = [("missing", None), ("null", None), ("empty", ""), ("blank", " "), ("n
 SEGMENTS = ["{id}", "999999", "0", "-1", "abc", "1.5", "", "%20", "{id}/extra"]
 QUERY_VALUES = ["abc", "1", "", "0", "-1", "1.5", "%zz"]
 NON_OBJECT_BODIES = ["[]", '"text"', "1", "null", "true", "{", "", "not json"]
+MAX_SHOWN = 10
+
+
+def clip(text, n=200):
+    text = str(text).replace("\n", " ")
+    return text if len(text) <= n else text[: n - 1] + "…"
 
 
 SKIP_DIRS = {".home", ".workflow", "__pycache__", ".git", "node_modules", ".venv", "venv"}
@@ -69,8 +75,9 @@ def source_files(ws):
     out = []
     for root, dirs, files in os.walk(ws):
         dirs[:] = [d for d in dirs if d not in SKIP_DIRS and not d.startswith(".") and not d.startswith("test")]
+        # ._x.py: macOS AppleDouble metadata a tar from a Mac leaves behind, not code.
         out += [os.path.join(root, f) for f in files
-                if f.endswith(".py") and not f.startswith("test_") and not f.endswith("_test.py")]
+                if f.endswith(".py") and not f.startswith(("test_", "._")) and not f.endswith("_test.py")]
     return sorted(out)
 
 
@@ -117,7 +124,7 @@ def harvest(paths):
     for path in paths:
         try:
             tree = ast.parse(open(path, encoding="utf-8", errors="replace").read())
-        except SyntaxError:
+        except (SyntaxError, ValueError):
             continue
         for n in ast.walk(tree):
             s = strconst(n)
@@ -315,10 +322,15 @@ def main():
             req("DELETE", p)
 
     target.server.shutdown()
-    for text, examples in failures.values():
+    # Compact on purpose: check.py keeps only the tail of a check's output, and
+    # the harness turns each FAIL block into one finding (lib/fix-loop.ts).
+    shown_failures = list(failures.values())[:MAX_SHOWN]
+    for text, examples in shown_failures:
         print(f"FAIL  {text}")
         for example, shown in examples.items():
-            print(f"      {shown}\n        -> {example}")
+            print(f"      {clip(shown)}  ->  {clip(example, 160)}")
+    if len(failures) > MAX_SHOWN:
+        print(f"... and {len(failures) - MAX_SHOWN} more distinct failure(s)")
     stop_coverage()
     print(f"{len(failures)} distinct failure(s) from {sent} requests to {served_by}; "
           f"methods {','.join(methods)}; routes {routes}; names {names}")
@@ -328,7 +340,7 @@ def main():
         src = open(path, encoding="utf-8", errors="replace").read()
         try:
             top = compile(src, path, "exec")
-        except SyntaxError:
+        except (SyntaxError, ValueError):
             continue
         lines, stack = set(), [k for k in top.co_consts if hasattr(k, "co_lines")]
         while stack:

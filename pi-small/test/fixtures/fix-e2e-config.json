@@ -1,0 +1,13 @@
+{
+	"stepTimeoutMin": 2,
+	"testTimeoutSec": 60,
+	"maxTurns": 10,
+	"feedback": "failures",
+	"codingTools": ["bash", "edit"],
+	"fixRounds": 3,
+	"fixBatch": 3,
+	"fixAttempts": 2,
+	"fixChecks": [
+		{ "name": "HTTP server survives malformed requests", "command": "python3 /opt/pi-small/workflow/checks/http_fuzz.py" }
+	]
+}

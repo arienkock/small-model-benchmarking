@@ -164,7 +164,7 @@ def main():
     checks = []
     for c in spec.get("checks", []):
         rc, out = run(c["command"], ws, 120)
-        checks.append({"name": c["name"], "ok": rc == 0, "tail": tail(out, 20)})
+        checks.append({"name": c["name"], "ok": rc == 0, "tail": tail(out, 60)})
         if rc != 0:
             problems.append(f'the "{c["name"]}" check failed' + (" (timed out)" if rc is None else "") + f" (`{c['command']}`).")
 

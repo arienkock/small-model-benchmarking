@@ -1,0 +1,14 @@
+{
+	"_about": "The fix loop (lib/fix-loop.ts) on an existing workspace: the crash fuzzer is a probe, not a gate; one reviewer session per clean probe (wrap-up nudge + one continuation); at most 3 findings per fix session, 2 fix attempts per round, 4 rounds. Session limits as in the 2026-09-24/25 rotation runs (10 turns, 15 minutes, bash + edit for coding).",
+	"maxTurns": 10,
+	"stepTimeoutMin": 15,
+	"feedback": "failures",
+	"codingTools": ["bash", "edit"],
+	"reviewContinuations": 1,
+	"fixRounds": 4,
+	"fixBatch": 3,
+	"fixAttempts": 2,
+	"fixChecks": [
+		{ "name": "HTTP server survives malformed requests", "command": "python3 /opt/pi-small/workflow/checks/http_fuzz.py" }
+	]
+}
