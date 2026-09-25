@@ -16,6 +16,7 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { buildReviewPrompt, runReviews, validateFindings } from "../lib/review.ts";
 import { buildWorkflowTool } from "../lib/workflow-tool.ts";
 import { type AgentRun, passingTests, runWorkflow, type StepDir, type WorkflowEnv } from "../lib/workflow-runner.ts";
 import {
@@ -671,6 +672,83 @@ await test("tool: report_done refuses while check.py fails, accepts once it pass
 	} finally {
 		process.chdir(cwd);
 	}
+});
+
+// -------------------------------------------------------------- review --
+
+await test("validateFindings: a valid submission, an empty list, and each bad field named", () => {
+	const good = validateFindings({ findings: [{ priority: "High", title: "off by one", where: "a.py:10", detail: "loop excludes the last item" }] });
+	assert.ok(good.ok, JSON.stringify(good));
+	assert.deepEqual(good.value, [{ priority: "high", title: "off by one", where: "a.py:10", detail: "loop excludes the last item" }]);
+
+	const empty = validateFindings({ findings: [] });
+	assert.ok(empty.ok && empty.value.length === 0, "an empty list is a valid submission — nothing found is a real answer");
+
+	const badPriority = validateFindings({ findings: [{ priority: "urgent", title: "x" }] });
+	assert.ok(!badPriority.ok);
+	assert.match(badPriority.errors.join("\n"), /finding 1: "priority" must be high, medium or low \(got "urgent"\)/);
+
+	const noTitle = validateFindings({ findings: [{ priority: "low", title: "" }] });
+	assert.ok(!noTitle.ok);
+	assert.match(noTitle.errors.join("\n"), /finding 1: "title" is required/);
+
+	const tooMany = validateFindings({ findings: Array.from({ length: 21 }, (_, i) => ({ priority: "low", title: `t${i}` })) });
+	assert.ok(!tooMany.ok);
+	assert.match(tooMany.errors.join("\n"), /at most 20 findings, got 21/);
+});
+
+await test("buildReviewPrompt: the variant's line and the task, not the staged workflow's plan", () => {
+	const p = buildReviewPrompt("Build a books API.", "correctness");
+	assert.match(p, /Review the code for correctness: does it work, and is it free of bugs\?/);
+	assert.match(p, /## The task\n\nBuild a books API\./);
+	assert.doesNotMatch(p, /## Implementation plan/, "a review prompt carries no staged-workflow spec");
+	assert.doesNotMatch(p, /completeness|fidelity/i, "only the asked-for variant's line is included");
+});
+
+await test("runReviews: every model x variant is a fresh session against the restored start; a silent session is recorded unsubmitted", async () => {
+	const calls: string[] = [];
+	const events: any[] = [];
+	const outs = new Map<string, any>();
+	const env: WorkflowEnv = {
+		checkScript: "/check.py",
+		prepareStep: (label) => ({ name: label, out: `/h/${label}/out.json`, checkSpecPath: `/h/${label}/check.json` }),
+		writeStepFile: () => {},
+		async runAgent(dir): Promise<AgentRun> {
+			// Every session submits one finding, except fidelity/B, which ends silently.
+			if (!(dir.name.includes("fidelity") && dir.name.endsWith("-B"))) {
+				outs.set(dir.name, { accepted: true, args: { findings: [{ priority: "high", title: "x", where: "", detail: "" }] } });
+			}
+			return { exitCode: 0, timedOut: false, durationMs: 3, turns: 2 };
+		},
+		readOut: (dir) => outs.get(dir.name) ?? null,
+		async runCheck() {
+			throw new Error("runReviews must never run the harness's checks");
+		},
+		saveState: () => {},
+		event: (e) => events.push(e),
+		snapshotWorkspace: (k) => calls.push(`snapshot ${k}`),
+		restoreWorkspace: (k) => calls.push(`restore ${k}`),
+	};
+	const results = await runReviews(env, { config: DEFAULT_CONFIG, task: "x", variants: ["completeness", "fidelity"], models: ["A", "B"] });
+	assert.equal(results.length, 4, "2 models x 2 variants x 1 repeat");
+	assert.deepEqual(
+		results.map((r) => `${r.model}/${r.variant}`),
+		["A/completeness", "A/fidelity", "B/completeness", "B/fidelity"],
+		"model outer, variant inner",
+	);
+	assert.equal(calls.filter((c) => c === "snapshot review-start").length, 1, "the workspace is snapshotted once");
+	assert.equal(calls.filter((c) => c === "restore review-start").length, 4, "restored before every session, including the first");
+
+	const silent = results.find((r) => r.model === "B" && r.variant === "fidelity")!;
+	assert.equal(silent.ok, false);
+	assert.deepEqual(silent.findings, []);
+	assert.match(silent.detail!, /ended without a successful call to `submit_findings`/);
+
+	for (const r of results.filter((r) => r !== silent)) {
+		assert.ok(r.ok, JSON.stringify(r));
+		assert.deepEqual(r.findings, [{ priority: "high", title: "x", where: "", detail: "" }]);
+	}
+	assert.ok(events.some((e) => e.type === "review_run" && e.step === silent.step && e.ok === false));
 });
 
 console.log(`\n${passed} workflow tests passed`);

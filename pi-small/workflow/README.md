@@ -116,6 +116,56 @@ first run spent 78 of its 85 minutes generating. Set it to `""` in a task's
 Defaults are in `DEFAULT_CONFIG` (`lib/workflow.ts`); override them with
 `--config file.json`.
 
+## Review-only runs
+
+A separate experiment from the staged workflow above: instead of building
+something, N models each review an EXISTING workspace against the task text
+and submit prioritised findings, no fixing. `../lib/review.ts` (`runReviews`)
+drives it in place of `../lib/workflow-runner.ts`'s `runWorkflow`; it shares
+everything else — the same `run.ts`, the same in-plugin step-file/submit-tool
+machinery (`../lib/workflow-command.ts`, `../lib/workflow-tool.ts`), the same
+`WorkflowEnv`. There is no state to accumulate across steps and no pass/fail
+check to retry against: every (model, variant, repeat) combination is one
+independent, fresh session against the SAME starting workspace.
+
+    node workflow/run.ts --task workflow/tasks/books-api --models Granite-4.2-3B-Q8_0,LFM2.5-2.6B-Q8_0 \
+        --review completeness,correctness --seed-ws path/to/an/existing/implementation
+
+- `--review v1,v2,…` turns the run into a review instead of the staged
+  workflow. Each name is a key of `REVIEW_VARIANTS` (`completeness`,
+  `correctness`, `fidelity`, or `all`, which asks about all three in one
+  session) — an unknown name is rejected before anything starts.
+- `--seed-ws DIR` copies an existing implementation into the workspace before
+  the run starts (`__pycache__` skipped) — the code under review. Without it
+  the workspace is whatever `--ws` already holds, or the task's own `seed`.
+- `--models A,B,C` is the reviewer roster here, not a failure-triggered
+  rotation: EVERY model reviews EVERY variant. A single `--model A` still
+  works — the run just has one reviewer.
+- The workspace is snapshotted once at the start and restored before every
+  session, so one reviewer's stray edit can never leak into the next one's
+  read of the code. The default tool set (`WorkflowConfig.reviewTools`,
+  `["bash", "read"]`) lets a reviewer run the tests and the app to check a
+  claim rather than only guess from reading — the restore is what actually
+  keeps the workspace honest, not the absence of write tools.
+- No `--resume`, no retries, no grader: a session either submits through
+  `submit_findings` (validated by `validateFindings` in `lib/review.ts`) or it
+  doesn't, and that is the recorded result either way — see `reviews.json`
+  below. `--no-grade` is a no-op in this mode; there is nothing to grade.
+- The run directory carries `reviews.json` (a `ReviewResult[]`, one per
+  model/variant/repeat) instead of `state.json`, and its steps are named
+  `steps/NN-review-<variant>-<model>/`. `run.ts` still waits on the same
+  `workflow_end` marker in `events.jsonl`, so `--review` needed no change to
+  that wait loop — only to what happens after it.
+
+Tests: `node test/workflow-test.ts` covers `validateFindings`,
+`buildReviewPrompt` and `runReviews`'s (model × variant × repeat) loop against
+a fake `WorkflowEnv`, the same way it covers the staged workflow. `node
+test/review-e2e.ts [--local]` is the real thing, the same way
+`workflow-e2e.ts` is: `run.ts`, the proxy, one pi process, two scripted models
+(`test/fixtures/review-script.mjs`) each reviewing `test/fixtures/books-reference`
+under two variants, asserting the scripted findings AND that the workspace is
+still byte-for-byte the seed afterwards.
+
 ## The run directory
 
     workflow-runs/<timestamp>-<model>/

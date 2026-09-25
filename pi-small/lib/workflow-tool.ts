@@ -22,6 +22,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { Type } from "typebox";
+import { validateFindings } from "./review.ts";
 import { type CheckReport, describeCheck, type StepFile, unwrapArgs, validateScenarios, validateSubmission } from "./workflow.ts";
 
 export function loadStepFile(path = process.env.PI_SMALL_WORKFLOW_STEP): StepFile | null {
@@ -79,6 +80,23 @@ const PARAMS: Record<string, any> = {
 		{ additionalProperties: true },
 	),
 	report_done: Type.Object({ summary: Type.String({ description: "one or two sentences on what you did" }) }, { additionalProperties: true }),
+	submit_findings: Type.Object(
+		{
+			findings: Type.Array(
+				Type.Object(
+					{
+						priority: Type.String({ description: '"high", "medium" or "low"' }),
+						title: Type.String({ description: "short name of the finding" }),
+						where: Type.String({ description: "the file or place it is about, if any" }),
+						detail: Type.String({ description: "what is wrong and why it matters" }),
+					},
+					{ additionalProperties: true },
+				),
+				{ description: "the findings, most important first; an empty list if you found nothing" },
+			),
+		},
+		{ additionalProperties: true },
+	),
 };
 
 const DESCRIPTIONS: Record<string, string> = {
@@ -86,6 +104,7 @@ const DESCRIPTIONS: Record<string, string> = {
 	submit_breakdown: "Submit the ordered list of implementation tasks. Ends this step when accepted.",
 	submit_task_plan: "Submit this task's verification scenarios and implementation logic. Ends this step when accepted.",
 	report_done: "Report that this step is finished. The harness first runs its own checks (the whole test suite, a test for every scenario, the task's own checks) and refuses if they fail.",
+	submit_findings: "Submit your review findings, most important first, in one call. Use an empty list if you found nothing. Ends this step when accepted.",
 };
 
 /** Run check.py the way the host does, but in this container, on the live workspace. */
@@ -154,6 +173,25 @@ export function buildWorkflowTool(step: StepFile) {
 		return { content: [{ type: "text" as const, text: `${status} Call submit_scenarios again with the next few; set done: true on the last call.` }], details: {}, terminate: false };
 	};
 
+	/**
+	 * One call, no batching (unlike scenarios — a review's findings fit in one
+	 * response). Validated the same way, and, like every submit tool, the host
+	 * re-validates the out file itself rather than trusting `accepted` here.
+	 */
+	const reviewSubmit = (params: any) => {
+		const v = validateFindings(params);
+		if (!v.ok) {
+			refusals++;
+			if (refusals >= limit) {
+				writeFileSync(step.out, JSON.stringify({ tool: step.tool, accepted: false, args: params, errors: v.errors, refusals, at: new Date().toISOString() }, null, 2));
+				return stop("Still not accepted after several tries; this step ends here.");
+			}
+			throw new Error(`Not accepted. Fix these and call ${step.tool} again:\n- ${v.errors.join("\n- ")}\n(${refusals} of ${limit} tries used.)`);
+		}
+		writeFileSync(step.out, JSON.stringify({ tool: step.tool, accepted: true, args: params, value: v.value, refusals, at: new Date().toISOString() }, null, 2));
+		return stop(`Accepted ${v.value.length} finding${v.value.length === 1 ? "" : "s"}. This step is complete.`);
+	};
+
 	return {
 		name: step.tool,
 		label: step.tool,
@@ -163,6 +201,7 @@ export function buildWorkflowTool(step: StepFile) {
 			const record = (accepted: boolean, extra: Record<string, unknown>) =>
 				writeFileSync(step.out, JSON.stringify({ tool: step.tool, accepted, args: params, refusals, at: new Date().toISOString(), ...extra }, null, 2));
 			if (step.kind === "scenarios") return scenarioBatch(params);
+			if (step.kind === "review") return reviewSubmit(params);
 
 			const v = validateSubmission(step, params);
 			if (!v.ok) {

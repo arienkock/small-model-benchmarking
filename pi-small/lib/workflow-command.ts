@@ -27,6 +27,7 @@ import { join } from "node:path";
 import { type ProxyEndpoint, proxySwitch } from "./proxy-client.ts";
 import { restoreWorkspace, snapshotWorkspace } from "./workspace-snapshot.ts";
 import { loadRoster, resolveThinking } from "./roster.ts";
+import { runReviews } from "./review.ts";
 import { type AgentRun, runWorkflow, type SessionLimits, type StepDir, type WorkflowEnv } from "./workflow-runner.ts";
 import { type CheckReport, type CheckSpec, renderSpec, type TaskProfile, type WorkflowConfig, type WorkflowState } from "./workflow.ts";
 
@@ -43,6 +44,13 @@ export interface RunSpec {
 	models?: string[];
 	deadline?: number;
 	state?: WorkflowState;
+	/**
+	 * Set: this run is the review-only experiment (../lib/review.ts) instead of
+	 * the staged workflow — runReviews() drives it, not runWorkflow(). No
+	 * `state`/resume for a review run; every session starts from the same
+	 * workspace, snapshotted once at the start.
+	 */
+	review?: { variants: string[]; repeats?: number };
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -237,6 +245,33 @@ async function runInProcess(spec: RunSpec, startCtx: any, proxy: ProxyEndpoint, 
 	const t0 = Date.now();
 	if (spec.models?.length) log(`model rotation: ${spec.models.join(" → ")} (next model after every failed session)`);
 	if (spec.deadline) log(`deadline ${new Date(spec.deadline).toISOString()}`);
+
+	if (spec.review) {
+		// No rotation to fall back to: use whatever model this process was started
+		// with (run.ts's --model, set as PI_SMALL_MODEL — see the comment on
+		// runAgent's model switch above).
+		const models = spec.models?.length ? spec.models : process.env.PI_SMALL_MODEL ? [process.env.PI_SMALL_MODEL] : [];
+		env.event({ type: "workflow_start", models, review: spec.review, inProcess: true });
+		const results = await runReviews(env, {
+			config: spec.config,
+			task: spec.task,
+			variants: spec.review.variants,
+			models,
+			repeats: spec.review.repeats,
+			deadline: spec.deadline,
+		});
+		writeFileSync(join(runDir, "reviews.json"), JSON.stringify(results, null, 2));
+		const minutes = Number(((Date.now() - t0) / 60_000).toFixed(1));
+		// Same end marker the staged workflow uses, so run.ts's wait-for-end logic
+		// (it only looks for "workflow_end" in events.jsonl) needs no review-specific case.
+		env.event({ type: "workflow_end", status: "completed", minutes });
+		log(`review COMPLETED after ${minutes} min, ${results.length} session(s)`);
+		try {
+			say(cur, `review completed after ${minutes} min, ${results.length} session(s)`);
+		} catch {}
+		return;
+	}
+
 	env.event({ type: "workflow_start", models: spec.models, inProcess: true });
 	const final = await runWorkflow(env, {
 		config: spec.config,

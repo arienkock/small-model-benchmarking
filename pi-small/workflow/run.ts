@@ -6,6 +6,7 @@
  *   node workflow/run.ts --task … --models Granite-4.2-3B-Q8_0,LFM2.5-2.6B-Q8_0 --config workflow/configs/rotation-10turns.json
  *   node workflow/run.ts --task … --model … --local        # no docker: pi runs here (development)
  *   node workflow/run.ts --resume --run-dir workflow-runs/<dir>
+ *   node workflow/run.ts --task … --models A,B --review completeness,correctness --seed-ws some/existing-code
  *
  * The harness is task-agnostic; everything about a particular task — its text,
  * how to run its tests, extra checks, a grader, starting code — comes from the
@@ -27,15 +28,21 @@
  *   --task DIR         a task directory holding task.json (or the task.json itself);
  *                      required unless --resume
  *   --model ALIAS      the model (roster alias)
- *   --models A,B,C     a rotation instead: every failed session moves to the next model
+ *   --models A,B,C     a rotation (the staged workflow) or the reviewer roster (--review)
  *   --thinking on|off  thinking mode, for models that have one
  *   --run-dir DIR      where state, logs and the workspace go
  *                      (default workflow-runs/<timestamp>-<model>)
  *   --ws DIR           the workspace (default <run-dir>/ws)
+ *   --seed-ws DIR      copy DIR's contents into the workspace before starting
+ *                      (__pycache__ skipped), e.g. an existing implementation to review
  *   --config FILE      JSON overrides for DEFAULT_CONFIG, applied over the task's own
  *   --deadline TIME    ISO time (or epoch ms): no step starts after it; the run
  *                      ends "stopped" and is still graded
- *   --no-grade         skip the task's grader
+ *   --review v1,v2,…   run the review-only experiment (../lib/review.ts) instead of the
+ *                      staged workflow: every model in --models reviews the workspace
+ *                      once per listed variant (keys of REVIEW_VARIANTS — completeness,
+ *                      correctness, fidelity, all). No --resume, no grader.
+ *   --no-grade         skip the task's grader (ignored with --review; it never grades)
  *   --no-serve         do not start a proxy: one must already answer on --port
  *   --local            run pi (and the grader) here instead of in the container
  *   --build            rebuild the sandbox image first (default: only when it is missing)
@@ -46,12 +53,14 @@
  * The run directory:
  *   run.json, run-spec.json   what was asked for; what the plugin was given
  *   state.json, spec.md       the workflow state (--resume reads it); the enriched task
+ *   reviews.json               --review only: one ReviewResult per model/variant/repeat
  *   events.jsonl, workflow.log    every step, session and check, with timings
  *   agent.events.jsonl / agent.stderr.log   the pi process's RPC events and stderr
  *   proxy.log                 the host proxy, when this script started it
  *   current-step.json         the step the plugin's next session reads
  *   steps/NN-<kind>[-Tk]-aN/  the prompt, step.json, check.json, out.json, check reports
- *   grade.json                the task grader's output, if the task has one
+ *                             (--review: NN-review-<variant>-<model>/)
+ *   grade.json                the task grader's output, if the task has one (not --review)
  *   home/                     the agent's HOME: pi's config and session files, pi-small's
  *                             session logs. Outside the workspace, so a model listing
  *                             /workspace does not find (and read) its own transcripts.
@@ -63,6 +72,7 @@ import { appendFileSync, cpSync, existsSync, mkdirSync, openSync, readdirSync, r
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { proxyStatus } from "../lib/proxy-client.ts";
+import { REVIEW_VARIANTS, type ReviewResult } from "../lib/review.ts";
 import type { RunSpec } from "../lib/workflow-command.ts";
 import { DEFAULT_CONFIG, mergeConfig, profileOf, type TaskDefinition, taskDefinitionErrors, type WorkflowState } from "../lib/workflow.ts";
 import { PiRpc } from "./pi-rpc.ts";
@@ -100,6 +110,11 @@ const port = Number((args.port as string) || process.env.PI_SMALL_PORT || "8123"
 const apiKey = (args["api-key"] as string) || process.env.PI_SMALL_API_KEY || "sk-bench";
 const thinking = (args.thinking as string) || "";
 
+const reviewVariants = args.review ? (args.review as string).split(",").map((v) => v.trim()).filter(Boolean) : [];
+const unknownVariants = reviewVariants.filter((v) => !(v in REVIEW_VARIANTS));
+if (unknownVariants.length) throw new Error(`--review: unknown variant(s) ${unknownVariants.join(", ")} — one of ${Object.keys(REVIEW_VARIANTS).join(", ")}`);
+const reviewMode = reviewVariants.length > 0;
+
 mkdirSync(join(runDir, "steps"), { recursive: true });
 mkdirSync(ws, { recursive: true });
 mkdirSync(join(runDir, "home"), { recursive: true });
@@ -132,6 +147,13 @@ if (state) {
 } else {
 	task = readFileSync(join(taskDir, def.prompt), "utf8");
 	if (def.seed) cpSync(join(taskDir, def.seed), ws, { recursive: true });
+	if (args["seed-ws"]) {
+		// __pycache__ is a build artifact of whatever last ran the seed directory's
+		// own tests, not part of the code under review; copying it in is at best
+		// clutter and at worst stale bytecode a model's session would run instead
+		// of its own edits.
+		cpSync(resolve(args["seed-ws"] as string), ws, { recursive: true, filter: (src) => !src.split(/[\\/]/).includes("__pycache__") });
+	}
 }
 
 /** Anything in the workspace before the first step is existing work: T1 then also gets an integration step. */
@@ -264,6 +286,7 @@ const runSpec: RunSpec = {
 	models: rotation.length ? rotation : undefined,
 	deadline,
 	state,
+	review: reviewMode ? { variants: reviewVariants } : undefined,
 };
 writeFileSync(join(runDir, "run-spec.json"), JSON.stringify(runSpec, null, 2));
 
@@ -283,27 +306,47 @@ for (const t1 = Date.now(); !workflowEnded() && !agentGone && Date.now() - t1 < 
 if (!workflowEnded()) log(agentGone ? "agent: the pi process exited before the workflow ended — see agent.stderr.log" : "agent: gave up waiting for the workflow");
 await agent.close();
 
-const final: WorkflowState | null = existsSync(join(runDir, "state.json")) ? JSON.parse(readFileSync(join(runDir, "state.json"), "utf8")) : null;
-log(`workflow ${final?.status?.toUpperCase() ?? "DID NOT START"} after ${((Date.now() - t0) / 60_000).toFixed(1)} min${final?.failure ? ` — ${final.failure.split("\n")[0]}` : ""}`);
+let exitCode: number;
 
-// ------------------------------------------------------------- the grader --
+if (reviewMode) {
+	// No WorkflowState (no state.json) for a review run — reviews.json is its
+	// record instead: one ReviewResult per model/variant/repeat.
+	const reviewsPath = join(runDir, "reviews.json");
+	const reviews: ReviewResult[] = existsSync(reviewsPath) ? JSON.parse(readFileSync(reviewsPath, "utf8")) : [];
+	log(`review ${reviews.length ? "COMPLETED" : "DID NOT START"} after ${((Date.now() - t0) / 60_000).toFixed(1)} min, ${reviews.length} session(s)`);
+	for (const r of reviews) {
+		const counts = { high: 0, medium: 0, low: 0 };
+		for (const f of r.findings) counts[f.priority]++;
+		const secs = (r.run.durationMs / 1000).toFixed(0);
+		log(`  ${r.model} / ${r.variant}: ${r.ok ? "submitted" : "NOT submitted"} — high ${counts.high}, medium ${counts.medium}, low ${counts.low}; ${r.run.turns ?? 0} turn(s), ${secs}s`);
+	}
+	// --review never grades: there is nothing for a grader to check against — a
+	// review changes no files. (--no-grade is a no-op here, not an error.)
+	exitCode = reviews.length > 0 ? 0 : 1;
+} else {
+	const final: WorkflowState | null = existsSync(join(runDir, "state.json")) ? JSON.parse(readFileSync(join(runDir, "state.json"), "utf8")) : null;
+	log(`workflow ${final?.status?.toUpperCase() ?? "DID NOT START"} after ${((Date.now() - t0) / 60_000).toFixed(1)} min${final?.failure ? ` — ${final.failure.split("\n")[0]}` : ""}`);
 
-if (def.grader && !args["no-grade"]) {
-	const r = local
-		? spawnSync("bash", ["-c", def.grader.replaceAll("/task", taskDir).replaceAll("/workspace", ws)], { cwd: ws, encoding: "utf8", timeout: 600_000 })
-		: spawnSync("docker", ["run", "--rm", "--network", "none", "-v", `${ws}:/workspace`, "-v", `${taskDir}:/task:ro`, "-w", "/workspace", image, "bash", "-c", def.grader], {
-				encoding: "utf8",
-				timeout: 600_000,
-			});
-	const out = r.stdout ?? "";
-	writeFileSync(join(runDir, "grade.json"), out);
-	let summary = `exit ${r.status}`;
-	try {
-		const g = JSON.parse(out.trim().split("\n").pop() ?? "");
-		summary = g.startup && !g.startup.ok ? "server did not start" : `${g.passed}/${g.total} checks passed${g.skipped ? ` (${g.skipped} skipped: a check they depend on failed)` : ""}`;
-	} catch {}
-	appendFileSync(join(runDir, "events.jsonl"), JSON.stringify({ ts: new Date().toISOString(), type: "grade", summary, exitCode: r.status }) + "\n");
-	log(`grader: ${summary}`);
+	// ------------------------------------------------------------- the grader --
+
+	if (def.grader && !args["no-grade"]) {
+		const r = local
+			? spawnSync("bash", ["-c", def.grader.replaceAll("/task", taskDir).replaceAll("/workspace", ws)], { cwd: ws, encoding: "utf8", timeout: 600_000 })
+			: spawnSync("docker", ["run", "--rm", "--network", "none", "-v", `${ws}:/workspace`, "-v", `${taskDir}:/task:ro`, "-w", "/workspace", image, "bash", "-c", def.grader], {
+					encoding: "utf8",
+					timeout: 600_000,
+				});
+		const out = r.stdout ?? "";
+		writeFileSync(join(runDir, "grade.json"), out);
+		let summary = `exit ${r.status}`;
+		try {
+			const g = JSON.parse(out.trim().split("\n").pop() ?? "");
+			summary = g.startup && !g.startup.ok ? "server did not start" : `${g.passed}/${g.total} checks passed${g.skipped ? ` (${g.skipped} skipped: a check they depend on failed)` : ""}`;
+		} catch {}
+		appendFileSync(join(runDir, "events.jsonl"), JSON.stringify({ ts: new Date().toISOString(), type: "grade", summary, exitCode: r.status }) + "\n");
+		log(`grader: ${summary}`);
+	}
+	exitCode = final?.status === "completed" ? 0 : 1;
 }
 
 if (proxyProc) {
@@ -311,4 +354,4 @@ if (proxyProc) {
 	spawnSync(process.execPath, [join(PLUGIN_DIR, "serve.mjs"), "--stop"], { env: { ...process.env, PI_SMALL_PORT: process.env.PI_SMALL_BACKEND_PORT ?? "8125" }, stdio: "ignore" });
 }
 log(`run directory: ${runDir}`);
-process.exit(final?.status === "completed" ? 0 : 1);
+process.exit(exitCode);

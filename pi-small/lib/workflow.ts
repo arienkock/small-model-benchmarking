@@ -48,7 +48,14 @@ export interface WfTask {
 	status: TaskStatus;
 }
 
-export type StepKind = "scenarios" | "breakdown" | "task_plan" | "implement" | "integrate";
+/**
+ * "review" is not a step of the staged (scenarios → … → integrate) workflow:
+ * it is the standalone review-only experiment (../lib/review.ts), which reuses
+ * this same step-file / submit-tool machinery (a step file on disk, one submit
+ * tool the plugin registers, the host re-validating whatever came back) rather
+ * than duplicating it. It never appears in `nextStep`/`applySubmission` below.
+ */
+export type StepKind = "scenarios" | "breakdown" | "task_plan" | "implement" | "integrate" | "review";
 
 export const STEP_TOOL: Record<StepKind, string> = {
 	scenarios: "submit_scenarios",
@@ -56,6 +63,7 @@ export const STEP_TOOL: Record<StepKind, string> = {
 	task_plan: "submit_task_plan",
 	implement: "report_done",
 	integrate: "report_done",
+	review: "submit_findings",
 };
 
 /** Which tools a step's session gets besides its submit tool. */
@@ -65,6 +73,7 @@ export const STEP_TOOLSET: Record<StepKind, "planning" | "coding"> = {
 	task_plan: "planning",
 	implement: "coding",
 	integrate: "coding",
+	review: "planning",
 };
 
 export interface WorkflowConfig {
@@ -123,6 +132,14 @@ export interface WorkflowConfig {
 	 * line, and each rewrite brought a new error.
 	 */
 	codingTools?: string[];
+	/**
+	 * Tool kinds for review sessions (lib/review.ts), instead of the model's
+	 * roster tools. Unset: `["bash", "read"]` — a reviewer can run the tests and
+	 * the app to check a claim, and read any file, but not edit anything; safe
+	 * even though the workspace is not reset until the NEXT session starts,
+	 * because it is restored from "review-start" before every session runs.
+	 */
+	reviewTools?: string[];
 	/**
 	 * What a retried coding step starts from:
 	 *   keep   the previous attempt's files, and its failure as feedback
@@ -485,7 +502,13 @@ export function validateDone(args: any): Result<{ summary: string }> {
 	return summary.length >= 3 ? { ok: true, value: { summary } } : { ok: false, errors: ['"summary" is required: one or two sentences on what you did.'] };
 }
 
-/** Validate a submission for its step; `scenarioIds`/`needsTestCommand` only matter for the breakdown. */
+/**
+ * Validate a submission for its step; `scenarioIds`/`needsTestCommand` only
+ * matter for the breakdown. "review" is never routed here — workflow-tool.ts
+ * validates it directly with review.ts's own validateFindings, the same way
+ * "scenarios" bypasses this for its batching — so the fallback below is only
+ * a safety net against calling this with the wrong step.
+ */
 export function validateSubmission(step: Pick<StepFile, "kind" | "taskId" | "config" | "scenarioIds" | "needsTestCommand">, args: any): Result<any> {
 	switch (step.kind) {
 		case "scenarios":
@@ -497,6 +520,8 @@ export function validateSubmission(step: Pick<StepFile, "kind" | "taskId" | "con
 		case "implement":
 		case "integrate":
 			return validateDone(args);
+		default:
+			return { ok: false, errors: [`no validator for step kind "${step.kind}".`] };
 	}
 }
 
