@@ -160,7 +160,12 @@ export async function runWorkflow(env: WorkflowEnv, opts: RunOptions): Promise<W
 		}
 
 		for (let attempt = 1; attempt <= maxAttempts && !accepted; attempt++) {
-			if (now() >= deadline) return stopped(state, `before ${label} attempt ${attempt}`);
+			// Out of time in "best" mode: leave (and so grade) the best workspace, not the last attempt's.
+			const stopHere = (why: string) => {
+				if (wsMode === "best" && best) env.restoreWorkspace!(bestKey);
+				return stopped(state, why);
+			};
+			if (now() >= deadline) return stopHere(`before ${label} attempt ${attempt}`);
 			if (wsMode !== "keep" && (attempt > 1 || best)) {
 				const from = best ? bestKey : label;
 				env.restoreWorkspace!(from);
@@ -208,7 +213,7 @@ export async function runWorkflow(env: WorkflowEnv, opts: RunOptions): Promise<W
 				feedback = best?.feedback;
 			}
 			if (judged.ok) accepted = judged;
-			else if (now() >= deadline) return stopped(state, `during ${label} attempt ${attempt}`);
+			else if (now() >= deadline) return stopHere(`during ${label} attempt ${attempt}`);
 			else {
 				// "reset" and "best" decide the next attempt's start and feedback above.
 				if (wsMode === "keep") {
