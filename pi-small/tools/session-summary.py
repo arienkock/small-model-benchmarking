@@ -43,9 +43,15 @@ def read_jsonl(path):
     return out
 
 
+START_EVENTS = {"step_start", "review_start"}
+END_EVENTS = {"step_run", "review_run"}
+
+
 def step_window(run_dir, step_name):
     """[start, end) for the step's agent session, from events.jsonl. end is None
-    if the step is still running (no step_run yet)."""
+    if the step is still running (no step_run/review_run yet). The staged workflow
+    logs step_start/step_run; --review runs log review_start/review_run instead
+    (see ../lib/review.ts) — both bracket the session the same way."""
     events_path = os.path.join(run_dir, "events.jsonl")
     if not os.path.exists(events_path):
         return None, None, "no events.jsonl in the run directory"
@@ -53,12 +59,12 @@ def step_window(run_dir, step_name):
     for e in read_jsonl(events_path):
         if e.get("step") != step_name:
             continue
-        if e.get("type") == "step_start":
+        if e.get("type") in START_EVENTS:
             start = parse_ts(e["ts"])
-        elif e.get("type") == "step_run":
+        elif e.get("type") in END_EVENTS:
             end = parse_ts(e["ts"])
     if start is None:
-        return None, None, "no step_start event for this step (a check-only step, e.g. final-check, runs no agent session)"
+        return None, None, "no step_start/review_start event for this step (a check-only step, e.g. final-check, runs no agent session)"
     return start, end, None
 
 
