@@ -161,7 +161,7 @@ export async function runWorkflow(env: WorkflowEnv, opts: RunOptions): Promise<W
 
 		for (let attempt = 1; attempt <= maxAttempts && !accepted; attempt++) {
 			if (now() >= deadline) return stopped(state, `before ${label} attempt ${attempt}`);
-			if (wsMode !== "keep" && attempt > 1) {
+			if (wsMode !== "keep" && (attempt > 1 || best)) {
 				const from = best ? bestKey : label;
 				env.restoreWorkspace!(from);
 				env.event({ type: "workspace_reset", step: label, from, score: best?.score ?? 0 });
