@@ -159,7 +159,7 @@ def main():
         elif count == 0:
             problems.append(f"the test suite ran no tests (`{command}`).")
         if rc is not None and count is not None and 0 < count < min_tests:
-            problems.append(f"{count} tests ran, but there are {min_tests} scenarios so far: write a test for each one.")
+            problems.append(f"{count} tests ran; at least {min_tests} are needed ({spec.get('minTestsWhy') or 'one per scenario so far'}).")
 
     checks = []
     for c in spec.get("checks", []):

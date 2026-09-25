@@ -304,6 +304,8 @@ export interface CheckSpec {
 	failurePattern?: string;
 	/** Scenarios so far (plus one per integration step): the suite must run at least this many tests. */
 	minTests: number;
+	/** Why minTests is what it is, for the message when too few tests ran. */
+	minTestsWhy?: string;
 	checks: Array<{ name: string; command: string }>;
 }
 
@@ -603,6 +605,7 @@ export function checkSpecFor(state: WorkflowState, kind: "implement" | "integrat
 		testCountPattern: state.profile.testCountPattern,
 		failurePattern: state.profile.failurePattern,
 		minTests: requiredTokensThrough(state, taskId, kind).length,
+		minTestsWhy: kind === "integrate" ? "one per scenario so far, plus the integration tests this step asks for" : "one per scenario so far",
 		checks: state.profile.checks ?? [],
 	};
 }

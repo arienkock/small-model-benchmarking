@@ -506,7 +506,7 @@ await test("check.py: passes a clean workspace; test names are free", () => {
 await test("check.py: fewer tests than scenarios fails, saying how many", () => {
 	const r = runCheckPy(workspace({ "mod.py": MOD, "tests/test_mod.py": TEST() }), { minTests: 5 });
 	assert.ok(!r.ok);
-	assert.match(r.problems.join(), /2 tests ran, but there are 5 scenarios so far/);
+	assert.match(r.problems.join(), /2 tests ran; at least 5 are needed \(one per scenario so far\)/);
 });
 
 await test("check.py: without a count pattern the count is not checked; any language", () => {
