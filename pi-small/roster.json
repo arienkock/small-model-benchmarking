@@ -35,8 +35,8 @@
 			"file": "Spark-X2.5-4B-Q6_K.gguf",
 			"localFile": "D:/llama-cache/models--sizzlebop--Spark-X2.5-4B-GGUF/snapshots/*/Spark-X2.5-4B-Q6_K.gguf",
 			"default": true,
-			"notes": "No official Q6_K; third-party build. Round 3' PKG 6/6, probed response headers 3/3. Its embedded template carries a working tool-call channel — no override needed. reasoningBudget 1024 (default 2048): it always thinks, and in the 2026-09-24 overnight workflow runs every turn used the whole 2048-token budget (7-8k characters of thinking, ~3 min a turn), so a 15-minute session got 6 turns, mostly `cat`.",
-			"reasoningBudget": 1024,
+			"notes": "No official Q6_K; third-party build. Round 3' PKG 6/6, probed response headers 3/3. Its embedded template carries a working tool-call channel — no override needed. reasoningBudget 512 (default 2048): it always thinks, and in the 2026-09-24 overnight workflow runs every turn used the whole 2048-token budget (7-8k characters of thinking, ~3 min a turn), so a 15-minute session got 6 turns, mostly `cat`. At 1024 it still ran out of turns in every review-1 session (~90 s a turn), hence 512.",
+			"reasoningBudget": 512,
 			"chatTemplate": null,
 			"serverArgs": []
 		},

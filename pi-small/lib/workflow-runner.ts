@@ -56,6 +56,8 @@ export interface AgentRun {
 	/** The session was aborted at `config.maxTurns`. */
 	turnLimited?: boolean;
 	turns?: number;
+	/** A wrap-up nudge (see `WrapUp`) was sent in this session. */
+	wrappedUp?: boolean;
 }
 
 /** What one session may use: its time, its turns, and (with a rotation) which model serves it. */
@@ -65,13 +67,33 @@ export interface SessionLimits {
 	model?: string;
 }
 
+/**
+ * A last-chance nudge sent in the SAME session when it hits `limits` (turn or
+ * time limit) or ends without calling its submit tool at all: one more user
+ * message, with its own small turn/time budget on top of what the session
+ * already used. Opt-in per call to `runAgent` — only review sessions ask for
+ * it today (lib/review.ts).
+ */
+export interface WrapUp {
+	message: string;
+	maxExtraTurns: number;
+	extraTimeoutMs: number;
+}
+
 export interface WorkflowEnv {
 	/** Create the directory for one attempt of one step. */
 	prepareStep(label: string): StepDir;
 	/** Write a JSON file into the step directory (step.json, check.json). */
 	writeStepFile(dir: StepDir, name: string, data: unknown): void;
-	/** Run one fresh session with this prompt, within `limits` (and on `limits.model`, when set). */
-	runAgent(dir: StepDir, prompt: string, limits: SessionLimits): Promise<AgentRun>;
+	/**
+	 * Run one fresh session with this prompt, within `limits` (and on
+	 * `limits.model`, when set). With `wrapUp`: if the session hits `limits` or
+	 * ends without calling its submit tool, one more message (`wrapUp.message`)
+	 * is sent in that SAME session, with up to `wrapUp.maxExtraTurns` more turns
+	 * and `wrapUp.extraTimeoutMs` more time; the returned run reflects the
+	 * outcome of that nudge and has `wrappedUp: true`.
+	 */
+	runAgent(dir: StepDir, prompt: string, limits: SessionLimits, wrapUp?: WrapUp): Promise<AgentRun>;
 	/** The submit tool's out file, parsed, or null. */
 	readOut(dir: StepDir): any | null;
 	/** Run check.py against the workspace in a fresh container. */

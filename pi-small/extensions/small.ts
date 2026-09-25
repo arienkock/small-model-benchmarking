@@ -1045,6 +1045,31 @@ export default function (pi: ExtensionAPI) {
 		await switchTo(mgr.state.spec, mgr.state.requestedCtx, ctx);
 	});
 
+	// A review step (workflowStep.kind === "review", see lib/review.ts) losing
+	// its findings-so-far to a generic auto-compaction summary is worse than
+	// losing anything else here: there is no retry within the session to
+	// recover them from, only the wrap-up nudge at the very end. On a
+	// threshold or manual compaction, cancel pi's own default summary and ask
+	// for one shaped for a review instead. "manual" fires again from OUR OWN
+	// ctx.compact() call below — event.customInstructions already set on that
+	// second pass is the signal to stop re-entering and let it through.
+	// "overflow" (mid-turn, retried after compacting) is left alone: this is
+	// not the moment to redirect what gets kept.
+	pi.on("session_before_compact", (event: any, ctx: any) => {
+		if (workflowStep?.kind !== "review") return;
+		if (event.reason !== "threshold" && event.reason !== "manual") return;
+		if (event.customInstructions) return;
+		ctx.compact({
+			customInstructions: [
+				"This review session is being compacted. Summarize it so the review can continue afterward. Include:",
+				"- findings so far, one line each: `priority | location | one-line evidence`",
+				"- the areas of the code already checked",
+				"- what is left to check",
+			].join("\n"),
+		});
+		return { cancel: true };
+	});
+
 	pi.on("session_shutdown", async () => {
 		await mgr.stop();
 	});

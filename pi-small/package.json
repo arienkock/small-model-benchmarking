@@ -17,6 +17,7 @@
 		"test": "node test/plugin-test.ts && node test/serve-test.ts && node test/workflow-test.ts",
 		"typecheck": "tsc --noEmit -p tsconfig.json",
 		"test:workflow-e2e": "node test/workflow-e2e.ts",
+		"test:review-e2e": "node test/review-e2e.ts",
 		"workflow": "node workflow/run.ts"
 	},
 	"peerDependencies": {

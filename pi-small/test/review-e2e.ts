@@ -10,9 +10,13 @@
  * serve.mjs, as it would llama-server), ONE pi process in RPC mode, and
  * `/workflow run` driving lib/review.ts's runReviews() instead of the staged
  * workflow because the run spec carries `review`. Two models each review the
- * same seeded workspace under two variants — 4 sessions — and the test checks
- * both the scripted findings AND that the workspace never changed: a review
- * run's whole point is that nothing does.
+ * same seeded workspace under three variants — completeness and fidelity
+ * submit straight away; correctness is scripted slow on purpose so it gets
+ * wrapped up (lib/review.ts's WRAP_UP nudge, real session time limit — see
+ * --config) and then continued (a fresh session, config.reviewContinuations)
+ * for real, not just against the fake env in test/workflow-test.ts. The test
+ * checks the scripted findings AND that the workspace never changed: a
+ * review run's whole point is that nothing does.
  */
 import assert from "node:assert";
 import { spawnSync } from "node:child_process";
@@ -56,11 +60,11 @@ try {
 			join(ROOT, "workflow", "run.ts"),
 			"--task", join(ROOT, "workflow", "tasks", "books-api"),
 			"--models", MODELS.join(","),
-			"--review", "completeness,fidelity",
+			"--review", "completeness,fidelity,correctness",
 			"--seed-ws", seedWs,
 			"--port", PORT,
 			"--run-dir", runDir,
-			"--config", join(ROOT, "test", "fixtures", "workflow-e2e-config.json"),
+			"--config", join(ROOT, "test", "fixtures", "review-e2e-config.json"),
 			...(local ? ["--local"] : []),
 		],
 		{ stdio: "inherit", timeout: 10 * 60_000, env },
@@ -76,20 +80,40 @@ assert.equal(code, 0, `run.ts exited ${code} — see ${runDir}`);
 const reviews: ReviewResult[] = JSON.parse(readFileSync(join(runDir, "reviews.json"), "utf8"));
 console.log(`\nrun dir: ${runDir}\nreviews: ${reviews.length}`);
 
-assert.equal(reviews.length, 4, "2 models x 2 variants x 1 repeat");
+assert.equal(reviews.length, 6, "2 models x 3 variants x 1 repeat");
 assert.deepEqual(
 	reviews.map((r) => `${r.model}/${r.variant}`).sort(),
-	["Granite-4.2-3B-Q8_0/completeness", "Granite-4.2-3B-Q8_0/fidelity", "LFM2.5-2.6B-Q8_0/completeness", "LFM2.5-2.6B-Q8_0/fidelity"].sort(),
+	[
+		"Granite-4.2-3B-Q8_0/completeness", "Granite-4.2-3B-Q8_0/fidelity", "Granite-4.2-3B-Q8_0/correctness",
+		"LFM2.5-2.6B-Q8_0/completeness", "LFM2.5-2.6B-Q8_0/fidelity", "LFM2.5-2.6B-Q8_0/correctness",
+	].sort(),
 );
 assert.ok(
 	reviews.every((r) => r.ok),
 	`every session should have submitted: ${JSON.stringify(reviews.filter((r) => !r.ok))}`,
 );
+
+const events: any[] = readFileSync(join(runDir, "events.jsonl"), "utf8").trim().split("\n").map((l) => JSON.parse(l));
+
 for (const r of reviews) {
 	if (r.variant === "completeness") {
 		assert.deepEqual(r.findings, [{ priority: "high", title: "no DELETE endpoint", where: "app.py", detail: "the task asks for DELETE /books/{id}; app.py has no DELETE route" }]);
-	} else {
+	} else if (r.variant === "fidelity") {
 		assert.deepEqual(r.findings, [], "the fidelity variant is scripted to find nothing");
+	} else {
+		// correctness: scripted slow, so the initial session must have been
+		// aborted at the session time limit and nudged (wrappedUp) — the final
+		// result's own `run` is the CONTINUATION's, which is not itself wrapped
+		// up, so that has to be checked on the initial session's own event.
+		const initial = events.find((e) => e.type === "review_run" && e.model === r.model && e.variant === "correctness" && e.phase === "initial");
+		assert.ok(initial, `no initial review_run event for ${r.model}/correctness`);
+		assert.equal(initial.wrappedUp, true, "the slow first turn must have been aborted and nudged");
+		assert.equal(initial.ok, true, "the wrap-up nudge itself must have submitted");
+		assert.match(r.step, /-continue1$/, "the reported step is the continuation, which produced the final result");
+		assert.deepEqual(r.findings, [
+			{ priority: "medium", title: "no input validation on POST", where: "app.py", detail: "the create endpoint does not validate the request body" },
+			{ priority: "low", title: "no pagination on GET /books", where: "app.py", detail: "a large collection is returned unbounded" },
+		]);
 	}
 }
 

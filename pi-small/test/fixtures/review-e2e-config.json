@@ -1,0 +1,5 @@
+{
+	"stepTimeoutMin": 0.15,
+	"testTimeoutSec": 60,
+	"reviewContinuations": 1
+}

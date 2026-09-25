@@ -141,6 +141,13 @@ export interface WorkflowConfig {
 	 */
 	reviewTools?: string[];
 	/**
+	 * How many continuation sessions follow a review session that was wrapped
+	 * up (nudged at its turn/time limit — see review.ts). Each continuation is
+	 * a fresh session on the same model given the findings so far and asked to
+	 * finish the review; the last valid submission wins.
+	 */
+	reviewContinuations?: number;
+	/**
 	 * What a retried coding step starts from:
 	 *   keep   the previous attempt's files, and its failure as feedback
 	 *   reset  the workspace as it was when the step started, and no feedback: the
@@ -174,6 +181,7 @@ export const DEFAULT_CONFIG: WorkflowConfig = {
 	systemPrompt: TERSE_STYLE,
 	feedback: "minimal",
 	retryWorkspace: "keep",
+	reviewContinuations: 1,
 };
 
 export function mergeConfig(base: WorkflowConfig, over: any): WorkflowConfig {

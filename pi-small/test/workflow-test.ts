@@ -16,9 +16,9 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { buildReviewPrompt, runReviews, validateFindings } from "../lib/review.ts";
+import { buildContinuationPrompt, buildReviewPrompt, runReviews, validateFindings } from "../lib/review.ts";
 import { buildWorkflowTool } from "../lib/workflow-tool.ts";
-import { type AgentRun, passingTests, runWorkflow, type StepDir, type WorkflowEnv } from "../lib/workflow-runner.ts";
+import { type AgentRun, passingTests, runWorkflow, type StepDir, type WorkflowEnv, type WrapUp } from "../lib/workflow-runner.ts";
 import {
 	checkSpecFor,
 	describeCheck,
@@ -749,6 +749,129 @@ await test("runReviews: every model x variant is a fresh session against the res
 		assert.deepEqual(r.findings, [{ priority: "high", title: "x", where: "", detail: "" }]);
 	}
 	assert.ok(events.some((e) => e.type === "review_run" && e.step === silent.step && e.ok === false));
+});
+
+await test("buildContinuationPrompt: carries the findings so far and the variant, not the original review framing", () => {
+	const p = buildContinuationPrompt("Build a books API.", "correctness", [{ priority: "high", title: "off by one", where: "a.py:10", detail: "loop excludes the last item" }]);
+	assert.match(p, /ran out of turns/);
+	assert.match(p, /- \[high\] off by one \(a\.py:10\): loop excludes the last item/);
+	assert.match(p, /Review the code for correctness/);
+	assert.match(p, /## The task\n\nBuild a books API\./);
+
+	const none = buildContinuationPrompt("x", "correctness", []);
+	assert.match(none, /\(none yet\)/);
+});
+
+/**
+ * A fake env whose `runAgent` is fully scripted per step name — including
+ * whether the session claims a wrap-up nudge happened (`wrappedUp`) — so the
+ * wrap-up/continuation ORCHESTRATION in review.ts can be tested without the
+ * real session machinery. That machinery (workflow-command.ts's runSession
+ * actually sending the extra message) is covered by test/review-e2e.ts.
+ */
+function fakeReviewEnv(script: (dir: StepDir, wrapUp?: WrapUp) => { out?: any; timedOut?: boolean; turnLimited?: boolean; wrappedUp?: boolean }) {
+	const events: any[] = [];
+	const calls: string[] = [];
+	const outs = new Map<string, any>();
+	const runAgentCalls: Array<{ step: string; wrapUp?: WrapUp }> = [];
+	const env: WorkflowEnv = {
+		checkScript: "/check.py",
+		prepareStep: (label) => ({ name: label, out: `/h/${label}/out.json`, checkSpecPath: `/h/${label}/check.json` }),
+		writeStepFile: () => {},
+		async runAgent(dir, _prompt, _limits, wrapUp): Promise<AgentRun> {
+			runAgentCalls.push({ step: dir.name, wrapUp });
+			const r = script(dir, wrapUp);
+			if (r.out !== undefined) outs.set(dir.name, r.out);
+			return { exitCode: 0, timedOut: !!r.timedOut, turnLimited: !!r.turnLimited, wrappedUp: !!r.wrappedUp, durationMs: 5, turns: 2 };
+		},
+		readOut: (dir) => outs.get(dir.name) ?? null,
+		async runCheck() {
+			throw new Error("runReviews must never run the harness's checks");
+		},
+		saveState: () => {},
+		event: (e) => events.push(e),
+		snapshotWorkspace: (k) => calls.push(`snapshot ${k}`),
+		restoreWorkspace: (k) => calls.push(`restore ${k}`),
+	};
+	return { env, events, calls, runAgentCalls };
+}
+
+const finding = (title: string) => ({ priority: "high" as const, title, where: "", detail: "" });
+
+await test("runReviews: every session is offered the wrap-up nudge", async () => {
+	const f = fakeReviewEnv((dir) => ({ out: { accepted: true, args: { findings: [finding(dir.name)] } } }));
+	await runReviews(f.env, { config: DEFAULT_CONFIG, task: "x", variants: ["completeness"], models: ["A"] });
+	assert.ok(f.runAgentCalls.length > 0);
+	for (const c of f.runAgentCalls) {
+		assert.ok(c.wrapUp, `${c.step}: runAgent should be called with a wrap-up nudge`);
+		assert.match(c.wrapUp!.message, /out of turns/i);
+	}
+});
+
+await test("runReviews: a wrapped-up submission gets one continuation by default, whose valid submission wins", async () => {
+	const f = fakeReviewEnv((dir) => {
+		if (dir.name.endsWith("-continue1")) return { out: { accepted: true, args: { findings: [finding("a"), finding("b")] } } };
+		return { out: { accepted: true, args: { findings: [finding("a")] } }, wrappedUp: true, turnLimited: true };
+	});
+	const results = await runReviews(f.env, { config: DEFAULT_CONFIG, task: "x", variants: ["completeness"], models: ["A"] });
+	assert.equal(results.length, 1);
+	const [r] = results;
+	assert.ok(r.ok);
+	assert.deepEqual(r.findings.map((x) => x.title), ["a", "b"], "the continuation's complete list wins");
+	assert.match(r.step, /-continue1$/, "the reported step is the continuation that produced the final result");
+	assert.equal(f.runAgentCalls.length, 2, "the initial session plus exactly one continuation (the default)");
+
+	const starts = f.events.filter((e) => e.type === "review_start");
+	assert.equal(starts.length, 2);
+	assert.equal(starts[1].continuation, 1);
+	const runs = f.events.filter((e) => e.type === "review_run");
+	assert.equal(runs[0].phase, "initial");
+	assert.equal(runs[1].phase, "continuation");
+
+	assert.equal(f.calls.filter((c) => c === "restore review-start").length, 2, "the workspace is restored before the continuation too");
+});
+
+await test("runReviews: no continuation when the session was never wrapped up, even if it submitted", async () => {
+	const f = fakeReviewEnv(() => ({ out: { accepted: true, args: { findings: [finding("a")] } } }));
+	const results = await runReviews(f.env, { config: DEFAULT_CONFIG, task: "x", variants: ["completeness"], models: ["A"] });
+	assert.equal(f.runAgentCalls.length, 1, "a session that finished on its own is not continued");
+	assert.deepEqual(results[0].findings.map((x) => x.title), ["a"]);
+});
+
+await test("runReviews: no continuation when the wrap-up nudge itself never got a valid submission", async () => {
+	const f = fakeReviewEnv(() => ({ wrappedUp: true, turnLimited: true })); // no `out` at all — the nudge was also silent
+	const results = await runReviews(f.env, { config: DEFAULT_CONFIG, task: "x", variants: ["completeness"], models: ["A"] });
+	assert.equal(f.runAgentCalls.length, 1, "nothing to hand a continuation, so none runs");
+	assert.equal(results[0].ok, false);
+	assert.match(results[0].detail!, /ended without a successful call to `submit_findings`/);
+});
+
+await test("runReviews: an invalid continuation does not erase the wrapped-up session's valid findings", async () => {
+	const f = fakeReviewEnv((dir) => {
+		if (dir.name.endsWith("-continue1")) return { out: { accepted: true, args: { findings: "not a list" } } };
+		return { out: { accepted: true, args: { findings: [finding("a")] } }, wrappedUp: true, turnLimited: true };
+	});
+	const results = await runReviews(f.env, { config: DEFAULT_CONFIG, task: "x", variants: ["completeness"], models: ["A"] });
+	assert.equal(f.runAgentCalls.length, 2, "the invalid continuation still ran once");
+	assert.equal(results[0].ok, true);
+	assert.deepEqual(results[0].findings.map((x) => x.title), ["a"], "the earlier VALID submission stands");
+	assert.match(results[0].step, /^01-review-completeness-A$/, "the reported step is the one that actually produced the result");
+});
+
+await test("runReviews: config.reviewContinuations bounds how many continuations run", async () => {
+	let calls = 0;
+	const f = fakeReviewEnv((dir) => {
+		calls++;
+		return { out: { accepted: true, args: { findings: [finding(dir.name)] } }, wrappedUp: true, turnLimited: true };
+	});
+	const cfg = { ...DEFAULT_CONFIG, reviewContinuations: 3 };
+	await runReviews(f.env, { config: cfg, task: "x", variants: ["completeness"], models: ["A"] });
+	// Every session (initial + each continuation) reports wrappedUp+ok, so all 3 configured continuations run.
+	assert.equal(calls, 4, "1 initial + 3 continuations");
+
+	const zero = fakeReviewEnv((dir) => ({ out: { accepted: true, args: { findings: [finding(dir.name)] } }, wrappedUp: true, turnLimited: true }));
+	await runReviews(zero.env, { config: { ...DEFAULT_CONFIG, reviewContinuations: 0 }, task: "x", variants: ["completeness"], models: ["A"] });
+	assert.equal(zero.runAgentCalls.length, 1, "reviewContinuations: 0 means no continuation ever runs");
 });
 
 console.log(`\n${passed} workflow tests passed`);

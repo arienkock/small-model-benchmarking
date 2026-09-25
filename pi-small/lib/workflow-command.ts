@@ -28,7 +28,7 @@ import { type ProxyEndpoint, proxySwitch } from "./proxy-client.ts";
 import { restoreWorkspace, snapshotWorkspace } from "./workspace-snapshot.ts";
 import { loadRoster, resolveThinking } from "./roster.ts";
 import { runReviews } from "./review.ts";
-import { type AgentRun, runWorkflow, type SessionLimits, type StepDir, type WorkflowEnv } from "./workflow-runner.ts";
+import { type AgentRun, runWorkflow, type SessionLimits, type StepDir, type WorkflowEnv, type WrapUp } from "./workflow-runner.ts";
 import { type CheckReport, type CheckSpec, renderSpec, type TaskProfile, type WorkflowConfig, type WorkflowState } from "./workflow.ts";
 
 /** What the host writes for one run. Paths are as THIS process sees them. */
@@ -122,6 +122,26 @@ async function runSession(c: any, prompt: string, limits: SessionLimits): Promis
 	return { exitCode: error ? 1 : 0, timedOut, turnLimited, turns, durationMs: Date.now() - t0 };
 }
 
+/**
+ * A session that hit its turn/time limit, or never called its submit tool at
+ * all: one more message in the SAME session (still `c`), with its own small
+ * budget on top of the turns it already used — `assistantTurns` counts the
+ * whole session, so the extra budget's `maxTurns` has to be cumulative too.
+ * Runs unconditionally when `wrapUp` is given and the first run needed it;
+ * the caller (review.ts) decides whether the nudge actually produced a valid
+ * submission.
+ */
+async function maybeWrapUp(c: any, outPath: string, first: AgentRun, model: string | undefined, wrapUp: WrapUp | undefined): Promise<AgentRun> {
+	if (!wrapUp) return first;
+	if (!first.turnLimited && !first.timedOut && existsSync(outPath)) return first;
+	const extra = await runSession(c, wrapUp.message, {
+		maxTurns: (first.turns ?? 0) + wrapUp.maxExtraTurns,
+		timeoutMs: wrapUp.extraTimeoutMs,
+		model,
+	});
+	return { ...extra, wrappedUp: true };
+}
+
 export function registerWorkflowCommand(pi: any, proxy: ProxyEndpoint, say: (ctx: any, msg: string) => void): void {
 	pi.registerCommand("workflow", {
 		description: "Run the staged workflow: /workflow run <run-spec.json> (written by workflow/run.ts)",
@@ -166,7 +186,7 @@ async function runInProcess(spec: RunSpec, startCtx: any, proxy: ProxyEndpoint, 
 			// The next session's plugin instance reads its step from the fixed path.
 			if (name === "step.json") writeFileSync(spec.stepFilePath, text);
 		},
-		async runAgent(dir: StepDir, prompt: string, limits: SessionLimits): Promise<AgentRun> {
+		async runAgent(dir: StepDir, prompt: string, limits: SessionLimits, wrapUp?: WrapUp): Promise<AgentRun> {
 			const stepDir = stepDirs.get(dir.name)!;
 			writeFileSync(join(stepDir, "prompt.md"), prompt);
 			const t0 = Date.now();
@@ -184,11 +204,13 @@ async function runInProcess(spec: RunSpec, startCtx: any, proxy: ProxyEndpoint, 
 			}
 			let result: AgentRun = { exitCode: 1, timedOut: false, durationMs: 0 };
 			const budget: SessionLimits = { ...limits, timeoutMs: Math.max(0, limits.timeoutMs - (Date.now() - t0)) };
+			const outPath = join(stepDir, "out.json");
 			try {
 				const r = await cur.newSession({
 					withSession: async (c: any) => {
 						cur = c;
 						result = await runSession(c, prompt, budget);
+						result = await maybeWrapUp(c, outPath, result, limits.model, wrapUp);
 					},
 				});
 				if (r?.cancelled) log("  the new session was cancelled by an extension");
@@ -198,7 +220,7 @@ async function runInProcess(spec: RunSpec, startCtx: any, proxy: ProxyEndpoint, 
 			result.durationMs = Date.now() - t0;
 			log(
 				`  session ended after ${(result.durationMs / 1000).toFixed(0)} s, ${result.turns ?? 0} turn(s)${limits.model ? ` on ${limits.model}` : ""}` +
-					`${result.turnLimited ? " (TURN LIMIT)" : ""}${result.timedOut ? " (TIMED OUT)" : ""}${result.exitCode ? " (error)" : ""}`,
+					`${result.turnLimited ? " (TURN LIMIT)" : ""}${result.timedOut ? " (TIMED OUT)" : ""}${result.wrappedUp ? " (WRAPPED UP)" : ""}${result.exitCode ? " (error)" : ""}`,
 			);
 			return result;
 		},

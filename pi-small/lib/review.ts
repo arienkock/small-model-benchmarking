@@ -9,7 +9,7 @@
 // disk, a WorkflowEnv, the plugin's one submit tool per step (see "review" in
 // workflow-tool.ts) — rather than duplicating them.
 
-import type { AgentRun, SessionLimits, StepDir, WorkflowEnv } from "./workflow-runner.ts";
+import type { AgentRun, SessionLimits, StepDir, WorkflowEnv, WrapUp } from "./workflow-runner.ts";
 import { type Result, type StepFile, unwrapArgs, type WorkflowConfig } from "./workflow.ts";
 
 export const REVIEW_VARIANTS: Record<string, string> = {
@@ -52,6 +52,43 @@ export function buildReviewPrompt(task: string, variant: string): string {
 		"",
 	].join("\n");
 }
+
+/**
+ * A previous session on the same model and prompt was wrapped up (nudged at
+ * its limit — see `runOneSession`) and submitted findings. This prompt hands
+ * them back and asks for the complete list, so a session that ran out of
+ * turns partway through does not lose what it already found.
+ */
+export function buildContinuationPrompt(task: string, variant: string, findingsSoFar: Finding[]): string {
+	const listed = findingsSoFar.length
+		? findingsSoFar.map((f) => `- [${f.priority}] ${f.title} (${f.where || "?"}): ${f.detail}`).join("\n")
+		: "(none yet)";
+	return [
+		"# Review (continued)",
+		"",
+		"The code in /workspace was written for the task below. Do not change any files.",
+		"",
+		REVIEW_VARIANTS[variant],
+		"",
+		"A previous session ran out of turns before it finished this review. Below is what it found so far. Continue the review, then report all of it in one call to the tool `submit_findings` — most important first, and including whatever below still holds.",
+		"",
+		"## Findings so far",
+		"",
+		listed,
+		"",
+		"## The task",
+		"",
+		task.trim(),
+		"",
+	].join("\n");
+}
+
+/** Sent in the same session when it hits its limit or never calls `submit_findings` at all. */
+const WRAP_UP: WrapUp = {
+	message: "You are out of turns. Call `submit_findings` now with what you have found so far.",
+	maxExtraTurns: 2,
+	extraTimeoutMs: 3 * 60_000,
+};
 
 const str = (v: unknown): string => (typeof v === "string" ? v.trim() : "");
 
@@ -112,6 +149,49 @@ export interface ReviewResult {
 	run: AgentRun;
 }
 
+interface SessionOutcome {
+	run: AgentRun;
+	ok: boolean;
+	findings: Finding[];
+	detail?: string;
+}
+
+function reviewStepFile(cfg: WorkflowConfig, out: string): StepFile {
+	return {
+		kind: "review",
+		tool: "submit_findings",
+		// Same significance as everywhere else in the staged workflow — see
+		// STEP_TOOLSET — but nothing here actually reads it back; the plugin
+		// (extensions/small.ts) builds the session's tool set from toolKinds
+		// alone, whatever toolset says.
+		toolset: "planning",
+		toolKinds: cfg.reviewTools ?? ["bash", "read"],
+		out,
+		config: cfg,
+		systemPrompt: cfg.systemPrompt?.trim() || undefined,
+	};
+}
+
+/**
+ * One review session, with the wrap-up nudge (see `WrapUp`/`workflow-runner.ts`)
+ * on by default: a session that hits `limits` or never calls `submit_findings`
+ * gets one more message in the SAME session asking for whatever it has so far.
+ * The submission — from the first pass or the nudge — is re-validated here,
+ * the same way the staged workflow's runner re-validates every submission;
+ * never trust the session.
+ */
+async function runOneSession(env: WorkflowEnv, dir: StepDir, prompt: string, limits: SessionLimits, cfg: WorkflowConfig): Promise<SessionOutcome> {
+	const run = await env.runAgent(dir, prompt, limits, WRAP_UP);
+	const out = env.readOut(dir);
+	if (!out) {
+		const timeout = run.turnLimited ? ` The session was stopped at the ${cfg.maxTurns}-turn limit.` : run.timedOut ? " The session was stopped at the time limit." : "";
+		return { run, ok: false, findings: [], detail: `The session ended without a successful call to \`submit_findings\`.${timeout}` };
+	}
+	const v = validateFindings(out.args);
+	if (v.ok) return { run, ok: true, findings: v.value };
+	return { run, ok: false, findings: [], detail: `The submission to \`submit_findings\` was not valid:\n- ${v.errors.join("\n- ")}` };
+}
+
 /**
  * Run every (model, variant, repeat) combination, each a fresh session
  * against the SAME starting workspace: snapshotted once up front, then
@@ -121,6 +201,13 @@ export interface ReviewResult {
  * anything, but the restore is what actually guarantees it. Order is model
  * (outer) then variant then repeat, so a deadline cutoff drops the tail of
  * one model's variants rather than one variant across every model.
+ *
+ * A session that only submitted because of the wrap-up nudge (`run.wrappedUp`)
+ * likely ran out of turns before finishing: up to `config.reviewContinuations`
+ * (default 1) fresh sessions follow, same model and prompt, each handed the
+ * findings so far and asked to finish the review. The final result is the
+ * last VALID submission — an invalid or empty-handed continuation does not
+ * erase what an earlier session already found.
  */
 export async function runReviews(env: WorkflowEnv, opts: ReviewOpts): Promise<ReviewResult[]> {
 	const cfg = opts.config;
@@ -128,6 +215,7 @@ export async function runReviews(env: WorkflowEnv, opts: ReviewOpts): Promise<Re
 	const deadline = opts.deadline ?? Infinity;
 	const repeats = Math.max(1, opts.repeats ?? 1);
 	const sessionMs = () => Math.max(0, Math.min(cfg.stepTimeoutMin * 60_000, deadline - now()));
+	const maxContinuations = Math.max(0, cfg.reviewContinuations ?? 1);
 
 	env.snapshotWorkspace?.("review-start");
 	const results: ReviewResult[] = [];
@@ -144,46 +232,40 @@ export async function runReviews(env: WorkflowEnv, opts: ReviewOpts): Promise<Re
 				env.restoreWorkspace?.("review-start");
 				counter++;
 				const dir: StepDir = env.prepareStep(`${String(counter).padStart(2, "0")}-${label}`);
-				const stepFile: StepFile = {
-					kind: "review",
-					tool: "submit_findings",
-					// Same significance as everywhere else in the staged workflow — see
-					// STEP_TOOLSET — but nothing here actually reads it back; the plugin
-					// (extensions/small.ts) builds the session's tool set from toolKinds
-					// alone, whatever toolset says.
-					toolset: "planning",
-					toolKinds: cfg.reviewTools ?? ["bash", "read"],
-					out: dir.out,
-					config: cfg,
-					systemPrompt: cfg.systemPrompt?.trim() || undefined,
-				};
-				env.writeStepFile(dir, "step.json", stepFile);
+				env.writeStepFile(dir, "step.json", reviewStepFile(cfg, dir.out));
 
 				const prompt = buildReviewPrompt(opts.task, variant);
 				env.event({ type: "review_start", step: dir.name, model, variant, repeat, promptChars: prompt.length });
 				const limits: SessionLimits = { timeoutMs: sessionMs(), maxTurns: cfg.maxTurns, model };
-				const run = await env.runAgent(dir, prompt, limits);
-				const out = env.readOut(dir);
+				let current = await runOneSession(env, dir, prompt, limits, cfg);
+				let step = dir.name;
+				env.event({ type: "review_run", step, model, variant, repeat, phase: "initial", ...current.run, ok: current.ok, findingCount: current.findings.length, detail: current.detail });
 
-				let ok = false;
-				let findings: Finding[] = [];
-				let detail: string | undefined;
-				if (!out) {
-					const timeout = run.turnLimited ? ` The session was stopped at the ${cfg.maxTurns}-turn limit.` : run.timedOut ? " The session was stopped at the time limit." : "";
-					detail = `The session ended without a successful call to \`submit_findings\`.${timeout}`;
-				} else {
-					// Never trust the session: re-validate whatever the tool wrote, the
-					// same way the staged workflow's runner re-validates every submission.
-					const v = validateFindings(out.args);
-					if (v.ok) {
-						ok = true;
-						findings = v.value;
-					} else {
-						detail = `The submission to \`submit_findings\` was not valid:\n- ${v.errors.join("\n- ")}`;
+				// The nudge got a submission out of it — it almost certainly ran out of
+				// turns first. `config.reviewContinuations` fresh sessions follow, each
+				// picking up from the last VALID findings; an invalid or empty-handed
+				// continuation along the way is logged but does not stop the rest —
+				// only the last valid submission is kept.
+				if (current.run.wrappedUp && current.ok) {
+					for (let c = 1; c <= maxContinuations && now() < deadline; c++) {
+						env.restoreWorkspace?.("review-start");
+						counter++;
+						const contDir: StepDir = env.prepareStep(`${String(counter).padStart(2, "0")}-${label}-continue${c}`);
+						env.writeStepFile(contDir, "step.json", reviewStepFile(cfg, contDir.out));
+
+						const contPrompt = buildContinuationPrompt(opts.task, variant, current.findings);
+						env.event({ type: "review_start", step: contDir.name, model, variant, repeat, continuation: c, promptChars: contPrompt.length });
+						const contLimits: SessionLimits = { timeoutMs: sessionMs(), maxTurns: cfg.maxTurns, model };
+						const next = await runOneSession(env, contDir, contPrompt, contLimits, cfg);
+						env.event({ type: "review_run", step: contDir.name, model, variant, repeat, phase: "continuation", continuation: c, ...next.run, ok: next.ok, findingCount: next.findings.length, detail: next.detail });
+						if (next.ok) {
+							current = next;
+							step = contDir.name;
+						}
 					}
 				}
-				env.event({ type: "review_run", step: dir.name, model, variant, repeat, ...run, ok, findingCount: findings.length, detail });
-				results.push({ model, variant, repeat, step: dir.name, ok, findings, detail, run });
+
+				results.push({ model, variant, repeat, step, ok: current.ok, findings: current.findings, detail: current.detail, run: current.run });
 			}
 		}
 	}
