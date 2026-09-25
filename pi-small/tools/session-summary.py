@@ -21,6 +21,13 @@ import os
 import sys
 from datetime import datetime
 
+# The default console codepage on Windows (cp1252/cp437) can't encode the
+# em dashes, ellipses and curly quotes this script prints — reconfigure to
+# UTF-8 so a run on benchlaptop doesn't crash mid-output.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+
 ARG_EXCERPT_LEN = 150
 RESULT_LINE_LEN = 200
 WINDOW_SLOP_MS = 0  # step_start/step_run bracket the session's header exactly; no slop needed
