@@ -360,7 +360,9 @@ try {
 	pass("compareProps flags exactly the sampler fields a server got wrong, tolerating f32 rounding");
 
 	// --- the compaction reserve follows the largest maxTokens -----------------
-	assert.equal(requiredReserveTokens(roster), 6144, "4096 everywhere keeps the historical 6144");
+	const flat = JSON.parse(JSON.stringify(roster));
+	for (const m of flat.models) delete m.maxTokens;
+	assert.equal(requiredReserveTokens(flat), 6144, "4096 everywhere keeps the historical 6144");
 	const bigger = JSON.parse(JSON.stringify(roster));
 	bigger.models[0].maxTokens = 8192;
 	assert.equal(requiredReserveTokens(bigger), 10240, "a model given 8192 needs a 10240 reserve");

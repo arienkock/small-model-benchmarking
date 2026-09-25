@@ -59,8 +59,8 @@ import { appendFileSync, existsSync, mkdirSync, openSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { convertToLlm, serializeConversation } from "@earendil-works/pi-coding-agent";
-import { buildCompactionPrompt } from "../lib/compaction.ts";
+import { buildSessionContext, convertToLlm, serializeConversation } from "@earendil-works/pi-coding-agent";
+import { buildCompactionInstruction, buildCompactionPrompt } from "../lib/compaction.ts";
 import { buildTool } from "../lib/tools.ts";
 import { buildWorkflowTool, loadStepFile } from "../lib/workflow-tool.ts";
 import { TERSE_STYLE } from "../lib/workflow.ts";
@@ -77,6 +77,7 @@ import {
 	resolveCtxLadder,
 	resolveMaxTokens,
 	resolveSampler,
+	modelReserveTokens,
 	resolveCompactionWords,
 	resolveSystemPrompt,
 	resolveThinking,
@@ -831,9 +832,11 @@ export default function (pi: ExtensionAPI) {
 	// ------------------------------------------------------------ sampling --
 	// Temperature lives here, not in the harness and not only in the server
 	// flags, so /sm-temp takes effect on the next request with no reload.
-	pi.on("before_provider_request", (event: any) => {
+	// Also applied to pi-small's own compaction request (see session_before_compact),
+	// which has to render exactly like a normal turn to reuse the prompt cache.
+	const shapePayload = (payload: any) => {
 		return {
-			...event.payload,
+			...payload,
 			temperature: mgr.state.temp,
 			top_p: mgr.state.topP,
 			top_k: mgr.state.topK,
@@ -850,9 +853,10 @@ export default function (pi: ExtensionAPI) {
 			// session has, and the server's own default may be the other mode.
 			...(mgr.state.thinking === null
 				? {}
-				: { chat_template_kwargs: { ...(event.payload?.chat_template_kwargs ?? {}), ...thinkingKwargs(mgr.state.thinking, mgr.state.spec.reasoningEffort) } }),
+				: { chat_template_kwargs: { ...(payload?.chat_template_kwargs ?? {}), ...thinkingKwargs(mgr.state.thinking, mgr.state.spec.reasoningEffort) } }),
 		};
-	});
+	};
+	pi.on("before_provider_request", (event: any) => shapePayload(event.payload));
 
 	// -------------------------------------------------------- system prompt --
 	// Replaces pi's system prompt for the model currently being served — the
@@ -1057,43 +1061,87 @@ export default function (pi: ExtensionAPI) {
 	// (lib/compaction.ts) instead of pi's, which asks for a long seven-section
 	// checkpoint that costs minutes to generate at these speeds. pi's
 	// customInstructions would only be appended to its prompt, so this hook
-	// makes the summary call itself and returns the result. A review step's
-	// prompt also keeps its findings so far: losing those is worse than losing
-	// anything else, since no retry within the session could recover them. On
-	// any failure pi's own compaction runs instead.
+	// makes the summary call itself and returns the result.
+	//
+	// First IN CONTEXT: the session's own messages, exactly as the agent sends
+	// them (same system prompt, tools, and payload shaping), plus a synthetic
+	// tool call whose result is the instruction. That request shares its whole
+	// prefix with the previous turn, so llama-server only has to read the
+	// instruction; a fresh request with the history serialized into it made the
+	// server re-read everything, ~25 minutes per compaction at 16k (free-form run
+	// 2, 2026-09-25). If that fails, the serialized version; if that fails too,
+	// pi's own compaction. A review step's prompt also keeps its findings so far.
+	const compactionModelCall = async (ctx: any, model: any, llmContext: any, maxTokens: number, signal: AbortSignal) => {
+		const response = await ctx.modelRegistry.complete(model, llmContext, {
+			maxTokens,
+			signal,
+			cacheRetention: "none",
+			sessionId: randomUUID(),
+			onPayload: (payload: any) => shapePayload(payload),
+		});
+		const summary = response.content.filter((c: any) => c.type === "text").map((c: any) => c.text).join("\n").trim();
+		const failure = response.stopReason === "error" ? response.errorMessage || "error"
+			: response.stopReason === "length" ? "hit the token cap"
+			: response.stopReason === "toolUse" ? "called a tool instead of writing the summary"
+			: !summary ? "empty summary" : "";
+		return { summary, failure, usage: response.usage };
+	};
 	pi.on("session_before_compact", async (event: any, ctx: any) => {
 		const { preparation, signal } = event;
 		const { messagesToSummarize, turnPrefixMessages, tokensBefore, firstKeptEntryId, previousSummary, settings } = preparation;
 		const model = ctx.model;
 		if (!model || !firstKeptEntryId) return;
-		const prompt = buildCompactionPrompt({
-			conversation: serializeConversation(convertToLlm([...messagesToSummarize, ...turnPrefixMessages])),
-			previousSummary,
-			review: workflowStep?.kind === "review",
-			words: resolveCompactionWords(mgr.state.spec, d),
-		});
-		const startedAt = Date.now();
-		try {
-			const response = await ctx.modelRegistry.complete(
-				model,
-				{ messages: [{ role: "user", content: [{ type: "text", text: prompt }], timestamp: Date.now() }] },
-				{ maxTokens: Math.floor(0.8 * settings.reserveTokens), signal, cacheRetention: "none", sessionId: randomUUID() },
-			);
-			const summary = response.content.filter((c: any) => c.type === "text").map((c: any) => c.text).join("\n").trim();
-			const failure = response.stopReason === "error" ? response.errorMessage || "error"
-				: response.stopReason === "length" ? "hit the token cap" : !summary ? "empty summary" : "";
-			sessionLog.write({ type: "compaction", reason: event.reason, ok: !failure, failure: failure || undefined, tokensBefore, words: summary.split(/\s+/).filter(Boolean).length, seconds: Math.round((Date.now() - startedAt) / 1000), usage: response.usage });
-			if (failure) {
-				if (!signal.aborted) say(ctx, `pi-small: compaction summary failed (${failure}); falling back to pi's own`, "warn");
-				return;
-			}
-			return { compaction: { summary, firstKeptEntryId, tokensBefore, usage: response.usage } };
-		} catch (error) {
-			const message = error instanceof Error ? error.message : String(error);
-			sessionLog.write({ type: "compaction", reason: event.reason, ok: false, failure: message, tokensBefore });
-			if (!signal.aborted) say(ctx, `pi-small: compaction summary failed (${message}); falling back to pi's own`, "warn");
-			return;
+		// pi's reserve is the roster's largest (see modelReserveTokens); hold off
+		// until the context passes this model's own threshold.
+		const ownThreshold = model.contextWindow - modelReserveTokens(mgr.state.spec, d);
+		if (event.reason === "threshold" && tokensBefore <= ownThreshold) {
+			sessionLog.write({ type: "compaction_deferred", tokensBefore, ownThreshold });
+			return { cancel: true };
 		}
+		const review = workflowStep?.kind === "review";
+		const words = resolveCompactionWords(mgr.state.spec, d);
+		const maxTokens = Math.floor(0.8 * settings.reserveTokens);
+		const attempts: Array<{ mode: string; build: () => any }> = [
+			{
+				mode: "in-context",
+				build: () => {
+					const sm = ctx.sessionManager;
+					const messages = convertToLlm(buildSessionContext(sm.getEntries(), sm.getLeafId()).messages);
+					const now = Date.now();
+					const id = `compact_${now}`;
+					messages.push(
+						{ role: "assistant", content: [{ type: "toolCall", id, name: "compact_context", arguments: {} }], api: model.api, provider: model.provider, model: model.id, usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, totalTokens: 0, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 } }, stopReason: "toolUse", timestamp: now },
+						{ role: "toolResult", toolCallId: id, toolName: "compact_context", content: [{ type: "text", text: buildCompactionInstruction({ review, words }) }], isError: false, timestamp: now },
+					);
+					const all = pi.getAllTools();
+					const tools = pi.getActiveTools().map((n: string) => all.find((t: any) => t.name === n)).filter(Boolean)
+						.map((t: any) => ({ name: t.name, description: t.description, parameters: t.parameters }));
+					return { systemPrompt: ctx.getSystemPrompt(), messages, tools };
+				},
+			},
+			{
+				mode: "serialized",
+				build: () => ({
+					messages: [{ role: "user", content: [{ type: "text", text: buildCompactionPrompt({ conversation: serializeConversation(convertToLlm([...messagesToSummarize, ...turnPrefixMessages])), previousSummary, review, words }) }], timestamp: Date.now() }],
+				}),
+			},
+		];
+		for (const { mode, build } of attempts) {
+			if (signal.aborted) return;
+			const startedAt = Date.now();
+			let result: { summary: string; failure: string; usage?: any };
+			try {
+				result = await compactionModelCall(ctx, model, build(), maxTokens, signal);
+			} catch (error) {
+				result = { summary: "", failure: error instanceof Error ? error.message : String(error) };
+			}
+			const { summary, failure, usage } = result;
+			sessionLog.write({ type: "compaction", mode, reason: event.reason, ok: !failure, failure: failure || undefined, tokensBefore, words: summary.split(/\s+/).filter(Boolean).length, seconds: Math.round((Date.now() - startedAt) / 1000), usage });
+			if (!failure) return { compaction: { summary, firstKeptEntryId, tokensBefore, usage } };
+			if (!signal.aborted) say(ctx, `pi-small: ${mode} compaction summary failed (${failure})`, "warn");
+		}
+		if (!signal.aborted) say(ctx, "pi-small: falling back to pi's own compaction", "warn");
+		return;
 	});
 
 	pi.on("session_shutdown", async () => {

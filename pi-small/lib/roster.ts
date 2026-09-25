@@ -498,8 +498,18 @@ export function resolveMaxTokens(spec: ModelSpec, d: RosterDefaults): number {
  * largest maxTokens, and never below the 6144 bin/pi-small always used.
  */
 export function requiredReserveTokens(roster: Roster): number {
-	const largest = Math.max(...roster.models.map((m) => resolveMaxTokens(m, roster.defaults)));
-	return Math.max(6144, largest + 2048);
+	return Math.max(...roster.models.map((m) => modelReserveTokens(m, roster.defaults)));
+}
+
+/**
+ * The reserve ONE model needs. pi reads a single reserve for the whole session,
+ * so it is the roster's largest, and a model with a small maxTokens would
+ * compact far too early under it (a 10240 reserve at a 16k window compacts at
+ * ~6k). The plugin cancels a threshold compaction until the context passes
+ * (window - this) for the model actually being served.
+ */
+export function modelReserveTokens(spec: ModelSpec, d: RosterDefaults): number {
+	return Math.max(6144, resolveMaxTokens(spec, d) + 2048);
 }
 
 /**

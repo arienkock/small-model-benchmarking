@@ -69,6 +69,8 @@ function fakePi() {
 		setActiveTools: (names: string[]) => {
 			rec.activeTools = names;
 		},
+		getActiveTools: () => rec.activeTools,
+		getAllTools: () => [...rec.toolsByName.values()].map((t: any) => ({ name: t.name, description: t.description, parameters: t.parameters })),
 		setModel: async (m: any) => {
 			rec.model = m;
 			return true;
@@ -425,7 +427,10 @@ pass("PI_SMALL_MODEL picks the plugin's own startup model — matches what bin/p
 // Everything thinking-related has to arrive TWICE — on the command line and on
 // every request — because in the container the request is the only lever.
 const modedRoster = JSON.parse(readFileSync(resolve(HERE, "..", "roster.json"), "utf8"));
-modedRoster.models.find((m: any) => m.alias === "Qwen3.6-35B-A3B-Q4_K_M").file = stubServerPath;
+const modedQwen = modedRoster.models.find((m: any) => m.alias === "Qwen3.6-35B-A3B-Q4_K_M");
+modedQwen.file = stubServerPath;
+// Only its thinking modes are under test here: back on the roster defaults for the rest.
+for (const k of ["ctx", "ctxCandidates", "maxTokens"]) delete modedQwen[k];
 modedRoster.models.find((m: any) => m.alias === "Qwen3.8-27B-UD-IQ4_XS").maxTokens = 6000;
 const modedRosterPath = join(LOGS, "roster-moded.json");
 writeFileSync(modedRosterPath, JSON.stringify(modedRoster));
@@ -495,12 +500,25 @@ assert.ok(truncNotices.some((n) => /max_tokens \(4096\) with NO answer — 900 c
 assert.ok(truncNotices.some((n) => /response truncated at max_tokens \(4096\)/.test(n)), `partial truncation: ${truncNotices.join(" | ")}`);
 pass("a response cut off at max_tokens is reported, and one with no answer at all is named as such");
 
-// Compaction: pi-small writes the summary itself, with its own prompt.
+// Compaction: pi-small writes the summary itself, with its own prompt — in
+// context first (reusing the server's prompt cache), then from a serialized copy.
 {
 	const compactHook = rec3.handlers.get("session_before_compact");
 	const calls: any[] = [];
-	let reply: any = { content: [{ type: "text", text: "## Lessons\nx\n## Next steps\ny" }], stopReason: "stop", usage: { output: 9 } };
-	const cctx = { ...ctx3, model: { provider: "small-local", id: "Qwen3.6-35B-A3B-Q4_K_M" }, modelRegistry: { ...ctx3.modelRegistry, complete: async (m: any, c: any, o: any) => (calls.push({ m, c, o }), reply) } };
+	let replies: any[] = [];
+	const entries = [
+		{ type: "message", id: "e1", parentId: null, timestamp: new Date(1).toISOString(), message: { role: "user", content: "build the thing", timestamp: 1 } },
+		{ type: "message", id: "e2", parentId: "e1", timestamp: new Date(2).toISOString(), message: { role: "assistant", content: [{ type: "text", text: "on it" }], api: "openai-completions", provider: "small-local", model: "m", usage: { input: 1, output: 1, cacheRead: 0, cacheWrite: 0, totalTokens: 2, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 } }, stopReason: "stop", timestamp: 2 } },
+	];
+	const cctx = {
+		...ctx3,
+		model: { provider: "small-local", id: "Qwen3.6-35B-A3B-Q4_K_M", api: "openai-completions" },
+		getSystemPrompt: () => "THE SYSTEM PROMPT",
+		sessionManager: { ...ctx3.sessionManager, getEntries: () => entries, getLeafId: () => "e2" },
+		modelRegistry: { ...ctx3.modelRegistry, complete: async (m: any, c: any, o: any) => (calls.push({ m, c, o }), replies.shift()) },
+	};
+	const ok = { content: [{ type: "text", text: "## Lessons\nx\n## Next steps\ny" }], stopReason: "stop", usage: { output: 9 } };
+	const cut = { content: [{ type: "text", text: "## Lessons\ncut o" }], stopReason: "length", usage: {} };
 	const event = (previousSummary?: string) => ({
 		reason: "threshold",
 		signal: new AbortController().signal,
@@ -513,19 +531,50 @@ pass("a response cut off at max_tokens is reported, and one with no answer at al
 			settings: { reserveTokens: 5000 },
 		},
 	});
-	const out = await compactHook(event("## Lessons\nold lesson"), cctx);
+
+	replies = [ok];
+	const out = await compactHook(event(), cctx);
 	assert.deepEqual(out?.compaction, { summary: "## Lessons\nx\n## Next steps\ny", firstKeptEntryId: "entry-7", tokensBefore: 12000, usage: { output: 9 } });
-	const prompt = calls[0].c.messages[0].content[0].text;
-	assert.match(prompt, /## Lessons\nAt most 200 words/, "200 words per part unless the roster says otherwise");
-	assert.match(prompt, /## Next steps\nAt most 200 words/, prompt);
-	assert.match(prompt, /<previous-summary>\n## Lessons\nold lesson\n<\/previous-summary>/, "the previous summary is carried forward");
-	assert.match(prompt, /<conversation>[\s\S]*build the thing[\s\S]*<\/conversation>/, "the conversation is included");
-	assert.doesNotMatch(prompt, /Findings so far/, "only review steps are asked for findings");
-	assert.equal(calls[0].o.maxTokens, 4000, "0.8 x reserveTokens, as pi's own compaction uses");
-	reply = { content: [{ type: "text", text: "## Lessons\ncut o" }], stopReason: "length", usage: {} };
-	assert.equal(await compactHook(event(), cctx), undefined, "a summary cut off at the token cap falls back to pi's compaction");
+	const first = calls[0];
+	assert.equal(first.c.systemPrompt, "THE SYSTEM PROMPT", "the agent's own system prompt, so the prefix matches");
+	assert.deepEqual(first.c.tools.map((t: any) => t.name), rec3.activeTools, "the agent's active tools, in order");
+	const msgs = first.c.messages;
+	assert.deepEqual(msgs.slice(0, 2).map((m: any) => m.role), ["user", "assistant"], "the session's own messages come first");
+	const [call, result] = msgs.slice(-2);
+	assert.equal(call.content[0].type, "toolCall", "then a synthetic tool call...");
+	assert.equal(result.role, "toolResult", "...whose result is the instruction — not a user message, which would re-render earlier thinking");
+	const instruction = result.content[0].text;
+	assert.match(instruction, /## Lessons\nAt most 200 words/, "200 words per part unless the roster says otherwise");
+	assert.match(instruction, /## Next steps\nAt most 200 words/, instruction);
+	assert.doesNotMatch(instruction, /Findings so far/, "only review steps are asked for findings");
+	assert.equal(first.o.maxTokens, 4000, "0.8 x reserveTokens, as pi's own compaction uses");
+	const shaped = first.o.onPayload({ messages: [] });
+	assert.ok("temperature" in shaped && "presence_penalty" in shaped, "the request is shaped like a normal turn (sampler, thinking switch)");
+
+	calls.length = 0;
+	replies = [cut, ok];
+	const out2 = await compactHook(event("## Lessons\nold lesson"), cctx);
+	assert.equal(out2?.compaction?.summary, "## Lessons\nx\n## Next steps\ny", "a failed in-context summary falls back to the serialized one");
+	const prompt = calls[1].c.messages[0].content[0].text;
+	assert.match(prompt, /<previous-summary>\n## Lessons\nold lesson\n<\/previous-summary>/, "the serialized prompt carries the previous summary");
+	assert.match(prompt, /<conversation>[\s\S]*build the thing[\s\S]*<\/conversation>/, "and the conversation");
+
+	replies = [cut, cut];
+	assert.equal(await compactHook(event(), cctx), undefined, "when both fail, pi's own compaction runs");
+
+	// pi's reserve is the roster's largest; a model with a smaller maxTokens
+	// holds a threshold compaction off until its own threshold (window - its reserve).
+	calls.length = 0;
+	const small = { ...cctx, model: { ...cctx.model, contextWindow: 16384 } };
+	const early = event();
+	early.preparation.tokensBefore = 7000;
+	assert.deepEqual(await compactHook(early, small), { cancel: true }, "7000 of 16384 is below 16384 - 6144: too early for a 4096-maxTokens model");
+	assert.equal(calls.length, 0, "and no summary is requested");
+	early.preparation.tokensBefore = 10300;
+	replies = [ok];
+	assert.ok((await compactHook(early, small))?.compaction, "past its own threshold it compacts");
 }
-pass("compaction uses pi-small's two-part prompt (lessons, next steps; 200 words each by default) and falls back to pi's when it fails");
+pass("compaction: in context first (same prompt, tools, payload; instruction as a tool result), then serialized, then pi's own");
 
 // The session log: settings, effective system prompt, every response.
 rec3.handlers.get("before_agent_start")({ prompt: "hi", systemPrompt: "BASE PROMPT" }, ctx3);
