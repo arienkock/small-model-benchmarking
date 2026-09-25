@@ -400,7 +400,7 @@ try {
 		(e: any) => String(e?.message ?? e),
 	);
 	assert.ok(Date.now() - t0 < 15_000, `a command with no timeout of its own is stopped by the default (took ${Date.now() - t0} ms): ${hung}`);
-	assert.match(hung, /Command timed out after 1 seconds[\s\S]*default limit[\s\S]*"timeout" argument/, "the model is told the default stopped it and how to ask for more");
+	assert.match(hung, /Command timed out after 1 seconds\n<harness-note>[\s\S]*default limit[\s\S]*"timeout" argument[\s\S]*<\/harness-note>$/, "the model is told the default stopped it and how to ask for more");
 	const own = await (bash.execute as any)("t2", { command: "sleep 2; echo done", timeout: 10 }, undefined, undefined, undefined);
 	assert.match(JSON.stringify(own.content), /done/, "a model's own longer timeout wins over the default");
 	const ownTimeout = await (bash.execute as any)("t3", { command: "sleep 30", timeout: 1 }, undefined, undefined, undefined).then(() => "", (e: any) => String(e.message));

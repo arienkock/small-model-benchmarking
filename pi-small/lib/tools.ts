@@ -90,9 +90,9 @@ function withDefaultTimeout(def: ToolDefinition<any, any, any>, seconds: number 
 			} catch (e: any) {
 				if (defaulted && /Command timed out after/.test(String(e?.message))) {
 					throw new Error(
-						`${e.message}\n[pi-small] ${seconds} s is the default limit for a command. If this command needs longer (a test suite, a build), ` +
+						`${e.message}\n<harness-note>${seconds} s is the default limit for a command. If this command needs longer (a test suite, a build), ` +
 							`run it again with the bash tool's "timeout" argument set, in seconds. If it should have finished, it is probably waiting ` +
-							`on something (a server that never answers, input it will not get).`,
+							`on something (a server that never answers, input it will not get).</harness-note>`,
 					);
 				}
 				throw e;
