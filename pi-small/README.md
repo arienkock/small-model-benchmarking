@@ -529,6 +529,18 @@ if the file holds less, and it never lowers a value set higher on purpose. Apert
 inherently too tight for this to fully rescue regardless of tuning, same as
 its context-ladder situation above.
 
+**The compaction summary is pi-small's own** (`lib/compaction.ts`), in every
+session. pi's default asks for a seven-section checkpoint (goal, constraints,
+done, in progress, blocked, decisions, next steps, context). At 10–14 tokens/s,
+that output is the expensive part, and most of it restates the task, which pi
+keeps anyway. pi-small asks for two parts of at most 400 words each:
+**Lessons**, meaning whatever would be expensive to relearn, and **Next steps**.
+A review step also keeps its findings so far. pi's `customInstructions` can
+only append to its prompt, so the plugin's `session_before_compact` hook makes
+the summary call itself and returns the result. If that call fails or hits the
+token cap, pi's own compaction runs instead. The session log gets a
+`compaction` record for each one, with its word count and duration.
+
 The directory is seeded once (never overwritten on a later launch, so
 `/model`'s "set as default" survives), and a `small-local` default already
 saved in the REAL global settings is migrated in automatically the first time

@@ -495,13 +495,45 @@ assert.ok(truncNotices.some((n) => /max_tokens \(4096\) with NO answer — 900 c
 assert.ok(truncNotices.some((n) => /response truncated at max_tokens \(4096\)/.test(n)), `partial truncation: ${truncNotices.join(" | ")}`);
 pass("a response cut off at max_tokens is reported, and one with no answer at all is named as such");
 
+// Compaction: pi-small writes the summary itself, with its own prompt.
+{
+	const compactHook = rec3.handlers.get("session_before_compact");
+	const calls: any[] = [];
+	let reply: any = { content: [{ type: "text", text: "## Lessons\nx\n## Next steps\ny" }], stopReason: "stop", usage: { output: 9 } };
+	const cctx = { ...ctx3, model: { provider: "small-local", id: "Qwen3.6-35B-A3B-Q4_K_M" }, modelRegistry: { ...ctx3.modelRegistry, complete: async (m: any, c: any, o: any) => (calls.push({ m, c, o }), reply) } };
+	const event = (previousSummary?: string) => ({
+		reason: "threshold",
+		signal: new AbortController().signal,
+		preparation: {
+			messagesToSummarize: [{ role: "user", content: "build the thing", timestamp: 1 }],
+			turnPrefixMessages: [],
+			tokensBefore: 12000,
+			firstKeptEntryId: "entry-7",
+			previousSummary,
+			settings: { reserveTokens: 5000 },
+		},
+	});
+	const out = await compactHook(event("## Lessons\nold lesson"), cctx);
+	assert.deepEqual(out?.compaction, { summary: "## Lessons\nx\n## Next steps\ny", firstKeptEntryId: "entry-7", tokensBefore: 12000, usage: { output: 9 } });
+	const prompt = calls[0].c.messages[0].content[0].text;
+	assert.match(prompt, /## Lessons\nAt most 400 words/, prompt);
+	assert.match(prompt, /## Next steps\nAt most 400 words/, prompt);
+	assert.match(prompt, /<previous-summary>\n## Lessons\nold lesson\n<\/previous-summary>/, "the previous summary is carried forward");
+	assert.match(prompt, /<conversation>[\s\S]*build the thing[\s\S]*<\/conversation>/, "the conversation is included");
+	assert.doesNotMatch(prompt, /Findings so far/, "only review steps are asked for findings");
+	assert.equal(calls[0].o.maxTokens, 4000, "0.8 x reserveTokens, as pi's own compaction uses");
+	reply = { content: [{ type: "text", text: "## Lessons\ncut o" }], stopReason: "length", usage: {} };
+	assert.equal(await compactHook(event(), cctx), undefined, "a summary cut off at the token cap falls back to pi's compaction");
+}
+pass("compaction uses pi-small's two-part prompt (lessons, next steps; 400 words each) and falls back to pi's when it fails");
+
 // The session log: settings, effective system prompt, every response.
 rec3.handlers.get("before_agent_start")({ prompt: "hi", systemPrompt: "BASE PROMPT" }, ctx3);
 const logFile = readdirSync(sessionDir).find((f) => f.startsWith("session-"));
 assert.ok(logFile, "a session log is written");
 const records = readFileSync(join(sessionDir, logFile!), "utf8").trim().split("\n").map((l) => JSON.parse(l));
 const types = new Set(records.map((r) => r.type));
-for (const t of ["session", "system_prompt", "response"]) assert.ok(types.has(t), `session log has a ${t} record: ${[...types].join(",")}`);
+for (const t of ["session", "system_prompt", "response", "compaction"]) assert.ok(types.has(t), `session log has a ${t} record: ${[...types].join(",")}`);
 const promptRec = records.find((r) => r.type === "system_prompt");
 assert.equal(promptRec.chars, `BASE PROMPT\n\n${TERSE_STYLE}`.length, "the prompt's length is recorded");
 assert.match(promptRec.sha256, /^[0-9a-f]{12}$/, "and its hash — pi does not persist the prompt itself");

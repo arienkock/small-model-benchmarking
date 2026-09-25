@@ -54,11 +54,13 @@
  */
 
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { appendFileSync, existsSync, mkdirSync, openSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { convertToLlm, serializeConversation } from "@earendil-works/pi-coding-agent";
+import { buildCompactionPrompt } from "../lib/compaction.ts";
 import { buildTool } from "../lib/tools.ts";
 import { buildWorkflowTool, loadStepFile } from "../lib/workflow-tool.ts";
 import { TERSE_STYLE } from "../lib/workflow.ts";
@@ -1050,29 +1052,46 @@ export default function (pi: ExtensionAPI) {
 		await switchTo(mgr.state.spec, mgr.state.requestedCtx, ctx);
 	});
 
-	// A review step (workflowStep.kind === "review", see lib/review.ts) losing
-	// its findings-so-far to a generic auto-compaction summary is worse than
-	// losing anything else here: there is no retry within the session to
-	// recover them from, only the wrap-up nudge at the very end. On a
-	// threshold or manual compaction, cancel pi's own default summary and ask
-	// for one shaped for a review instead. "manual" fires again from OUR OWN
-	// ctx.compact() call below — event.customInstructions already set on that
-	// second pass is the signal to stop re-entering and let it through.
-	// "overflow" (mid-turn, retried after compacting) is left alone: this is
-	// not the moment to redirect what gets kept.
-	pi.on("session_before_compact", (event: any, ctx: any) => {
-		if (workflowStep?.kind !== "review") return;
-		if (event.reason !== "threshold" && event.reason !== "manual") return;
-		if (event.customInstructions) return;
-		ctx.compact({
-			customInstructions: [
-				"This review session is being compacted. Summarize it so the review can continue afterward. Include:",
-				"- findings so far, one line each: `priority | location | one-line evidence`",
-				"- the areas of the code already checked",
-				"- what is left to check",
-			].join("\n"),
+	// Compaction: every session uses pi-small's own summary prompt
+	// (lib/compaction.ts) instead of pi's, which asks for a long seven-section
+	// checkpoint that costs minutes to generate at these speeds. pi's
+	// customInstructions would only be appended to its prompt, so this hook
+	// makes the summary call itself and returns the result. A review step's
+	// prompt also keeps its findings so far: losing those is worse than losing
+	// anything else, since no retry within the session could recover them. On
+	// any failure pi's own compaction runs instead.
+	pi.on("session_before_compact", async (event: any, ctx: any) => {
+		const { preparation, signal } = event;
+		const { messagesToSummarize, turnPrefixMessages, tokensBefore, firstKeptEntryId, previousSummary, settings } = preparation;
+		const model = ctx.model;
+		if (!model || !firstKeptEntryId) return;
+		const prompt = buildCompactionPrompt({
+			conversation: serializeConversation(convertToLlm([...messagesToSummarize, ...turnPrefixMessages])),
+			previousSummary,
+			review: workflowStep?.kind === "review",
 		});
-		return { cancel: true };
+		const startedAt = Date.now();
+		try {
+			const response = await ctx.modelRegistry.complete(
+				model,
+				{ messages: [{ role: "user", content: [{ type: "text", text: prompt }], timestamp: Date.now() }] },
+				{ maxTokens: Math.floor(0.8 * settings.reserveTokens), signal, cacheRetention: "none", sessionId: randomUUID() },
+			);
+			const summary = response.content.filter((c: any) => c.type === "text").map((c: any) => c.text).join("\n").trim();
+			const failure = response.stopReason === "error" ? response.errorMessage || "error"
+				: response.stopReason === "length" ? "hit the token cap" : !summary ? "empty summary" : "";
+			sessionLog.write({ type: "compaction", reason: event.reason, ok: !failure, failure: failure || undefined, tokensBefore, words: summary.split(/\s+/).filter(Boolean).length, seconds: Math.round((Date.now() - startedAt) / 1000), usage: response.usage });
+			if (failure) {
+				if (!signal.aborted) say(ctx, `pi-small: compaction summary failed (${failure}); falling back to pi's own`, "warn");
+				return;
+			}
+			return { compaction: { summary, firstKeptEntryId, tokensBefore, usage: response.usage } };
+		} catch (error) {
+			const message = error instanceof Error ? error.message : String(error);
+			sessionLog.write({ type: "compaction", reason: event.reason, ok: false, failure: message, tokensBefore });
+			if (!signal.aborted) say(ctx, `pi-small: compaction summary failed (${message}); falling back to pi's own`, "warn");
+			return;
+		}
 	});
 
 	pi.on("session_shutdown", async () => {
