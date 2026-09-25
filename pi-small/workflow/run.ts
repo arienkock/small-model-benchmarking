@@ -8,6 +8,7 @@
  *   node workflow/run.ts --resume --run-dir workflow-runs/<dir>
  *   node workflow/run.ts --task … --models A,B --review completeness,correctness --seed-ws some/existing-code
  *   node workflow/run.ts --task … --models A,B --fix --seed-ws some/existing-code --config workflow/configs/fix-loop.json
+ *   node workflow/run.ts --task … --model Qwen3.6-35B-A3B-Q4_K_M --freeform --cap-min 210
  *
  * The harness is task-agnostic; everything about a particular task — its text,
  * how to run its tests, extra checks, a grader, starting code — comes from the
@@ -49,6 +50,12 @@
  *                      is the fixer rotation. No --resume; graded like a workflow run.
  *   --reviewers A,B    --fix: the reviewer rotation (default: --models)
  *   --review-variant V --fix: the review prompt (default "all")
+ *   --freeform         no workflow at all: ONE plain pi-small session gets the task's
+ *                      prompt.md as its only message — no step tool, no checks, no
+ *                      feedback — and runs until it stops by itself or --cap-min.
+ *                      Graded; freeform.json records time to done, turns, tokens.
+ *   --cap-min N        --freeform: wall-clock cap in minutes (default 210); at the
+ *                      cap the session is aborted and the workspace graded as it is
  *   --no-grade         skip the task's grader (ignored with --review; it never grades)
  *   --no-serve         do not start a proxy: one must already answer on --port
  *   --local            run pi (and the grader) here instead of in the container
@@ -62,6 +69,7 @@
  *   state.json, spec.md       the workflow state (--resume reads it); the enriched task
  *   reviews.json               --review only: one ReviewResult per model/variant/repeat
  *   fix-loop.json              --fix only: every round's probe, review, selection and fixes
+ *   freeform.json              --freeform only: how the session ended, minutes, turns, tokens
  *   events.jsonl, workflow.log    every step, session and check, with timings
  *   agent.events.jsonl / agent.stderr.log   the pi process's RPC events and stderr
  *   proxy.log                 the host proxy, when this script started it
@@ -96,7 +104,7 @@ function parseArgs(argv: string[]) {
 		const a = argv[i];
 		if (!a.startsWith("--")) throw new Error(`unexpected argument ${a}`);
 		const key = a.slice(2);
-		if (["no-serve", "no-build", "build", "resume", "help", "no-grade", "local", "fix"].includes(key)) o[key] = true;
+		if (["no-serve", "no-build", "build", "resume", "help", "no-grade", "local", "fix", "freeform"].includes(key)) o[key] = true;
 		else o[key] = argv[++i] ?? "";
 	}
 	return o;
@@ -124,6 +132,13 @@ const unknownVariants = reviewVariants.filter((v) => !(v in REVIEW_VARIANTS));
 if (unknownVariants.length) throw new Error(`--review: unknown variant(s) ${unknownVariants.join(", ")} — one of ${Object.keys(REVIEW_VARIANTS).join(", ")}`);
 const reviewMode = reviewVariants.length > 0;
 const fixMode = !!args.fix;
+const freeform = !!args.freeform;
+const capMin = Number((args["cap-min"] as string) || "210");
+if (freeform) {
+	if (reviewMode || args.fix || args.resume) throw new Error("--freeform cannot be combined with --review, --fix or --resume");
+	if (!model) throw new Error("--freeform needs --model");
+	if (!(capMin > 0)) throw new Error(`--cap-min ${args["cap-min"]} is not a positive number of minutes`);
+}
 const reviewers = args.reviewers ? (args.reviewers as string).split(",").map((m) => m.trim()).filter(Boolean) : rotation;
 const reviewVariant = (args["review-variant"] as string) || "all";
 if (fixMode) {
@@ -244,7 +259,8 @@ function startAgent(): PiRpc {
 		PI_SMALL_REMOTE: "1",
 		PI_SMALL_PORT: String(port),
 		PI_SMALL_API_KEY: apiKey,
-		PI_SMALL_WORKFLOW_STEP: stepFilePath,
+		// Free-form: plain pi-small, so no step file and no step tool.
+		...(freeform ? {} : { PI_SMALL_WORKFLOW_STEP: stepFilePath }),
 		...(model ? { PI_SMALL_MODEL: model } : {}),
 		...(thinking ? { PI_SMALL_THINKING: thinking } : {}),
 	};
@@ -312,19 +328,100 @@ writeFileSync(join(runDir, "run-spec.json"), JSON.stringify(runSpec, null, 2));
 
 const agent = startAgent();
 agent.start();
-log(`agent: pi-small in RPC mode${local ? " (local)" : " (container)"}; sending /workflow run`);
-const limitMs = (deadline ? Math.max(0, deadline - Date.now()) : 24 * 3600_000) + 20 * 60_000;
-let agentGone = false;
-agent.waitFor((ev) => ev.type === "__exit__", limitMs).then(
-	() => (agentGone = true),
-	() => {},
-);
-// The response may come when the command is accepted or when it finishes;
-// events.jsonl's workflow_end is the end marker either way.
-agent.send({ type: "prompt", message: `/workflow run ${view.runDir}/run-spec.json` }, limitMs).catch((e) => log(`agent: ${e.message}`));
-for (const t1 = Date.now(); !workflowEnded() && !agentGone && Date.now() - t1 < limitMs; ) await sleep(2000);
-if (!workflowEnded()) log(agentGone ? "agent: the pi process exited before the workflow ended — see agent.stderr.log" : "agent: gave up waiting for the workflow");
+let freeformEnd: "settled" | "cap" | "exited" | undefined;
+if (freeform) {
+	freeformEnd = await runFreeform(agent);
+} else {
+	log(`agent: pi-small in RPC mode${local ? " (local)" : " (container)"}; sending /workflow run`);
+	const limitMs = (deadline ? Math.max(0, deadline - Date.now()) : 24 * 3600_000) + 20 * 60_000;
+	let agentGone = false;
+	agent.waitFor((ev) => ev.type === "__exit__", limitMs).then(
+		() => (agentGone = true),
+		() => {},
+	);
+	// The response may come when the command is accepted or when it finishes;
+	// events.jsonl's workflow_end is the end marker either way.
+	agent.send({ type: "prompt", message: `/workflow run ${view.runDir}/run-spec.json` }, limitMs).catch((e) => log(`agent: ${e.message}`));
+	for (const t1 = Date.now(); !workflowEnded() && !agentGone && Date.now() - t1 < limitMs; ) await sleep(2000);
+	if (!workflowEnded()) log(agentGone ? "agent: the pi process exited before the workflow ended — see agent.stderr.log" : "agent: gave up waiting for the workflow");
+}
 await agent.close();
+
+/**
+ * --freeform: the task's prompt as the one message of one plain session. Done
+ * when the agent has settled (idle, no retry after a compaction) and stays so
+ * for 30 s; at --cap-min it is aborted. Whatever is in the workspace then is
+ * what gets graded.
+ */
+async function runFreeform(a: PiRpc): Promise<"settled" | "cap" | "exited"> {
+	const capMs = capMin * 60_000;
+	log(`agent: pi-small in RPC mode${local ? " (local)" : " (container)"}; free-form session on ${model}, cap ${capMin} min`);
+	let running = false;
+	let settledAt = 0;
+	let gone = false;
+	const started = Date.now();
+	// A predicate that never matches: a way to see every event as it arrives.
+	a.waitFor((ev) => {
+		if (ev.type === "agent_start") running = true;
+		if (ev.type === "agent_settled" || ev.type === "agent_end") {
+			running = false;
+			settledAt = Date.now();
+		}
+		return false;
+	}, capMs + 30 * 60_000).catch(() => (gone = true));
+	appendFileSync(join(runDir, "events.jsonl"), JSON.stringify({ ts: new Date().toISOString(), type: "freeform_start", model, capMin }) + "\n");
+	a.send({ type: "prompt", message: task }, capMs + 30 * 60_000).catch((e) => log(`agent: ${e.message}`));
+	let end: "settled" | "cap" | "exited";
+	for (;;) {
+		await sleep(2000);
+		if (gone) {
+			end = "exited";
+			break;
+		}
+		if (settledAt && !running && Date.now() - settledAt > 30_000) {
+			end = "settled";
+			break;
+		}
+		if (Date.now() - started > capMs) {
+			end = "cap";
+			log(`free-form: the ${capMin}-minute cap — aborting the session`);
+			await a.send({ type: "abort" }, 60_000).catch((e) => log(`agent: abort: ${e.message}`));
+			for (const t1 = Date.now(); running && Date.now() - t1 < 120_000; ) await sleep(1000);
+			break;
+		}
+	}
+	const minutes = Number(((end === "settled" ? settledAt : Date.now()) - started) / 60_000).toFixed(1);
+	appendFileSync(join(runDir, "events.jsonl"), JSON.stringify({ ts: new Date().toISOString(), type: "freeform_end", end, minutes: Number(minutes) }) + "\n");
+	log(`free-form session ended (${end}) after ${minutes} min`);
+	return end;
+}
+
+/** Turns, tokens and compactions of the free-form session, from the agent's own event log. */
+function freeformStats() {
+	const stats = { turns: 0, assistantMessages: 0, toolCalls: 0, compactions: 0, inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, maxTurnOutputTokens: 0 };
+	const p = join(runDir, "agent.events.jsonl");
+	if (!existsSync(p)) return stats;
+	for (const line of readFileSync(p, "utf8").split("\n")) {
+		let e: any;
+		try {
+			e = JSON.parse(line);
+		} catch {
+			continue;
+		}
+		if (e.type === "turn_end") stats.turns++;
+		if (e.type === "tool_execution_start") stats.toolCalls++;
+		if (e.type === "compaction_end" && !e.aborted) stats.compactions++;
+		const m = e.type === "message_end" ? e.message : undefined;
+		if (m?.role === "assistant" && m.usage) {
+			stats.assistantMessages++;
+			stats.inputTokens += m.usage.input ?? 0;
+			stats.outputTokens += m.usage.output ?? 0;
+			stats.cacheReadTokens += m.usage.cacheRead ?? 0;
+			stats.maxTurnOutputTokens = Math.max(stats.maxTurnOutputTokens, m.usage.output ?? 0);
+		}
+	}
+	return stats;
+}
 
 let exitCode: number;
 
@@ -356,6 +453,12 @@ if (reviewMode) {
 		}
 		if (result) log(`  remaining: ${countByPriority(result.remaining)}`);
 		ok = result?.status === "clean";
+	} else if (freeform) {
+		const minutesToEnd = readFileSync(join(runDir, "events.jsonl"), "utf8").split("\n").filter(Boolean).map((l) => JSON.parse(l)).find((e) => e.type === "freeform_end")?.minutes ?? null;
+		const record = { model, thinking: thinking || null, capMin, end: freeformEnd, minutes: minutesToEnd, ...freeformStats() };
+		writeFileSync(join(runDir, "freeform.json"), JSON.stringify(record, null, 2));
+		log(`free-form: ${record.end} after ${record.minutes} min; ${record.turns} turn(s), ${record.toolCalls} tool call(s), ${record.compactions} compaction(s); tokens in ${record.inputTokens} (+${record.cacheReadTokens} cached), out ${record.outputTokens}`);
+		ok = freeformEnd === "settled";
 	} else {
 		const final: WorkflowState | null = existsSync(join(runDir, "state.json")) ? JSON.parse(readFileSync(join(runDir, "state.json"), "utf8")) : null;
 		log(`workflow ${final?.status?.toUpperCase() ?? "DID NOT START"} after ${((Date.now() - t0) / 60_000).toFixed(1)} min${final?.failure ? ` — ${final.failure.split("\n")[0]}` : ""}`);
