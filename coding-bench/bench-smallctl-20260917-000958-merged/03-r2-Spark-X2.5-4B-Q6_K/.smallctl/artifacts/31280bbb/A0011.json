@@ -1,0 +1,24 @@
+{
+  "success": false,
+  "status": "blocked",
+  "output": null,
+  "error": "VERIFIER LOOP HARD STOP: shell_exec is blocked after 7 verifier rejections. Allowed action classes are: ask_user, mutation, research, stop_blocked. Research the failure, make a targeted mutation, ask the user, or call task_fail.",
+  "metadata": {
+    "tool_name": "shell_exec",
+    "reason": "verifier_loop_hard_stop",
+    "rejection_count": 7,
+    "allowed_action_classes": [
+      "ask_user",
+      "mutation",
+      "research",
+      "stop_blocked"
+    ],
+    "active_mitigation": "verifier_loop_dispatch_block",
+    "arguments": {
+      "command": "curl -s -i http://127.0.0.1:8000/api/books",
+      "timeout_sec": 15
+    },
+    "model_visible": false,
+    "hidden": true
+  }
+}

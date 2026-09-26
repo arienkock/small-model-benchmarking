@@ -1,0 +1,32 @@
+{
+  "success": true,
+  "status": null,
+  "output": "import assert from 'node:assert';\nimport { pathToFileURL } from 'node:url';\n\nexport function debounce(fn: (...args: any[]) => void, waitMs: number) {\n    let timer: ReturnType<typeof setTimeout> | null = null;\n    return (...args: any[]) => {\n        if (timer !== null) {\n            clearTimeout(timer);\n            timer = null;\n        }\n        timer = setTimeout(() => {\n            timer = null;\n            fn(...args);\n        }, waitMs);\n    };\n}\n\n// Self-test that runs when the file is executed directly\nif (import.meta.url === pathToFileURL(process.argv[1]).href) {\n    const calls: string[] = [];\n    const debounced = debounce((...args: any[]) => {\n        calls.push(args.join(','));\n    }, 30);\n\n    // First call schedules a delay\n    debounced('a', 'b');\n\n    // Second call cancels the pending call and reschedules with latest args\n    debounced('c', 'd');\n\n    // Wait for the debounced call to fire\n    setTimeout(() => {\n        assert.deepStrictEqual(calls, ['c,d']);\n        console.log('all tests passed');\n    }, 100);\n}",
+  "error": null,
+  "metadata": {
+    "tool_name": "file_read",
+    "tier": "tier1",
+    "tool_risk": "low",
+    "tool_category": "filesystem",
+    "dispatch_phase": "execute",
+    "path": "/work/debounce.ts",
+    "source_path": "/work/debounce.ts",
+    "bytes": 1048,
+    "elapsed_ms": 3,
+    "requested_start_line": null,
+    "requested_end_line": null,
+    "max_bytes": 100000,
+    "line_start": 1,
+    "line_end": 36,
+    "total_lines": 36,
+    "complete_file": true,
+    "truncated": false,
+    "read_from_staging": false,
+    "staged_only": false,
+    "dotenv_read_redacted": false,
+    "dotenv_permissions_warning": "",
+    "write_session_id": "",
+    "write_session_status": "",
+    "system_repair_cycle_id": ""
+  }
+}

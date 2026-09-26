@@ -1,0 +1,164 @@
+{
+  "success": true,
+  "status": null,
+  "output": {
+    "query": "error: node:internal/modules/run_main:107 triggerUncaughtException( ^ AssertionError [ERR_ASSERTION]: first three calls should fire at selfTest (file:///work",
+    "provider": "duckduckgo",
+    "results": [
+      {
+        "result_id": "webres-c807c77c19cd",
+        "title": "node:internal/modules/run_main:107 triggerUncaughtException [Error ...",
+        "url": "https://github.com/saadeghi/daisyui/issues/4598",
+        "canonical_url": "https://github.com/saadeghi/daisyui/issues/4598",
+        "domain": "github.com",
+        "snippet": "This is happening to me when I try to \"compile\" PS C:\\\\Users\\\\partner\\\\source\\\\repos\\\\Tonarife\\\\Test> npx tailwindcss -i ./Styles/input.css -o ./wwwroot/tailwind.css ...",
+        "published_at": null,
+        "provider": "duckduckgo",
+        "rank": 1,
+        "quality": {
+          "score": 2.895,
+          "query_coverage": 0.474,
+          "exact_date_match": false,
+          "source_authority": "general_web",
+          "likely_forecast": false,
+          "intent_match": true
+        },
+        "fetch_id": "r1"
+      },
+      {
+        "result_id": "webres-29152eca4884",
+        "title": "How to fix InternalError: Assertion failed (Node.js internal error) in ...",
+        "url": "https://deverrors.com/errors/node-internal-error",
+        "canonical_url": "https://deverrors.com/errors/node-internal-error",
+        "domain": "deverrors.com",
+        "snippet": "Include the output from node --version and node --versions to show exact versions of all dependencies. A well-detailed bug report helps Node .js maintainers fix the issue.",
+        "published_at": null,
+        "provider": "duckduckgo",
+        "rank": 2,
+        "quality": {
+          "score": 2.263,
+          "query_coverage": 0.316,
+          "exact_date_match": false,
+          "source_authority": "general_web",
+          "likely_forecast": false,
+          "intent_match": true
+        },
+        "fetch_id": "r2"
+      },
+      {
+        "result_id": "webres-27a57192d3a8",
+        "title": "Node - triggerUncaughtException - The freeCodeCamp Forum",
+        "url": "https://forum.freecodecamp.org/t/node-triggeruncaughtexception/576460",
+        "canonical_url": "https://forum.freecodecamp.org/t/node-triggeruncaughtexception/576460",
+        "domain": "forum.freecodecamp.org",
+        "snippet": "Hey can anyone please solve my problem when i run node . it shows me this i am kinda noob iknow this is a 20 sec work but i am stuck on this for almost 2 weeks please help",
+        "published_at": null,
+        "provider": "duckduckgo",
+        "rank": 3,
+        "quality": {
+          "score": 1.842,
+          "query_coverage": 0.211,
+          "exact_date_match": false,
+          "source_authority": "general_web",
+          "likely_forecast": false,
+          "intent_match": true
+        },
+        "fetch_id": "r3"
+      },
+      {
+        "result_id": "webres-befc27592455",
+        "title": "16 Common Errors in Node.js and How to Fix Them - Better Stack",
+        "url": "https://betterstack.com/community/guides/scaling-nodejs/nodejs-errors/",
+        "canonical_url": "https://betterstack.com/community/guides/scaling-nodejs/nodejs-errors/",
+        "domain": "betterstack.com",
+        "snippet": "This article explores 16 of the most common Node .js errors and discusses possible solutions to each one",
+        "published_at": null,
+        "provider": "duckduckgo",
+        "rank": 4,
+        "quality": {
+          "score": 1.632,
+          "query_coverage": 0.158,
+          "exact_date_match": false,
+          "source_authority": "general_web",
+          "likely_forecast": false,
+          "intent_match": true
+        },
+        "fetch_id": "r4"
+      },
+      {
+        "result_id": "webres-7867220868ee",
+        "title": "[tutorial error] module required \u00b7 Issue #131 \u00b7 github/copilot-sdk",
+        "url": "https://github.com/github/copilot-sdk/issues/131",
+        "canonical_url": "https://github.com/github/copilot-sdk/issues/131",
+        "domain": "github.com",
+        "snippet": "Just tried following the TS tutorial, you get an error out of the box: npx tsx index.ts node:internal/modules/run_main:107 triggerUncaughtException( ^ Error ...",
+        "published_at": null,
+        "provider": "duckduckgo",
+        "rank": 5,
+        "quality": {
+          "score": 2.895,
+          "query_coverage": 0.474,
+          "exact_date_match": false,
+          "source_authority": "general_web",
+          "likely_forecast": false,
+          "intent_match": true
+        },
+        "fetch_id": "r5"
+      }
+    ],
+    "recency_requested_days": null,
+    "recency_enforced": false,
+    "recency_support": "none",
+    "warnings": [],
+    "diagnostics": {
+      "providers": [
+        {
+          "provider": "brave",
+          "status": "not_configured",
+          "result_count": 0
+        },
+        {
+          "provider": "searxng",
+          "status": "not_configured",
+          "result_count": 0
+        },
+        {
+          "provider": "duckduckgo",
+          "status": "ok",
+          "result_count": 5
+        },
+        {
+          "provider": "open_meteo",
+          "status": "empty",
+          "result_count": 0
+        }
+      ],
+      "contributing_providers": [
+        "duckduckgo"
+      ],
+      "candidate_count": 5,
+      "result_count": 5,
+      "time_filter_requested": false,
+      "time_filter_enforced": false
+    },
+    "new_result_count": 5,
+    "reused_result_count": 0,
+    "budget_remaining": {
+      "searches_remaining": 5,
+      "fetches_remaining": 6,
+      "chars_remaining": 30000
+    }
+  },
+  "error": null,
+  "metadata": {
+    "tool_name": "web_search",
+    "tier": "tier1",
+    "tool_risk": "network_read",
+    "tool_category": "web",
+    "dispatch_phase": "repair",
+    "provider": "duckduckgo",
+    "result_count": 5,
+    "recency_enforced": false,
+    "recency_support": "none"
+  }
+}

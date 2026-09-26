@@ -1,0 +1,74 @@
+import { pathToFileURL } from 'node:url';
+import assert from 'node:assert';
+
+/**
+ * throttle(fn, maxPerWindow, windowMs)
+ *
+ * Returns a wrapper around `fn` that invokes `fn` at most `maxPerWindow`
+ * times within any sliding window of `windowMs` milliseconds. Excess calls
+ * are silently skipped.
+ */
+export function throttle<T extends (...args: never[]) => void>(
+  fn: T,
+  maxPerWindow: number,
+  windowMs: number
+): (...args: Parameters<T>) => void {
+  // Sliding-window counters per window start.
+  // windowStart -> count of allowed calls in that window.
+  const windowCounts: Map<number, number> = new Map();
+  const now = (): number => Date.now();
+
+  const throttled = (...args: Parameters<T>): void => {
+    const start = now();
+    // Find the latest window start <= current time.
+    let windowStart = start;
+    if (windowCounts.has(start)) {
+      windowStart = start;
+    } else {
+      // Step backwards to the most recent window boundary.
+      let t = start;
+      while (!windowCounts.has(t)) {
+        t -= windowMs;
+      }
+      windowStart = t;
+    }
+
+    const count = windowCounts.get(windowStart) ?? 0;
+    if (count < maxPerWindow) {
+      windowCounts.set(windowStart, count + 1);
+      fn(...args);
+    }
+    // Otherwise: window still has room for more calls -> silently skip.
+  };
+
+  return throttled;
+}
+
+/**
+ * Self-test: run with `node throttle.ts`
+ */
+function selfTest(): void {
+  let calls = 0;
+  let lastCall = 0;
+  let firstCalls = 0;
+
+  const fn = (...args: number[]): void => {
+    calls++;
+    lastCall = Date.now();
+    firstCalls = firstCalls === 0 ? Date.now() : firstCalls;
+  };
+
+  const throttled = throttle(fn, 3, 10);
+
+  // Fire three calls quickly -> all should fire.
+  throttled();
+  throttled();
+  throttled();
+  assert.strictEqual(calls, 3, 'first three calls should fire');
+
+  // Fire a fourth call within the same window -> silently skipped.
+  throttled();
+  assert.strictEqual(calls, 3, 'fourth call within window should be skipped');
+
+  // Wait for the window to elapse, then a new window starts.
+  // Ensure the counter resets after windowMs.

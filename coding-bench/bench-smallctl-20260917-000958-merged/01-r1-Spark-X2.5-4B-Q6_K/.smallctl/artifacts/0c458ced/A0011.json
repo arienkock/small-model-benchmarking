@@ -1,0 +1,47 @@
+{
+  "success": false,
+  "status": null,
+  "output": null,
+  "error": "FAMA done_gate blocked task_complete because the latest verifier or acceptance evidence is not satisfied yet. Verdict: FAIL (failure_mode=insufficient_verifier). all tests passed",
+  "metadata": {
+    "reason": "fama_done_gate",
+    "active_mitigation": "done_gate",
+    "last_verifier_verdict": {
+      "tool": "shell_exec",
+      "target": "node debounce.ts",
+      "command": "node debounce.ts",
+      "exit_code": 0,
+      "key_stdout": "all tests passed",
+      "key_stderr": "",
+      "verdict": "fail",
+      "failure_mode": "insufficient_verifier",
+      "acceptance_delta": {
+        "status": "blocked",
+        "notes": [
+          "This is an install task, but the verifier `node debounce.ts` is not a post-condition check. For install tasks, verify with service status, package status, listening port, or version command."
+        ]
+      },
+      "insufficient_verifier": true,
+      "verifier_kind": "diagnostic",
+      "latest_blocker": {
+        "tool": "shell_exec",
+        "command": "node debounce.ts",
+        "target": "node debounce.ts",
+        "exit_code": 0,
+        "blocker_class": "execution_failure",
+        "failure_class": "insufficient_verifier",
+        "salient_error": "all tests passed"
+      }
+    },
+    "required_fingerprints": [
+      "node debounce.ts [all tests passed]"
+    ],
+    "actual_fingerprint": "node debounce.ts",
+    "fingerprint_match": false,
+    "mode": "loop",
+    "next_required_action": "run verification, satisfy acceptance, or call task_fail with the blocker",
+    "arguments": {
+      "message": "Task complete: Corrected debounce.ts saved with bug fix (clearTimeout + timer reset), self-test included, verified by node debounce.ts printing \"all tests passed\" with exit code 0."
+    }
+  }
+}

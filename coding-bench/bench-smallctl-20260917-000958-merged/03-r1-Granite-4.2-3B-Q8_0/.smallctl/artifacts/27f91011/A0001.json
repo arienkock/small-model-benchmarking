@@ -1,0 +1,16 @@
+{
+  "success": true,
+  "status": null,
+  "output": "written",
+  "error": null,
+  "metadata": {
+    "tool_name": "file_write",
+    "tier": "tier1",
+    "tool_risk": "high",
+    "tool_category": "filesystem",
+    "dispatch_phase": "execute",
+    "path": "/work/server.py",
+    "bytes": 654,
+    "changed": true
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "model": "Spark-X2.5-4B-Q6_K",
+  "temperature": 0.7,
+  "top_p": 0.95,
+  "top_k": 40,
+  "max_tokens": 6000,
+  "messages": [
+    {
+      "role": "user",
+      "content": "Find the bug in this TypeScript module and provide the corrected version. Save the corrected file.\n\n// debounce.ts\nexport function debounce(fn: (...args: any[]) => void, waitMs: number) {\n    let timer: ReturnType<typeof setTimeout> | null = null;\n    return (...args: any[]) => {\n        if (timer !== null) {\n            return; // already scheduled\n        }\n        timer = setTimeout(() => fn(args), waitMs);\n        timer = null;\n    };\n}\n\nThe intended behavior: debounce(fn, waitMs) returns a function that delays calling fn until\nwaitMs milliseconds have passed since the LAST call, passing through the latest arguments,\nand cancelling any pending call when a new one arrives.\n\nExplain what is wrong, write the corrected module to debounce.ts (keep the same export signature),\nand add a small self-test that runs when the file is executed directly and prints \"all tests passed\".\nVerify before finishing with: node debounce.ts (Node 24 runs .ts files natively).\n\nAn engineer investigated this module and reported:\n\n\n\nProduce a short numbered PLAN for another engineer who will make the fix. Enumerate EVERY separate defect you can find, and for each state concretely what to change. Then list the specific behaviors their self-test must assert. Do NOT write the corrected code."
+    }
+  ]
+}

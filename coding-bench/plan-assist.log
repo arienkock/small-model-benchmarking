@@ -1,0 +1,50 @@
+WARN: clearing STALE lock (pid 'unknown' is gone):
+plan-assist 17951 started Tue, Sep 15, 2026  7:05:36 AM  out=/d/llama.cpp/coding-bench/plan-assist-20260915-070536
+[19:13:17] === plan-assist: 3 repeats x {vtplan, selfplan} on filter T1 (debounce) ===
+[19:13:17] out=/d/llama.cpp/coding-bench/plan-assist-20260915-191317
+[19:13:20]   starting Spark-X2.5-4B-Q6_K (ctx=16384) --reasoning-budget 4096 --temp 0.7 --top-p 0.95 --top-k 40
+[19:14:05]     ready in 24s
+[19:14:05] PHASE 1 explore rep 1
+[19:44:08]     exit=124  1803s
+[19:44:08]     !! no findings.md — retrying explore r1 ONCE
+[20:14:11]     exit=124  1803s
+[20:14:11]     findings-r1.md: 2880 chars
+[20:14:11] PHASE 1 explore rep 2
+[20:44:14]     exit=124  1802s
+[20:44:14]     !! no findings.md — retrying explore r2 ONCE
+[21:14:17]     exit=124  1802s
+[21:14:17]     !! FATAL for rep 2: no findings after 2 attempts — skipping this repeat entirely
+[21:14:18] PHASE 1 explore rep 3
+[21:44:21]     exit=124  1802s
+[21:44:21]     !! no findings.md — retrying explore r3 ONCE
+[22:14:24]     exit=124  1803s
+[22:14:24]     findings-r3.md: 2025 chars
+[22:14:24] PHASE 2a selfplan rep 1
+[22:22:30]     plan -> 5508 chars (finish=stop tokens=5541)
+[22:22:30] PHASE 2a SKIP rep 2 (abandoned)
+[22:22:30] PHASE 2a selfplan rep 3
+[22:29:54]     plan -> 4415 chars (finish=stop tokens=5135)
+./plan-assist.sh: line 77: 18276 Killed                  "$LLAMA_SERVER" -hf "$repo" -hff "$file" --alias "$alias" --jinja -c "$ctx" -ngl 999 --parallel 1 -ctk q8_0 -ctv q8_0 --api-key "$API_KEY" --host "$HOST" --port "$PORT" "$@" > "$OUT/server-$alias.log" 2>&1
+[22:29:58]   starting VibeThinker-plan (ctx=32768) --reasoning-budget -1 --temp 1.0 --top-p 0.95 --top-k 0
+[22:30:06]     ready in 8s
+[22:30:06] PHASE 2b vtplan rep 1
+[22:32:03]     plan -> 3122 chars (finish=stop tokens=2179)
+[22:32:04] PHASE 2b SKIP rep 2 (abandoned)
+[22:32:04] PHASE 2b vtplan rep 3
+[22:35:26]     plan -> 2870 chars (finish=stop tokens=3814)
+./plan-assist.sh: line 80: 19132 Killed                  "$LLAMA_SERVER" -hf "$repo" -hff "$file" --alias "$alias" --jinja -c "$ctx" -ngl 999 --parallel 1 -ctk q8_0 -ctv q8_0 --api-key "$API_KEY" --host "$HOST" --port "$PORT" "$@" > "$OUT/server-$alias.log" 2>&1
+[22:35:30]   starting Spark-X2.5-4B-Q6_K (ctx=16384) --reasoning-budget 4096 --temp 0.7 --top-p 0.95 --top-k 40
+[22:35:35]     ready in 6s
+[22:35:35] PHASE 3 execute vtplan rep 1
+[23:05:38]     exit=124  1803s
+[23:05:38] PHASE 3 execute selfplan rep 1
+[23:35:41]     exit=124  1803s
+[23:35:41] PHASE 3 SKIP vtplan r2 (no plan)
+[23:35:41] PHASE 3 SKIP selfplan r2 (no plan)
+[23:35:41] PHASE 3 execute vtplan rep 3
+[00:05:45]     exit=124  1802s
+[00:05:45] PHASE 3 execute selfplan rep 3
+[00:35:48]     exit=124  1802s
+./plan-assist.sh: line 77: 19267 Killed                  "$LLAMA_SERVER" -hf "$repo" -hff "$file" --alias "$alias" --jinja -c "$ctx" -ngl 999 --parallel 1 -ctk q8_0 -ctv q8_0 --api-key "$API_KEY" --host "$HOST" --port "$PORT" "$@" > "$OUT/server-$alias.log" 2>&1
+[00:35:51] === running grader ===
+[00:36:05] === DONE. Results: /d/llama.cpp/coding-bench/plan-assist-20260915-191317 ===

@@ -1,0 +1,16 @@
+ggml_cuda_init: found 1 CUDA devices (Total VRAM: 6143 MiB):
+  Device 0: NVIDIA GeForce GTX 970M, compute capability 5.2, VMM: yes, VRAM: 6143 MiB
+load_backend: loaded CUDA backend from D:\llama.cpp\ggml-cuda.dll
+load_backend: loaded RPC backend from D:\llama.cpp\ggml-rpc.dll
+load_backend: loaded CPU backend from D:\llama.cpp\ggml-cpu-haswell.dll
+| model                          |       size |     params | backend    | ngl | threads |            test |                  t/s |
+| ------------------------------ | ---------: | ---------: | ---------- | --: | ------: | --------------: | -------------------: |
+| qwen35 27B IQ4_XS - 4.25 bpw   |  13.26 GiB |    27.32 B | CUDA       |  20 |       4 |           pp512 |         26.30 ± 0.03 |
+| qwen35 27B IQ4_XS - 4.25 bpw   |  13.26 GiB |    27.32 B | CUDA       |  20 |       4 |           tg128 |          1.24 ± 0.01 |
+| qwen35 27B IQ4_XS - 4.25 bpw   |  13.26 GiB |    27.32 B | CUDA       |  20 |       6 |           pp512 |         26.37 ± 0.02 |
+| qwen35 27B IQ4_XS - 4.25 bpw   |  13.26 GiB |    27.32 B | CUDA       |  20 |       6 |           tg128 |          1.36 ± 0.02 |
+| qwen35 27B IQ4_XS - 4.25 bpw   |  13.26 GiB |    27.32 B | CUDA       |  20 |       8 |           pp512 |         26.37 ± 0.10 |
+| qwen35 27B IQ4_XS - 4.25 bpw   |  13.26 GiB |    27.32 B | CUDA       |  20 |       8 |           tg128 |          1.38 ± 0.02 |
+
+build: fa6769818 (10896)
+EXIT:0

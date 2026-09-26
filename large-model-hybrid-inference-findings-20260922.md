@@ -8,6 +8,9 @@ models deliver on that promise on this hardware. Two models tested:
 ternary GGUF). Everything below happened directly on `benchlaptop`; no pi
 harness, no coding-bench grading run.
 
+The raw `llama-bench` / `llama-server` logs behind the sweeps (Qwen3.6, Qwen3.8,
+Qwen3-Coder, Granite 4.2 30B) are in [`large-model-sweeps/`](large-model-sweeps/).
+
 ## Hardware ceiling
 
 - CPU: Intel i7-6820HK, 4 cores / 8 threads, AVX2 only (no AVX512), 2.7 GHz.

@@ -1,0 +1,3 @@
+VibeThinker-3B-Q8_0: preflight failure — transcripts would not be gradable
+    turn_boundary: OK|finish_reason=stop
+    tool_calls:    FAIL|model tried to call a tool in an unparseable format (no tool_calls field). Sample: <think>The user wants us to create a file named hello.txt containing the word "hi". They mention we have a function "wri

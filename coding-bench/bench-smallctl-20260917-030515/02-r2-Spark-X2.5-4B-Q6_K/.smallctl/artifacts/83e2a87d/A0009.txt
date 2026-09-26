@@ -1,0 +1,36 @@
+Query: error: node:internal/modules/run_main:107 triggerUncaughtException( ^ AssertionError [ERR_ASSERTION]: first three calls should fire at selfTest (file:///work
+1. node:internal/modules/run_main:107 triggerUncaughtException [Error ...
+Fetch ID: r1
+Use with: web_fetch(result_id='r1')
+Result ID: webres-c807c77c19cd
+URL: https://github.com/saadeghi/daisyui/issues/4598
+Domain: github.com
+Snippet: This is happening to me when I try to "compile" PS C:\\Users\\partner\\source\\repos\\Tonarife\\Test> npx tailwindcss -i ./Styles/input.css -o ./wwwroot/tailwind.css ...
+2. How to fix InternalError: Assertion failed (Node.js internal error) in ...
+Fetch ID: r2
+Use with: web_fetch(result_id='r2')
+Result ID: webres-29152eca4884
+URL: https://deverrors.com/errors/node-internal-error
+Domain: deverrors.com
+Snippet: Include the output from node --version and node --versions to show exact versions of all dependencies. A well-detailed bug report helps Node .js maintainers fix the issue.
+3. Node - triggerUncaughtException - The freeCodeCamp Forum
+Fetch ID: r3
+Use with: web_fetch(result_id='r3')
+Result ID: webres-27a57192d3a8
+URL: https://forum.freecodecamp.org/t/node-triggeruncaughtexception/576460
+Domain: forum.freecodecamp.org
+Snippet: Hey can anyone please solve my problem when i run node . it shows me this i am kinda noob iknow this is a 20 sec work but i am stuck on this for almost 2 weeks please help
+4. 16 Common Errors in Node.js and How to Fix Them - Better Stack
+Fetch ID: r4
+Use with: web_fetch(result_id='r4')
+Result ID: webres-befc27592455
+URL: https://betterstack.com/community/guides/scaling-nodejs/nodejs-errors/
+Domain: betterstack.com
+Snippet: This article explores 16 of the most common Node .js errors and discusses possible solutions to each one
+5. [tutorial error] module required · Issue #131 · github/copilot-sdk
+Fetch ID: r5
+Use with: web_fetch(result_id='r5')
+Result ID: webres-7867220868ee
+URL: https://github.com/github/copilot-sdk/issues/131
+Domain: github.com
+Snippet: Just tried following the TS tutorial, you get an error out of the box: npx tsx index.ts node:internal/modules/run_main:107 triggerUncaughtException( ^ Error ...

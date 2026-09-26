@@ -1,0 +1,12 @@
+--- [FAILURE SUMMARY] ---
+Command failed with exit code 13.
+
+Warning: Detected unsettled top-level await at file:///work/debounce.ts:20
+    const { debounce } = await import('./debounce.ts');
+                         ^
+
+
+
+
+
+--- [EXIT CODE: 13] ---

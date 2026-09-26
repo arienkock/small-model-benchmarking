@@ -1,0 +1,21 @@
+Find the bug in this TypeScript module and provide the corrected version. Save the corrected file.
+
+// debounce.ts
+export function debounce(fn: (...args: any[]) => void, waitMs: number) {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    return (...args: any[]) => {
+        if (timer !== null) {
+            return; // already scheduled
+        }
+        timer = setTimeout(() => fn(args), waitMs);
+        timer = null;
+    };
+}
+
+The intended behavior: debounce(fn, waitMs) returns a function that delays calling fn until
+waitMs milliseconds have passed since the LAST call, passing through the latest arguments,
+and cancelling any pending call when a new one arrives.
+
+Explain what is wrong, write the corrected module to debounce.ts (keep the same export signature),
+and add a small self-test that runs when the file is executed directly and prints "all tests passed".
+Verify before finishing with: node debounce.ts (Node 24 runs .ts files natively).

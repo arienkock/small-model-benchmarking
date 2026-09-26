@@ -1,0 +1,15 @@
+{
+  "success": true,
+  "status": null,
+  "output": "Added to known_facts: Task: Build a rate-limited API with server.py (Python stdlib HTTP server, 5 req/60s per client IP, 429 + Retry-After) and throttle.ts (ESM throttle function with self-test runnable via `node throttle.ts`).",
+  "error": null,
+  "metadata": {
+    "tool_name": "memory_update",
+    "tier": "tier1",
+    "tool_risk": "low",
+    "tool_category": "memory",
+    "dispatch_phase": "execute",
+    "section": "known_facts",
+    "action": "add"
+  }
+}

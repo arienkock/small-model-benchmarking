@@ -1,0 +1,23 @@
+  ctx=32768 ready in 6s
+=== serving ctx=32768 (server reports n_ctx=32768) ===
+=== pass 1: max_tokens=31568 ===
+{
+  "finish": "stop",
+  "completion_tokens": 4958
+}
+content1 chars: 23375
+closes </think>? : 1
+----- TAIL of pass 1 -----
+ of a pending timeout on a new call.**  
+   When a new call arrives while a timeout is pending, the code must call `clearTimeout` on that timer ID, set `timer` to `null`, and then schedule a new timeout with the latest arguments. This provides the required cancellation behavior.
+
+**Behaviors the self‑test must assert**
+
+- After calling the returned function with several arguments within a short interval shorter than `waitMs`, the original function `fn` should be invoked exactly once, using the last set of arguments, after approximately `waitMs` milliseconds.  
+- If a new call is made before the delayed call has executed, the previously scheduled call must be cancelled and the new call must be delayed instead.  
+- The function should never have more than one pending timeout at any time; multiple timers should not be scheduled concurrently.  
+- When `waitMs` is `0` or negative, the debounced function should behave like the original function, invoking `fn` immediately on each call (or simply not applying a delay).  
+- The returned function must preserve the original signature (`...args: any[]` and return `void`).  
+- If `fn` is `null` or `undefined`, the debounced function should not throw and should simply do nothing.  
+- The test should verify that after a successful invocation of `fn` via the debounced wrapper, no pending timers remain (`timer` should be `null`).
+=== DONE ===

@@ -1,0 +1,18 @@
+/work (5 items)
+.smallctl [dir] (1 children)
+  artifacts [dir] (1 children)
+    ae646210 [dir]
+logs [dir] (1 children)
+  ae646210-20260917-002024 [dir] (11 children)
+    chat.jsonl [file] (351291 bytes)
+    chat.log [file] (214762 bytes)
+    harness.jsonl [file] (75600 bytes)
+    harness.log [file] (20416 bytes)
+    model_output.jsonl [file] (46411 bytes)
+    model_output.log [file] (759 bytes)
+    recovery.jsonl [file] (0 bytes)
+    recovery.log [file] (0 bytes)
+    ... more nested items
+prompt.txt [file] (1094 bytes)
+stderr.log [file] (4207 bytes)
+transcript.jsonl [file] (314 bytes)

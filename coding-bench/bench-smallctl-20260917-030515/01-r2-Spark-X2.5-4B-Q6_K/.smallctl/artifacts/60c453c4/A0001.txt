@@ -1,0 +1,11 @@
+total 16
+drwxrwxrwx 1 root root 4096 Sep 17 02:12 .
+drwxr-xr-x 1 root root 4096 Sep 17 02:12 ..
+drwxr-xr-x 1 root root 4096 Sep 17 02:14 .smallctl
+drwxr-xr-x 1 root root 4096 Sep 17 02:12 logs
+-rwxrwxrwx 1 root root  969 Sep 17 02:12 prompt.txt
+-rwxrwxrwx 1 root root 7032 Sep 17 02:16 stderr.log
+-rwxrwxrwx 1 root root  170 Sep 17 02:16 transcript.jsonl
+
+
+--- [EXIT CODE: 0] ---

@@ -1,0 +1,18 @@
+{
+  "final_task_status": "failed",
+  "total_tool_calls": 3,
+  "guard_trips": 0,
+  "postmortem_summary": "Model stream halted repeatedly without a tool call or final actionable answer. Halt reason: reasoning_only_stream_stall.",
+  "primary_blocker": "",
+  "unverified_change_warning": "",
+  "latest_task_id": "task-0001",
+  "latest_task_summary_path": "/work/logs/00ab365d-20260916-214914/tasks/task-0001/task_summary.json",
+  "stall_classification": null,
+  "error_type": "",
+  "no_op": false,
+  "deliverable_verified": false,
+  "structural_verified": false,
+  "behavioral_verified": false,
+  "verification_level": "none",
+  "diagnostic_only": true
+}

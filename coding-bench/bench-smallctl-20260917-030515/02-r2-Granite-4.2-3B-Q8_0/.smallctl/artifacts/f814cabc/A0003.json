@@ -1,0 +1,32 @@
+{
+  "success": true,
+  "status": null,
+  "output": "#!/usr/bin/env python3\n\"\"\"\nRate-limited API server.\n- GET /api/time returns {\"now\": <unix timestamp>}\n- Rate limit: 5 requests per 60 seconds per client IP\n- 6th+ requests in window return 429 with Retry-After header\n\"\"\"\n\nimport http.server\nimport socketserver\nimport urllib.parse\nimport time\nfrom datetime import datetime\n\n\nclass RateLimitedHandler(http.server.BaseHTTPRequestHandler):\n    # Store rate limit state: ip -> list of timestamps\n    rate_limits = {}\n\n    def do_GET(self):\n        parsed = urllib.parse.urlparse(self.path)\n        path = parsed.path\n\n        # Extract client IP\n        client_ip = self.client_address[0]\n\n        # Handle /api/time\n        if path == '/api/time':\n            # Check rate limit for this IP\n            now = time.time()\n            timestamps = self.rate_limits.get(client_ip, [])\n            \n            # Remove timestamps outside the 60-second window\n            window_start = now - 60.0\n            timestamps[:] = [ts for ts in timestamps if ts >= window_start]\n            \n            # If we've made more than 5 requests in the window, reject\n            if len(timestamps) >= 5:\n                # Calculate retry after (in seconds, rounded up)\n                retry_after = int(window_start - min(timestamps)) + 1\n                self.send_response(429)\n                self.send_header('Retry-After', str(retry_after))\n                self.send_header('Content-Type', 'application/json')\n                self.end_headers()\n                self.wfile.write(b'{\"error\": \"Rate limit exceeded\"}')\n                return\n            \n            # Record this request\n            timestamps.append(now)\n            self.rate_limits[client_ip] = timestamps\n            \n            # Send response\n            self.send_response(200)\n            self.send_header('Content-Type', 'application/json')\n            self.end_headers()\n            now_ts = int(now)\n            self.wfile.write(f'{{\"now\": {now_ts}}}'.encode())\n            return\n\n        # For any other path, return 404\n        self.send_response(404)\n        self.end_headers()\n\n    def log_message(self, format, *args):\n        # Suppress default log output\n        pass\n\n\nclass Server(socketserver.TCPServer):\n    allow_reuse_address = True\n\n\nif __name__ == '__main__':\n    PORT = 8000\n    server = Server(('', PORT), RateLimitedHandler)\n    print(f\"Server running on http://localhost:{PORT}\")\n    server.serve_forever()",
+  "error": null,
+  "metadata": {
+    "tool_name": "file_read",
+    "tier": "tier1",
+    "tool_risk": "low",
+    "tool_category": "filesystem",
+    "dispatch_phase": "execute",
+    "path": "/work/server.py",
+    "source_path": "/work/server.py",
+    "bytes": 2441,
+    "elapsed_ms": 4,
+    "requested_start_line": null,
+    "requested_end_line": null,
+    "max_bytes": 100000,
+    "line_start": 1,
+    "line_end": 77,
+    "total_lines": 77,
+    "complete_file": true,
+    "truncated": false,
+    "read_from_staging": false,
+    "staged_only": false,
+    "dotenv_read_redacted": false,
+    "dotenv_permissions_warning": "",
+    "write_session_id": "",
+    "write_session_status": "",
+    "system_repair_cycle_id": ""
+  }
+}

@@ -1,0 +1,2 @@
+Granite-4.2-3B-Q8_0 task 2 repeat 2: skipped, deadline guard
+Granite-4.2-3B-Q8_0 task 3 repeat 2: skipped, deadline guard

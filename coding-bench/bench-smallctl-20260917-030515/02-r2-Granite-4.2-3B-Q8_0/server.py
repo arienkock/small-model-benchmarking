@@ -1,0 +1,76 @@
+#!/usr/bin/env python3
+"""
+Rate-limited API server.
+- GET /api/time returns {"now": <unix timestamp>}
+- Rate limit: 5 requests per 60 seconds per client IP
+- 6th+ requests in window return 429 with Retry-After header
+"""
+
+import http.server
+import socketserver
+import urllib.parse
+import time
+
+
+class RateLimitedHandler(http.server.BaseHTTPRequestHandler):
+    # Store rate limit state: ip -> list of timestamps
+    rate_limits = {}
+
+    def do_GET(self):
+        parsed = urllib.parse.urlparse(self.path)
+        path = parsed.path
+
+        # Extract client IP
+        client_ip = self.client_address[0]
+
+        # Handle /api/time
+        if path == '/api/time':
+            # Check rate limit for this IP
+            now = time.time()
+            timestamps = self.rate_limits.get(client_ip, [])
+            
+            # Remove timestamps outside the 60-second window
+            window_start = now - 60.0
+            timestamps[:] = [ts for ts in timestamps if ts >= window_start]
+            
+            # If we've made more than 5 requests in the window, reject
+            if len(timestamps) >= 5:
+                # Calculate retry after: time until the oldest request expires
+                retry_after = int(window_start - min(timestamps)) + 1
+                self.send_response(429)
+                self.send_header('Retry-After', str(retry_after))
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(b'{"error": "Rate limit exceeded"}')
+                return
+            
+            # Record this request
+            timestamps.append(now)
+            self.rate_limits[client_ip] = timestamps
+            
+            # Send response
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            now_ts = int(now)
+            self.wfile.write(f'{{"now": {now_ts}}}'.encode())
+            return
+
+        # For any other path, return 404
+        self.send_response(404)
+        self.end_headers()
+
+    def log_message(self, format, *args):
+        # Suppress default log output
+        pass
+
+
+class Server(socketserver.TCPServer):
+    allow_reuse_address = True
+
+
+if __name__ == '__main__':
+    PORT = 8000
+    server = Server(('', PORT), RateLimitedHandler)
+    print(f"Server running on http://localhost:{PORT}")
+    server.serve_forever()

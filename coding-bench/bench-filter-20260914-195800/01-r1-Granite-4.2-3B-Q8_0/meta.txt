@@ -1,0 +1,20 @@
+run: 1
+repeat: 1
+model: Granite-4.2-3B-Q8_0
+workspace: /d/llama.cpp/coding-bench/bench-filter-20260914-195800/01-r1-Granite-4.2-3B-Q8_0
+exit_code: 124
+duration_sec: 243
+context: 16384
+reasoning_budget: 4096
+run_budget_sec: 240
+decode_tok_s: 16.01
+sampling: temp=0.7 top_p=0.95 top_k=40 seed=unset
+files_created:
+  meta.txt (312 bytes)
+tool_calls: 2
+output_tokens_total: 3445
+input_tokens_total: 2737
+signal_node_invocations: 0
+signal_curl_invocations: 0
+signal_tests_passed_strings: 1
+signal_guard_blocks: 1

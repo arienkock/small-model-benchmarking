@@ -1,0 +1,4 @@
+filler chars: 54000
+Nanbeige4.2-3B-Q6_K      ctx=16384  prefill  tok/s over  tokens
+Nanbeige4.2-3B-Q6_K      ctx=20480  prefill  tok/s over  tokens
+SPEEDTEST_DONE

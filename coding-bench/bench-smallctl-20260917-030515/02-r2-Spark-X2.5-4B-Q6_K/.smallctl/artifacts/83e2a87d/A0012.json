@@ -1,0 +1,40 @@
+{
+  "success": false,
+  "status": null,
+  "output": null,
+  "error": "Repair cycle requires reading the target file before patching it again.",
+  "metadata": {
+    "tool_name": "file_patch",
+    "tier": "tier1",
+    "tool_risk": "high",
+    "tool_category": "filesystem",
+    "dispatch_phase": "repair",
+    "path": "/work/throttle.ts",
+    "system_repair_cycle_id": "repair-7a35f5ea",
+    "required_read_paths": [],
+    "error_kind": "repair_cycle_read_required",
+    "recovery_hint": "This is a new repair-cycle read requirement. Prior file_read artifacts do not satisfy the current repair cycle; call file_read on this path to refresh the disk snapshot, even if the file is currently missing.",
+    "next_required_tool": {
+      "tool_name": "file_read",
+      "required_arguments": {
+        "path": "throttle.ts"
+      },
+      "reason": "new_repair_cycle_requires_fresh_disk_snapshot",
+      "system_repair_cycle_id": "repair-7a35f5ea"
+    },
+    "requested_path": "throttle.ts",
+    "arguments": {
+      "path": "throttle.ts",
+      "target_text_sha256": "306dd15d8765df9f9bc8759f234651dd6d8141c33d183051f9b7e9f28226c608",
+      "target_text_chars": 414,
+      "target_text_bytes": 414,
+      "target_text_preview": "  const calls: number[] = [];\n  const now = (): number => Date.now();\n\n  const throttled = (...args: Parameters<T>): void => {\n    const start = now();\n    cons",
+      "target_text_truncated": true,
+      "replacement_text_sha256": "ebd9d430f7c2848ea3061229ee1d81d8b4e21799866ebc396252b2ad90dc3fa4",
+      "replacement_text_chars": 515,
+      "replacement_text_bytes": 515,
+      "replacement_text_preview": "  const calls: number[] = [];\n  const now = (): number => Date.now();\n\n  const throttled = (...args: Parameters<T>): void => {\n    const start = now();\n    cons",
+      "replacement_text_truncated": true
+    }
+  }
+}

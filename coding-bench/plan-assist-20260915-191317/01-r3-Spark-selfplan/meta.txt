@@ -1,0 +1,11 @@
+exit_code: 124
+duration_sec: 1802
+context: 16384
+run_budget_sec: 1800
+tool_calls: 6
+guard_blocks: 0
+files_created:
+  debounce.ts (4816 bytes)
+  meta.txt (115 bytes)
+  package.json (21 bytes)
+  _modetest.ts (35 bytes)

@@ -1,0 +1,2 @@
+2026-09-17T00:51:07.231+00:00 model_call_start graph node started {"node": "model_call", "timeout_sec": 600.0}
+2026-09-17T00:51:10.856+00:00 model_call_end graph node completed {"node": "model_call", "elapsed_sec": 3.624}

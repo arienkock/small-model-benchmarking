@@ -1,0 +1,36 @@
+Query: error: Warning: Detected unsettled top-level await at file:///work/debounce.ts:20 const { debounce } = await import('./debounce.ts'); ^ Warning: Detected uns
+1. Warning: Detected unsettled top-level await - Stack Overflow
+Fetch ID: r1
+Use with: web_fetch(result_id='r1')
+Result ID: webres-731e951baa9a
+URL: https://stackoverflow.com/questions/78837483/warning-detected-unsettled-top-level-await
+Domain: stackoverflow.com
+Snippet: The following code results in error Warning : Detected unsettled top-level await . I don't understand why all of a sudden this block is throwing error when it was working just an hour ago.
+2. Top-level await + dynamic import + cyclic import causes "unsettled TLA ...
+Fetch ID: r2
+Use with: web_fetch(result_id='r2')
+Result ID: webres-09bf0972d1ec
+URL: https://github.com/nodejs/node/issues/55468
+Domain: github.com
+Snippet: Wrapping dynamic import () in a function (loadModule) seems to help Deno resolve the cycle, but Node.js still fails due to top-level await . This minimal test case complements the original repro and isolates the Node.js issue.
+3. How Top Level Await Works in JavaScript - Medium
+Fetch ID: r3
+Use with: web_fetch(result_id='r3')
+Result ID: webres-abd7c51cdfe6
+URL: https://medium.com/@AlexanderObregon/how-top-level-await-works-in-javascript-aae6cff0f2b2
+Domain: medium.com
+Snippet: Top level await lets JavaScript pause module execution without wrapping code in async functions, changing how modules load and how timing flows across imports.
+4. Resolving Top-Level Await Errors in TypeScript: A Guide to Module and ...
+Fetch ID: r4
+Use with: web_fetch(result_id='r4')
+Result ID: webres-17aac6561af5
+URL: https://devgex.com/en/article/00042832
+Domain: devgex.com
+Snippet: The key to resolving top-level await errors lies in correctly configuring TypeScript's module and target options. It is recommended to set module to es2022 or esnext and target to es2017 or higher in tsconfig.json to fully leverage modern JavaScript features.
+5. Bad reporting unsettled top-level await #58398 - GitHub
+Fetch ID: r5
+Use with: web_fetch(result_id='r5')
+Result ID: webres-5cc4ea330450
+URL: https://github.com/nodejs/node/issues/58398
+Domain: github.com
+Snippet: In case you haven't seen it, this appears to be the same bug discussed in [#55468] (#55468): Node v23's loader sometimes mis-flags legitimate micro-tasks as " unsettled top-level await ," causing the warning and exit code 13.

@@ -1,0 +1,20 @@
+{
+  "success": true,
+  "status": null,
+  "output": {
+    "stdout": "",
+    "stderr": "",
+    "exit_code": 0
+  },
+  "error": null,
+  "metadata": {
+    "tool_name": "shell_exec",
+    "tier": "tier1",
+    "tool_risk": "high",
+    "tool_category": "shell",
+    "dispatch_phase": "execute",
+    "execution_sec": 1.594,
+    "model_visible": false,
+    "hidden": true
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "final_task_status": "failed",
+  "total_tool_calls": 1,
+  "guard_trips": 0,
+  "postmortem_summary": "All connection attempts failed",
+  "primary_blocker": "",
+  "unverified_change_warning": "",
+  "latest_task_id": "task-0001",
+  "latest_task_summary_path": "/work/logs/2b53527d-20260917-005119/tasks/task-0001/task_summary.json",
+  "stall_classification": null,
+  "error_type": "",
+  "no_op": false,
+  "deliverable_verified": false,
+  "structural_verified": false,
+  "behavioral_verified": false,
+  "verification_level": "none",
+  "diagnostic_only": true,
+  "local_task_status": "failed",
+  "overall_objective_status": "incomplete",
+  "incomplete_task_ids": [
+    "task-0001"
+  ],
+  "has_incomplete_prior_tasks": false,
+  "task_count": 1,
+  "task_summary_paths": [
+    "/work/logs/2b53527d-20260917-005119/tasks/task-0001/task_summary.json"
+  ],
+  "prior_task_completed": false,
+  "latest_task_cancelled": false,
+  "files_changed_after_latest_task_start": false,
+  "verification_after_latest_change": false,
+  "summary_kind": "run",
+  "run_dir": "/work/logs/2b53527d-20260917-005119",
+  "session_summary_path": "/work/logs/2b53527d-20260917-005119/session_summary.json"
+}

@@ -1,0 +1,14 @@
+# Cross-repeat stability — Wed, Sep 16, 2026 12:36:04 AM
+# PASS count per component, over the repeats present in this run dir.
+# n/n or 0/n = a real signal. Anything in between = the cell is a coin flip
+# and must not be used to rank models.
+
+# algo:UNKNOWN cells are excluded from the denominator, not scored as
+# failures — the file would not load even stripped, so the grader never
+# called the function. They are reported separately as (+N unknown).
+
+MODEL                          COMPONENT                PASS/N
+Spark-selfplan                 t1.debounce.algo           1/2   <-- unstable
+Spark-selfplan                 t1.debounce.pkg            1/2   <-- unstable
+Spark-vtplan                   t1.debounce.algo           0/1  (+1 unknown)
+Spark-vtplan                   t1.debounce.pkg            0/2

@@ -1,0 +1,8 @@
+exit_code: 124
+duration_sec: 903
+context: 16384
+run_budget_sec: 900
+tool_calls: 2
+guard_blocks: 0
+files_created:
+  meta.txt (113 bytes)

@@ -1,0 +1,30 @@
+{
+  "success": false,
+  "status": null,
+  "output": {
+    "stdout": "",
+    "stderr": "file:///work/debounce.ts:13\n\nif (import.meta.url === new URL(process.argv[1], import.assert.cache).href) {\n                                                              ^\n    // Self-test\n\nSyntaxError [ERR_INVALID_TYPESCRIPT_SYNTAX]: Unexpected token `.`. Expected meta\n    at parseTypeScript (node:internal/modules/typescript:72:36)\n    at processTypeScriptCode (node:internal/modules/typescript:146:42)\n    at stripTypeScriptModuleTypes (node:internal/modules/typescript:215:22)\n    at Module._compile (node:internal/modules/cjs/loader:1883:15)\n    at Object..js (node:internal/modules/cjs/loader:2060:10)\n    at Module.load (node:internal/modules/cjs/loader:1651:32)\n    at Module._load (node:internal/modules/cjs/loader:1443:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)\n    at node:internal/main/run_main_module:33:47 {\n  code: 'ERR_INVALID_TYPESCRIPT_SYNTAX'\n}\n\nNode.js v24.21.0\n",
+    "exit_code": 1
+  },
+  "error": "file:///work/debounce.ts:13\n\nif (import.meta.url === new URL(process.argv[1], import.assert.cache).href) {\n                                                              ^\n    // Self-test\n\nSyntaxError [ERR_INVALID_TYPESCRIPT_SYNTAX]: Unexpected token `.`. Expected meta\n    at parseTypeScript (node:internal/modules/typescript:72:36)\n    at processTypeScriptCode (node:internal/modules/typescript:146:42)\n    at stripTypeScriptModuleTypes (node:internal/modules/typescript:215:22)\n    at Module._compile (node:internal/modules/cjs/loader:1883:15)\n    at Object..js (node:internal/modules/cjs/loader:2060:10)\n    at Module.load (node:internal/modules/cjs/loader:1651:32)\n    at Module._load (node:internal/modules/cjs/loader:1443:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)\n    at node:internal/main/run_main_module:33:47 {\n  code: 'ERR_INVALID_TYPESCRIPT_SYNTAX'\n}\n\nNode.js v24.21.0",
+  "metadata": {
+    "tool_name": "shell_exec",
+    "tier": "tier1",
+    "tool_risk": "high",
+    "tool_category": "shell",
+    "dispatch_phase": "execute",
+    "output": {
+      "stdout": "",
+      "stderr": "file:///work/debounce.ts:13\n\nif (import.meta.url === new URL(process.argv[1], import.assert.cache).href) {\n                                                              ^\n    // Self-test\n\nSyntaxError [ERR_INVALID_TYPESCRIPT_SYNTAX]: Unexpected token `.`. Expected meta\n    at parseTypeScript (node:internal/modules/typescript:72:36)\n    at processTypeScriptCode (node:internal/modules/typescript:146:42)\n    at stripTypeScriptModuleTypes (node:internal/modules/typescript:215:22)\n    at Module._compile (node:internal/modules/cjs/loader:1883:15)\n    at Object..js (node:internal/modules/cjs/loader:2060:10)\n    at Module.load (node:internal/modules/cjs/loader:1651:32)\n    at Module._load (node:internal/modules/cjs/loader:1443:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)\n    at node:internal/main/run_main_module:33:47 {\n  code: 'ERR_INVALID_TYPESCRIPT_SYNTAX'\n}\n\nNode.js v24.21.0\n",
+      "exit_code": 1
+    },
+    "command": "node /work/debounce.ts",
+    "execution_sec": 1.339,
+    "arguments": {
+      "command": "node /work/debounce.ts",
+      "background": false
+    },
+    "model_visible": false,
+    "hidden": true
+  }
+}

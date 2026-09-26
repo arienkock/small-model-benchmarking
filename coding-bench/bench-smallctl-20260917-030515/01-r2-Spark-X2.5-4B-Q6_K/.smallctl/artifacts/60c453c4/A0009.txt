@@ -1,0 +1,1 @@
+VERIFIER LOOP HARD STOP: shell_exec is blocked after 3 verifier rejections. Allowed action classes are: ask_user, mutation, research, stop_blocked. Research the failure, make a targeted mutation, ask the user, or call task_fail.

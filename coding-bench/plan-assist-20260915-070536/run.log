@@ -1,0 +1,19 @@
+[07:05:36] === plan-assist: 3 repeats x {vtplan, selfplan} on filter T1 (debounce) ===
+[07:05:36] out=/d/llama.cpp/coding-bench/plan-assist-20260915-070536
+[07:05:39]   starting Spark-X2.5-4B-Q6_K (ctx=16384) --reasoning-budget 4096 --temp 0.7 --top-p 0.95 --top-k 40
+[07:05:45]     ready in 6s
+[07:05:45] PHASE 1 explore rep 1
+[07:20:48]     exit=124  903s
+[07:20:48]     !! no findings.md; falling back to the task alone
+[07:20:48] PHASE 1 explore rep 2
+[07:35:51]     exit=124  903s
+[07:35:51]     !! no findings.md; falling back to the task alone
+[07:35:51] PHASE 1 explore rep 3
+[07:50:54]     exit=124  903s
+[07:50:54]     !! no findings.md; falling back to the task alone
+[07:50:54] PHASE 2a selfplan rep 1
+[07:58:34]     plan -> 5587 chars (finish=stop tokens=5406)
+[07:58:34] PHASE 2a selfplan rep 2
+[08:00:07]     plan -> 0 chars (finish= tokens=)
+[08:00:07]     !! selfplan r2 EMPTY
+[08:00:07] PHASE 2a selfplan rep 3

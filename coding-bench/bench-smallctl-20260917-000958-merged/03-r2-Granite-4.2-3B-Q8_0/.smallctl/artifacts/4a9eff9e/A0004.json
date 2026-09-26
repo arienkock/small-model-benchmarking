@@ -1,0 +1,19 @@
+{
+  "success": true,
+  "status": null,
+  "output": {
+    "job_id": "10da88a5710b4f6889ad98ca054df1a9",
+    "pid": 8,
+    "command": "cd /work && python3 server.py > server.log 2>&1 &"
+  },
+  "error": null,
+  "metadata": {
+    "tool_name": "shell_exec",
+    "tier": "tier1",
+    "tool_risk": "high",
+    "tool_category": "shell",
+    "dispatch_phase": "execute",
+    "model_visible": false,
+    "hidden": true
+  }
+}

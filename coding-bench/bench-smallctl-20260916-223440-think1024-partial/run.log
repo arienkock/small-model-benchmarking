@@ -1,0 +1,22 @@
+[22:34:40] extracted 2829 chars of shared benchmark rules from run-filter-bench.sh
+[22:34:40] loaded 3 prompts from prompts-filter.txt
+[22:34:40] === SmallCTL arm: 3 models x 3 tasks x 2 reps = 18 cells ===
+[22:34:40] deadline: 2026-09-17 07:00
+[22:34:41] === Granite-4.2-3B-Q8_0 (budget 1424s/cell) ===
+[22:35:00]   server up for Granite-4.2-3B-Q8_0 (n_ctx=24576)
+[22:35:00] [1/18] task 1 rep 1 — Granite-4.2-3B-Q8_0
+[22:58:47]     rc=124 1427s status=unknown tool_calls=0
+[22:58:47] [2/18] task 2 rep 1 — Granite-4.2-3B-Q8_0
+[23:22:35]     rc=124 1427s status=unknown tool_calls=0
+[23:22:35] [3/18] task 3 rep 1 — Granite-4.2-3B-Q8_0
+[23:35:25]     rc=1 770s status=failed tool_calls=3
+[23:35:25] [4/18] task 1 rep 2 — Granite-4.2-3B-Q8_0
+[23:48:56]     rc=1 809s status=failed tool_calls=4
+[23:48:56]     SKIPPED by deadline guard (task 2 rep 2)
+[23:48:56]     SKIPPED by deadline guard (task 3 rep 2)
+[23:48:56] === finished Granite-4.2-3B-Q8_0 ===
+[23:48:56] === Spark-X2.5-4B-Q6_K (budget 1757s/cell) ===
+[23:49:08]   server up for Spark-X2.5-4B-Q6_K (n_ctx=24576)
+[23:49:08] [7/18] task 1 rep 1 — Spark-X2.5-4B-Q6_K
+[23:57:53]     rc=1 525s status=failed tool_calls=3
+[23:57:53] [8/18] task 2 rep 1 — Spark-X2.5-4B-Q6_K

@@ -1,0 +1,16 @@
+task	rep	model	verdict	detail
+1	1	Granite-4.2-3B-Q8_0	debounce.algo:FAIL debounce.pkg:FAIL	shipped:RUN_FAIL logic:LOGIC_FAIL self:SELF_FAIL  node:assert:204   [logic-run: AssertionError [ERR_ASSERTION]: expected exactly 1 call after the burst, got 0 (bug 3: timer nulled synchronously, so no ]
+1	1	Nanbeige4.2-3B-Q6_K	debounce.algo:MISSING debounce.pkg:MISSING	shipped:MISSING logic:MISSING self:MISSING  no debounce.ts
+1	1	Spark-X2.5-4B-Q6_K	debounce.algo:PASS debounce.pkg:PASS	shipped:PASS logic:- self:SELF_PASS  GRADER_OK debounce 
+1	2	Granite-4.2-3B-Q8_0	debounce.algo:FAIL debounce.pkg:PASS	shipped:LOGIC_FAIL logic:LOGIC_FAIL self:SELF_SILENT  AssertionError [ERR_ASSERTION]: expected the LATEST args spread as [3,"c"], got [[3,"c"]] (bug 1: early return keeps fir 
+1	2	Spark-X2.5-4B-Q6_K	debounce.algo:PASS debounce.pkg:PASS	shipped:PASS logic:- self:SELF_FAIL  GRADER_OK debounce 
+2	1	Granite-4.2-3B-Q8_0	throttle.algo:FAIL throttle.pkg:PASS server:PASS	shipped:LOGIC_FAIL logic:LOGIC_FAIL  port 8080: 5x200 then 429 with Retry-After ; throttle: AssertionError [ERR_ASSERTION]: expected 3 more calls in the next window (6 total), got 3  
+2	1	Nanbeige4.2-3B-Q6_K	throttle.algo:MISSING throttle.pkg:MISSING server:MISSING	shipped:MISSING logic:MISSING  no server.py ; throttle: no throttle.ts 
+2	1	Spark-X2.5-4B-Q6_K	throttle.algo:FAIL throttle.pkg:PASS server:FAIL	shipped:LOGIC_FAIL logic:PASS  port 8000: codes: 429 429 429 429 429 429 (want 200 200 200 200 200 429) ; throttle: AssertionError [ERR_ASSERTION]: 2 calls in first window + 2 in fresh window   [scaffo
+2	2	Granite-4.2-3B-Q8_0	throttle.algo:PASS throttle.pkg:PASS server:PASS	shipped:PASS logic:-  port 8000: 5x200 then 429 with Retry-After ; throttle: GRADER_OK throttle  
+2	2	Spark-X2.5-4B-Q6_K	throttle.algo:UNKNOWN throttle.pkg:FAIL server:PASS	shipped:RUN_FAIL logic:RUN_FAIL  port 8000: 5x200 then 429 with Retry-After ; throttle: HANG: no exit within 30s (unsettled promise or blocked import) 
+3	1	Granite-4.2-3B-Q8_0	books.status:PASS books.body:PASS books.headers:FAIL	port 8000:  headers(no Content-Length — the seeded bug) 
+3	1	Nanbeige4.2-3B-Q6_K	books.status:MISSING books.body:MISSING books.headers:MISSING	no server.py 
+3	1	Spark-X2.5-4B-Q6_K	books.status:PASS books.body:PASS books.headers:PASS	port 8000: 200/404, 2 books, Content-Type and Content-Length correct 
+3	2	Granite-4.2-3B-Q8_0	books.status:PASS books.body:PASS books.headers:FAIL	port 8000:  headers(no Content-Length — the seeded bug) 
+3	2	Spark-X2.5-4B-Q6_K	books.status:PASS books.body:PASS books.headers:PASS	port 8000: 200/404, 2 books, Content-Type and Content-Length correct 

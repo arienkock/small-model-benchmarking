@@ -1,0 +1,6 @@
+server stopped
+post-stop status: 000
+connection refused (server stopped)
+
+
+--- [EXIT CODE: 0] ---

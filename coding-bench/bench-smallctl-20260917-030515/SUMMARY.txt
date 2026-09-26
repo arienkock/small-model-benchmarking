@@ -1,0 +1,18 @@
+# SmallCTL-arm summary — Thu, Sep 17, 2026  5:40:14 AM
+harness: SmallCTL @ 1ce1cb5, --run-mode loop, explicit flags (NO preset), image smallctl:pinned
+tasks: 3 (prompts-filter.txt, byte-identical to the pi arm)
+repeats: 1 independent runs per (model, task)
+sampling: temp=0.7 top_p=0.95 top_k=40, seed unset
+NOT COMPARABLE to the pi arm at 16384 — SmallCTL cannot assemble a prompt there (see script header)
+context: 24576  reasoning_budget: 512  completion_reserve: 5120
+budgets: per-model wall clock copied from bench-filter-20260914-203559
+shared rules: pi's APPEND_SYSTEM text, appended to the task (SmallCTL has no system-prompt flag)
+sandbox: docker (smallctl:pinned) — node v24.21.0, python3, curl, root (matches pi's)
+pi arm for comparison: bench-filter-20260914-203559 (same llama-server.exe, dated 2026-09-10)
+
+run: 1 model: Granite-4.2-3B-Q8_0 repeat: 2 exit_code: 124 duration_sec: 1426 status: unknown
+run: 2 model: Granite-4.2-3B-Q8_0 repeat: 2 exit_code: 124 duration_sec: 1428 status: unknown
+run: 3 model: Granite-4.2-3B-Q8_0 repeat: 2 exit_code: 1 duration_sec: 1130 status: failed
+run: 1 model: Spark-X2.5-4B-Q6_K repeat: 2 exit_code: 124 duration_sec: 1760 status: unknown
+run: 2 model: Spark-X2.5-4B-Q6_K repeat: 2 exit_code: 124 duration_sec: 1760 status: unknown
+run: 3 model: Spark-X2.5-4B-Q6_K repeat: 2 exit_code: 124 duration_sec: 1759 status: unknown

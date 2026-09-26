@@ -1,0 +1,32 @@
+{
+  "success": true,
+  "status": null,
+  "output": "import assert from 'node:assert';\n\nexport function debounce(fn: (...args: any[]) => void, waitMs: number) {\n    let timer: ReturnType<typeof setTimeout> | null = null;\n    return (...args: any[]) => {\n        if (timer !== null) {\n            clearTimeout(timer);\n        }\n        timer = setTimeout(() => fn(args), waitMs);\n    };\n}\n\n// Self-test when executed directly\nif (import.meta.url === new URL('.', import.meta.url).href) {\n    // Test 1: Call multiple times quickly - only the last call should trigger\n    let calledOnce = false;\n    let calledTwice = false;\n    const debounced = debounce(() => {\n        calledOnce = true;\n    }, 10);\n    \n    debounced();\n    // Second call should cancel the first\n    debounced();\n    \n    // Run after 15ms (more than 10ms) - only the last call should trigger\n    setTimeout(() => {\n        if (calledOnce) {\n            calledOnce = false;\n        } else if (calledTwice) {\n            calledTwice = false;\n        }\n        // We expect only the last call to have been triggered\n        assert(calledOnce === false, 'calledOnce should be false');\n        assert(calledTwice === false, 'calledTwice should be false');\n    }, 15);\n    \n    // Run after 5ms - neither should have triggered yet\n    setTimeout(() => {\n        assert(calledOnce === false, 'calledOnce should be false');\n        assert(calledTwice === false, 'calledTwice should be false');\n    }, 5);\n    \n    // Run after 20ms - the last call should trigger\n    setTimeout(() => {\n        if (calledOnce) {\n            calledOnce = false;\n        } else if (calledTwice) {\n            calledTwice = false;\n        }\n        assert(calledOnce === true, 'calledOnce should be true');\n        assert(calledTwice === false, 'calledTwice should be false');\n        console.log('all tests passed');\n    }, 20);\n}",
+  "error": null,
+  "metadata": {
+    "tool_name": "file_read",
+    "tier": "tier1",
+    "tool_risk": "low",
+    "tool_category": "filesystem",
+    "dispatch_phase": "execute",
+    "path": "/work/debounce.ts",
+    "source_path": "/work/debounce.ts",
+    "bytes": 1822,
+    "elapsed_ms": 4,
+    "requested_start_line": null,
+    "requested_end_line": null,
+    "max_bytes": 100000,
+    "line_start": 1,
+    "line_end": 55,
+    "total_lines": 55,
+    "complete_file": true,
+    "truncated": false,
+    "read_from_staging": false,
+    "staged_only": false,
+    "dotenv_read_redacted": false,
+    "dotenv_permissions_warning": "",
+    "write_session_id": "",
+    "write_session_status": "",
+    "system_repair_cycle_id": ""
+  }
+}

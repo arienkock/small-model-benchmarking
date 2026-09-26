@@ -1,0 +1,11 @@
+########## run-mode=loop ##########
+rc=124
+debounce.ts: NONE
+tools:       4 "tool_name": "file_read" 
+status: 
+########## run-mode=planning ##########
+rc=124
+debounce.ts: NONE
+tools: 
+status: 
+PROBE_DONE

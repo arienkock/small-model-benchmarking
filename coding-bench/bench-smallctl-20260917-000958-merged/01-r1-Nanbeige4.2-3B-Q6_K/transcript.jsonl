@@ -1,0 +1,23 @@
+{"status": "logging_ready", "run_log_dir": "/work/logs/b8aa28b2-20260917-003844"}
+{"status": "log_dir_finalized", "run_log_dir": "/work/logs/3948d860-20260917-003844"}
+{
+  "behavioral_verified": false,
+  "deliverable_verified": false,
+  "diagnostic_only": true,
+  "error": {
+    "details": {},
+    "message": "All connection attempts failed",
+    "type": "stream"
+  },
+  "inactive_steps": 0,
+  "latency_metrics": {
+    "overhead_preparation_duration_sec": 0.04
+  },
+  "no_op": false,
+  "reason": "All connection attempts failed",
+  "status": "failed",
+  "step_count": 1,
+  "structural_verified": false,
+  "token_usage": 0,
+  "verification_level": "none"
+}

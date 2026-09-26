@@ -1,0 +1,22 @@
+ggml_cuda_init: found 1 CUDA devices (Total VRAM: 6143 MiB):
+  Device 0: NVIDIA GeForce GTX 970M, compute capability 5.2, VMM: yes, VRAM: 6143 MiB
+load_backend: loaded CUDA backend from D:\llama.cpp\ggml-cuda.dll
+load_backend: loaded RPC backend from D:\llama.cpp\ggml-rpc.dll
+load_backend: loaded CPU backend from D:\llama.cpp\ggml-cpu-haswell.dll
+| model                          |       size |     params | backend    | ngl | threads |            test |                  t/s |
+| ------------------------------ | ---------: | ---------: | ---------- | --: | ------: | --------------: | -------------------: |
+| granite 30B Q4_K - Medium      |  16.50 GiB |    29.28 B | CUDA       |   0 |       4 |           pp512 |         22.79 ± 0.70 |
+| granite 30B Q4_K - Medium      |  16.50 GiB |    29.28 B | CUDA       |   0 |       4 |           tg128 |          1.19 ± 0.00 |
+| granite 30B Q4_K - Medium      |  16.50 GiB |    29.28 B | CUDA       |   0 |       8 |           pp512 |         23.46 ± 0.09 |
+| granite 30B Q4_K - Medium      |  16.50 GiB |    29.28 B | CUDA       |   0 |       8 |           tg128 |          1.21 ± 0.00 |
+| granite 30B Q4_K - Medium      |  16.50 GiB |    29.28 B | CUDA       |  10 |       4 |           pp512 |         23.94 ± 0.08 |
+| granite 30B Q4_K - Medium      |  16.50 GiB |    29.28 B | CUDA       |  10 |       4 |           tg128 |          1.18 ± 0.00 |
+| granite 30B Q4_K - Medium      |  16.50 GiB |    29.28 B | CUDA       |  10 |       8 |           pp512 |         23.99 ± 0.02 |
+| granite 30B Q4_K - Medium      |  16.50 GiB |    29.28 B | CUDA       |  10 |       8 |           tg128 |          1.19 ± 0.00 |
+| granite 30B Q4_K - Medium      |  16.50 GiB |    29.28 B | CUDA       |  20 |       4 |           pp512 |          8.64 ± 0.00 |
+| granite 30B Q4_K - Medium      |  16.50 GiB |    29.28 B | CUDA       |  20 |       4 |           tg128 |          1.26 ± 0.01 |
+| granite 30B Q4_K - Medium      |  16.50 GiB |    29.28 B | CUDA       |  20 |       8 |           pp512 |          8.68 ± 0.03 |
+| granite 30B Q4_K - Medium      |  16.50 GiB |    29.28 B | CUDA       |  20 |       8 |           tg128 |          1.24 ± 0.01 |
+
+build: fa6769818 (10896)
+EXIT:0

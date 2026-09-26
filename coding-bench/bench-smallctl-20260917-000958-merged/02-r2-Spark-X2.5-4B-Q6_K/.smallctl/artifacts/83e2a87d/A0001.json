@@ -1,0 +1,130 @@
+{
+  "success": true,
+  "status": null,
+  "output": [
+    {
+      "name": ".smallctl",
+      "path": "/work/.smallctl",
+      "type": "dir",
+      "size": null,
+      "children": [
+        {
+          "name": "artifacts",
+          "path": "/work/.smallctl/artifacts",
+          "type": "dir",
+          "size": null,
+          "children": [
+            {
+              "name": "83e2a87d",
+              "path": "/work/.smallctl/artifacts/83e2a87d",
+              "type": "dir",
+              "size": null
+            }
+          ],
+          "children_count": 1
+        }
+      ],
+      "children_count": 1
+    },
+    {
+      "name": "logs",
+      "path": "/work/logs",
+      "type": "dir",
+      "size": null,
+      "children": [
+        {
+          "name": "83e2a87d-20260917-024142",
+          "path": "/work/logs/83e2a87d-20260917-024142",
+          "type": "dir",
+          "size": null,
+          "children": [
+            {
+              "name": "chat.jsonl",
+              "path": "/work/logs/83e2a87d-20260917-024142/chat.jsonl",
+              "type": "file",
+              "size": 386504
+            },
+            {
+              "name": "chat.log",
+              "path": "/work/logs/83e2a87d-20260917-024142/chat.log",
+              "type": "file",
+              "size": 236143
+            },
+            {
+              "name": "harness.jsonl",
+              "path": "/work/logs/83e2a87d-20260917-024142/harness.jsonl",
+              "type": "file",
+              "size": 73678
+            },
+            {
+              "name": "harness.log",
+              "path": "/work/logs/83e2a87d-20260917-024142/harness.log",
+              "type": "file",
+              "size": 18644
+            },
+            {
+              "name": "model_output.jsonl",
+              "path": "/work/logs/83e2a87d-20260917-024142/model_output.jsonl",
+              "type": "file",
+              "size": 45951
+            },
+            {
+              "name": "model_output.log",
+              "path": "/work/logs/83e2a87d-20260917-024142/model_output.log",
+              "type": "file",
+              "size": 704
+            },
+            {
+              "name": "recovery.jsonl",
+              "path": "/work/logs/83e2a87d-20260917-024142/recovery.jsonl",
+              "type": "file",
+              "size": 0
+            },
+            {
+              "name": "recovery.log",
+              "path": "/work/logs/83e2a87d-20260917-024142/recovery.log",
+              "type": "file",
+              "size": 0
+            }
+          ],
+          "children_count": 11,
+          "children_truncated": true
+        }
+      ],
+      "children_count": 1
+    },
+    {
+      "name": "prompt.txt",
+      "path": "/work/prompt.txt",
+      "type": "file",
+      "size": 778
+    },
+    {
+      "name": "stderr.log",
+      "path": "/work/stderr.log",
+      "type": "file",
+      "size": 3998
+    },
+    {
+      "name": "transcript.jsonl",
+      "path": "/work/transcript.jsonl",
+      "type": "file",
+      "size": 259
+    }
+  ],
+  "error": null,
+  "metadata": {
+    "tool_name": "dir_list",
+    "tier": "tier1",
+    "tool_risk": "low",
+    "tool_category": "filesystem",
+    "dispatch_phase": "execute",
+    "path": "/work",
+    "count": 5,
+    "total_items": 5,
+    "truncated": false,
+    "tree_depth": 2,
+    "tree_children_limit": 8,
+    "tree_node_limit": 120
+  }
+}

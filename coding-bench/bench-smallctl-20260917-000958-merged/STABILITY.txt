@@ -1,0 +1,34 @@
+# Cross-repeat stability — Thu Sep 17 05:42:28 WEDT 2026
+# PASS count per component, over the repeats present in this run dir.
+# n/n or 0/n = a real signal. Anything in between = the cell is a coin flip
+# and must not be used to rank models.
+
+# algo:UNKNOWN cells are excluded from the denominator, not scored as
+# failures — the file would not load even stripped, so the grader never
+# called the function. They are reported separately as (+N unknown).
+
+MODEL                          COMPONENT                PASS/N
+Granite-4.2-3B-Q8_0            t1.debounce.algo           0/2
+Granite-4.2-3B-Q8_0            t1.debounce.pkg            1/2   <-- unstable
+Granite-4.2-3B-Q8_0            t2.server                  2/2
+Granite-4.2-3B-Q8_0            t2.throttle.algo           1/2   <-- unstable
+Granite-4.2-3B-Q8_0            t2.throttle.pkg            2/2
+Granite-4.2-3B-Q8_0            t3.books.body              2/2
+Granite-4.2-3B-Q8_0            t3.books.headers           0/2
+Granite-4.2-3B-Q8_0            t3.books.status            2/2
+Nanbeige4.2-3B-Q6_K            t1.debounce.algo           0/1
+Nanbeige4.2-3B-Q6_K            t1.debounce.pkg            0/1
+Nanbeige4.2-3B-Q6_K            t2.server                  0/1
+Nanbeige4.2-3B-Q6_K            t2.throttle.algo           0/1
+Nanbeige4.2-3B-Q6_K            t2.throttle.pkg            0/1
+Nanbeige4.2-3B-Q6_K            t3.books.body              0/1
+Nanbeige4.2-3B-Q6_K            t3.books.headers           0/1
+Nanbeige4.2-3B-Q6_K            t3.books.status            0/1
+Spark-X2.5-4B-Q6_K             t1.debounce.algo           2/2
+Spark-X2.5-4B-Q6_K             t1.debounce.pkg            2/2
+Spark-X2.5-4B-Q6_K             t2.server                  1/2   <-- unstable
+Spark-X2.5-4B-Q6_K             t2.throttle.algo           0/1  (+1 unknown)
+Spark-X2.5-4B-Q6_K             t2.throttle.pkg            1/2   <-- unstable
+Spark-X2.5-4B-Q6_K             t3.books.body              2/2
+Spark-X2.5-4B-Q6_K             t3.books.headers           2/2
+Spark-X2.5-4B-Q6_K             t3.books.status            2/2

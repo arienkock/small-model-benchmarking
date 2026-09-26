@@ -1,0 +1,24 @@
+{
+  "success": false,
+  "status": "blocked",
+  "output": null,
+  "error": "VERIFIER LOOP HARD STOP: shell_exec is blocked after 5 verifier rejections. Allowed action classes are: ask_user, mutation, research, stop_blocked. Research the failure, make a targeted mutation, ask the user, or call task_fail.",
+  "metadata": {
+    "tool_name": "shell_exec",
+    "reason": "verifier_loop_hard_stop",
+    "rejection_count": 5,
+    "allowed_action_classes": [
+      "ask_user",
+      "mutation",
+      "research",
+      "stop_blocked"
+    ],
+    "active_mitigation": "verifier_loop_dispatch_block",
+    "arguments": {
+      "command": "ps aux | grep -E \"server.py\" | grep -v grep; echo \"=== port check ===\"; (ss -tlnp 2>/dev/null || netstat -tlnp 2>/dev/null) | grep 8000 || echo \"port 8000 not listening\"; echo \"=== server.log ===\"; cat server.log 2>/dev/null || echo \"no server.log\"",
+      "timeout_sec": 10
+    },
+    "model_visible": false,
+    "hidden": true
+  }
+}

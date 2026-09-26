@@ -1,0 +1,29 @@
+{
+  "success": false,
+  "status": null,
+  "output": {
+    "stdout": "",
+    "stderr": "Warning: Detected unsettled top-level await at file:///work/debounce.ts:20\n    const { debounce } = await import('./debounce.ts');\n                         ^\n\n\n\n",
+    "exit_code": 13
+  },
+  "error": "Warning: Detected unsettled top-level await at file:///work/debounce.ts:20\n    const { debounce } = await import('./debounce.ts');\n                         ^",
+  "metadata": {
+    "tool_name": "shell_exec",
+    "tier": "tier1",
+    "tool_risk": "high",
+    "tool_category": "shell",
+    "dispatch_phase": "repair",
+    "output": {
+      "stdout": "",
+      "stderr": "Warning: Detected unsettled top-level await at file:///work/debounce.ts:20\n    const { debounce } = await import('./debounce.ts');\n                         ^\n\n\n\n",
+      "exit_code": 13
+    },
+    "command": "node debounce.ts",
+    "execution_sec": 1.579,
+    "arguments": {
+      "command": "node debounce.ts"
+    },
+    "model_visible": false,
+    "hidden": true
+  }
+}

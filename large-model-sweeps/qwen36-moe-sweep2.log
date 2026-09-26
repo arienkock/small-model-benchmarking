@@ -1,0 +1,73 @@
+=== ncmoe=999 ===
+ggml_cuda_init: found 1 CUDA devices (Total VRAM: 6143 MiB):
+  Device 0: NVIDIA GeForce GTX 970M, compute capability 5.2, VMM: yes, VRAM: 6143 MiB
+load_backend: loaded CUDA backend from D:\llama.cpp\ggml-cuda.dll
+load_backend: loaded RPC backend from D:\llama.cpp\ggml-rpc.dll
+load_backend: loaded CPU backend from D:\llama.cpp\ggml-cpu-haswell.dll
+| model                          |       size |     params | backend    | ngl |  n_cpu_moe | threads |            test |                  t/s |
+| ------------------------------ | ---------: | ---------: | ---------- | --: | ---------: | ------: | --------------: | -------------------: |
+| qwen35moe 35B.A3B Q4_K - Medium |  19.01 GiB |    34.66 B | CUDA       | 999 |        999 |       8 |           pp512 |         16.58 ± 7.23 |
+| qwen35moe 35B.A3B Q4_K - Medium |  19.01 GiB |    34.66 B | CUDA       | 999 |        999 |       8 |           tg128 |          6.85 ± 0.60 |
+
+build: fa6769818 (10896)
+=== ncmoe=48 ===
+ggml_cuda_init: found 1 CUDA devices (Total VRAM: 6143 MiB):
+  Device 0: NVIDIA GeForce GTX 970M, compute capability 5.2, VMM: yes, VRAM: 6143 MiB
+load_backend: loaded CUDA backend from D:\llama.cpp\ggml-cuda.dll
+load_backend: loaded RPC backend from D:\llama.cpp\ggml-rpc.dll
+load_backend: loaded CPU backend from D:\llama.cpp\ggml-cpu-haswell.dll
+| model                          |       size |     params | backend    | ngl |  n_cpu_moe | threads |            test |                  t/s |
+| ------------------------------ | ---------: | ---------: | ---------- | --: | ---------: | ------: | --------------: | -------------------: |
+| qwen35moe 35B.A3B Q4_K - Medium |  19.01 GiB |    34.66 B | CUDA       | 999 |         48 |       8 |           pp512 |         76.84 ± 2.79 |
+| qwen35moe 35B.A3B Q4_K - Medium |  19.01 GiB |    34.66 B | CUDA       | 999 |         48 |       8 |           tg128 |         12.74 ± 0.11 |
+
+build: fa6769818 (10896)
+=== ncmoe=32 ===
+ggml_cuda_init: found 1 CUDA devices (Total VRAM: 6143 MiB):
+  Device 0: NVIDIA GeForce GTX 970M, compute capability 5.2, VMM: yes, VRAM: 6143 MiB
+load_backend: loaded CUDA backend from D:\llama.cpp\ggml-cuda.dll
+load_backend: loaded RPC backend from D:\llama.cpp\ggml-rpc.dll
+load_backend: loaded CPU backend from D:\llama.cpp\ggml-cpu-haswell.dll
+| model                          |       size |     params | backend    | ngl |  n_cpu_moe | threads |            test |                  t/s |
+| ------------------------------ | ---------: | ---------: | ---------- | --: | ---------: | ------: | --------------: | -------------------: |
+| qwen35moe 35B.A3B Q4_K - Medium |  19.01 GiB |    34.66 B | CUDA       | 999 |         32 |       8 |           pp512 |         86.61 ± 1.73 |
+| qwen35moe 35B.A3B Q4_K - Medium |  19.01 GiB |    34.66 B | CUDA       | 999 |         32 |       8 |           tg128 |         13.58 ± 0.02 |
+
+build: fa6769818 (10896)
+=== ncmoe=24 ===
+ggml_cuda_init: found 1 CUDA devices (Total VRAM: 6143 MiB):
+  Device 0: NVIDIA GeForce GTX 970M, compute capability 5.2, VMM: yes, VRAM: 6143 MiB
+load_backend: loaded CUDA backend from D:\llama.cpp\ggml-cuda.dll
+load_backend: loaded RPC backend from D:\llama.cpp\ggml-rpc.dll
+load_backend: loaded CPU backend from D:\llama.cpp\ggml-cpu-haswell.dll
+| model                          |       size |     params | backend    | ngl |  n_cpu_moe | threads |            test |                  t/s |
+| ------------------------------ | ---------: | ---------: | ---------- | --: | ---------: | ------: | --------------: | -------------------: |
+| qwen35moe 35B.A3B Q4_K - Medium |  19.01 GiB |    34.66 B | CUDA       | 999 |         24 |       8 |           pp512 |          4.35 ± 0.98 |
+| qwen35moe 35B.A3B Q4_K - Medium |  19.01 GiB |    34.66 B | CUDA       | 999 |         24 |       8 |           tg128 |          6.58 ± 0.28 |
+
+build: fa6769818 (10896)
+=== ncmoe=16 ===
+ggml_cuda_init: found 1 CUDA devices (Total VRAM: 6143 MiB):
+  Device 0: NVIDIA GeForce GTX 970M, compute capability 5.2, VMM: yes, VRAM: 6143 MiB
+load_backend: loaded CUDA backend from D:\llama.cpp\ggml-cuda.dll
+load_backend: loaded RPC backend from D:\llama.cpp\ggml-rpc.dll
+load_backend: loaded CPU backend from D:\llama.cpp\ggml-cpu-haswell.dll
+| model                          |       size |     params | backend    | ngl |  n_cpu_moe | threads |            test |                  t/s |
+| ------------------------------ | ---------: | ---------: | ---------- | --: | ---------: | ------: | --------------: | -------------------: |
+| qwen35moe 35B.A3B Q4_K - Medium |  19.01 GiB |    34.66 B | CUDA       | 999 |         16 |       8 |           pp512 |         19.04 ± 5.77 |
+| qwen35moe 35B.A3B Q4_K - Medium |  19.01 GiB |    34.66 B | CUDA       | 999 |         16 |       8 |           tg128 |          4.57 ± 0.78 |
+
+build: fa6769818 (10896)
+=== ncmoe=8 ===
+ggml_cuda_init: found 1 CUDA devices (Total VRAM: 6143 MiB):
+  Device 0: NVIDIA GeForce GTX 970M, compute capability 5.2, VMM: yes, VRAM: 6143 MiB
+load_backend: loaded CUDA backend from D:\llama.cpp\ggml-cuda.dll
+load_backend: loaded RPC backend from D:\llama.cpp\ggml-rpc.dll
+load_backend: loaded CPU backend from D:\llama.cpp\ggml-cpu-haswell.dll
+| model                          |       size |     params | backend    | ngl |  n_cpu_moe | threads |            test |                  t/s |
+| ------------------------------ | ---------: | ---------: | ---------- | --: | ---------: | ------: | --------------: | -------------------: |
+| qwen35moe 35B.A3B Q4_K - Medium |  19.01 GiB |    34.66 B | CUDA       | 999 |          8 |       8 |           pp512 |        44.74 ± 10.06 |
+| qwen35moe 35B.A3B Q4_K - Medium |  19.01 GiB |    34.66 B | CUDA       | 999 |          8 |       8 |           tg128 |          5.26 ± 0.02 |
+
+build: fa6769818 (10896)
+DONE

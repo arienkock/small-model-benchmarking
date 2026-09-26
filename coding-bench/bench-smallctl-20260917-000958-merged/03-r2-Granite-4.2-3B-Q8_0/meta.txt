@@ -1,0 +1,10 @@
+run: 3
+repeat: 2
+model: Granite-4.2-3B-Q8_0
+workspace: /d/llama.cpp/coding-bench/bench-smallctl-20260917-030515/03-r2-Granite-4.2-3B-Q8_0
+harness: smallctl
+exit_code: 1
+duration_sec: 1130
+budget_sec: 1424
+final_task_status: failed
+total_tool_calls: 8

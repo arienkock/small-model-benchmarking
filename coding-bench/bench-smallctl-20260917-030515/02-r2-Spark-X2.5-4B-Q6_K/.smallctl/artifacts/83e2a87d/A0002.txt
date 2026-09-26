@@ -1,0 +1,1 @@
+Added to known_facts: Task: Build a rate-limited API with server.py (Python stdlib HTTP server, 5 req/60s per client IP, 429 + Retry-After) and throttle.ts (ESM throttle function with self-test runnable via `node throttle.ts`).

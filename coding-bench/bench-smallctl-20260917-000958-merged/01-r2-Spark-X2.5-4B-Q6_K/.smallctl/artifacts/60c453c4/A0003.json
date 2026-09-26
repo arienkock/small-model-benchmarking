@@ -1,0 +1,32 @@
+{
+  "success": true,
+  "status": null,
+  "output": "import assert from 'node:assert';\nimport { pathToFileURL } from 'node:url';\n\nexport function debounce(fn: (...args: any[]) => void, waitMs: number) {\n    let timer: ReturnType<typeof setTimeout> | null = null;\n    return (...args: any[]) => {\n        if (timer !== null) {\n            clearTimeout(timer);\n            timer = null;\n        }\n        timer = setTimeout(() => {\n            timer = null;\n            fn(...args);\n        }, waitMs);\n    };\n}\n\n// Self-test: runs when the file is executed directly.\nif (import.meta.url === pathToFileURL(process.argv[1]).href) {\n    const { debounce } = await import('./debounce.ts');\n\n    let calls: any[] = [];\n    let lastArgs: any[] = [];\n    let lastCall: { at: number; args: any[] } | null = null;\n\n    const d = debounce((...args: any[]) => {\n        calls.push(args);\n        lastArgs = args;\n        lastCall = { at: Date.now(), args };\n    }, 30);\n\n    d('a', '1');\n    d('b', '2');\n    d('c', '3');\n\n    // Wait a bit longer than waitMs so the debounced call fires.\n    await new Promise((resolve) => setTimeout(resolve, 100));\n\n    // Only one call should have happened, with the latest arguments.\n    assert.deepStrictEqual(calls, [['c', '3']], 'debounce should call fn exactly once with the latest args');\n    assert.deepStrictEqual(lastArgs, ['c', '3'], 'latest arguments should be passed to fn');\n\n    // Second batch should cancel the pending call and only fire once after waitMs.\n    calls.length = 0;\n    d('d', '4');\n    d('e', '5');\n\n    await new Promise((resolve) => setTimeout(resolve, 100));\n\n    assert.deepStrictEqual(calls, [['e', '5']], 'subsequent calls should cancel pending call and fire once with latest args');\n\n    console.log('all tests passed');\n}",
+  "error": null,
+  "metadata": {
+    "tool_name": "file_read",
+    "tier": "tier1",
+    "tool_risk": "low",
+    "tool_category": "filesystem",
+    "dispatch_phase": "repair",
+    "path": "/work/debounce.ts",
+    "source_path": "/work/debounce.ts",
+    "bytes": 1732,
+    "elapsed_ms": 4,
+    "requested_start_line": null,
+    "requested_end_line": null,
+    "max_bytes": 100000,
+    "line_start": 1,
+    "line_end": 53,
+    "total_lines": 53,
+    "complete_file": true,
+    "truncated": false,
+    "read_from_staging": false,
+    "staged_only": false,
+    "dotenv_read_redacted": false,
+    "dotenv_permissions_warning": "",
+    "write_session_id": "",
+    "write_session_status": "",
+    "system_repair_cycle_id": "repair-83fc4f93"
+  }
+}

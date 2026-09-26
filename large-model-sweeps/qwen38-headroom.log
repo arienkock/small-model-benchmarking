@@ -1,0 +1,13 @@
+0.01.042.743 I load_tensors:        CUDA0 model buffer size =     0.00 MiB
+0.01.050.552 I llama_kv_cache:        CPU KV buffer size =     0.00 MiB
+0.01.050.553 I llama_kv_cache:      CUDA0 KV buffer size =     0.00 MiB
+0.01.102.040 I sched_reserve:      CUDA0 compute buffer size =   192.92 MiB
+0.01.102.045 I sched_reserve:  CUDA_Host compute buffer size =    34.13 MiB
+0.03.149.511 I load_tensors:   CPU_Mapped model buffer size =  8742.66 MiB
+0.03.149.512 I load_tensors:        CUDA0 model buffer size =  4504.68 MiB
+0.05.442.724 I llama_kv_cache:        CPU KV buffer size =   176.00 MiB
+0.05.469.108 I llama_kv_cache:      CUDA0 KV buffer size =    80.00 MiB
+0.05.531.354 I sched_reserve:      CUDA0 compute buffer size =   192.92 MiB
+0.05.531.358 I sched_reserve:  CUDA_Host compute buffer size =    34.13 MiB
+0.25.023.619 D ~llama_context:      CUDA0 compute buffer size is 192.9150 MiB, matches expectation of 192.9150 MiB
+0.25.023.624 D ~llama_context:  CUDA_Host compute buffer size is  34.1329 MiB, matches expectation of  34.1329 MiB

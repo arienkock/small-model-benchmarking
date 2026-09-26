@@ -1,0 +1,36 @@
+import assert from 'node:assert';
+import { pathToFileURL } from 'node:url';
+
+export function debounce(fn: (...args: any[]) => void, waitMs: number) {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    return (...args: any[]) => {
+        if (timer !== null) {
+            clearTimeout(timer);
+            timer = null;
+        }
+        timer = setTimeout(() => {
+            timer = null;
+            fn(...args);
+        }, waitMs);
+    };
+}
+
+// Self-test that runs when the file is executed directly
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+    const calls: string[] = [];
+    const debounced = debounce((...args: any[]) => {
+        calls.push(args.join(','));
+    }, 30);
+
+    // First call schedules a delay
+    debounced('a', 'b');
+
+    // Second call cancels the pending call and reschedules with latest args
+    debounced('c', 'd');
+
+    // Wait for the debounced call to fire
+    setTimeout(() => {
+        assert.deepStrictEqual(calls, ['c,d']);
+        console.log('all tests passed');
+    }, 100);
+}

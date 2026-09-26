@@ -1,0 +1,8 @@
+filler chars: 54000
+Granite-4.2-3B-Q8_0      ctx=16384  prefill 148.78755048403318 tok/s over 12016 tokens
+Spark-X2.5-4B-Q6_K       ctx=16384  prefill 167.80784707028684 tok/s over 12017 tokens
+Granite-4.2-3B-Q8_0      ctx=20480  prefill 147.97298985571018 tok/s over 12016 tokens
+Spark-X2.5-4B-Q6_K       ctx=20480  prefill 166.43551008321913 tok/s over 12017 tokens
+Granite-4.2-3B-Q8_0      ctx=24576  prefill 147.7410514950476 tok/s over 12016 tokens
+Spark-X2.5-4B-Q6_K       ctx=24576  prefill 167.37440630973515 tok/s over 12017 tokens
+SPEEDTEST_DONE

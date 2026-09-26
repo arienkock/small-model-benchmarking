@@ -1,0 +1,4 @@
+2026-09-16T21:41:06.048+00:00 dispatch_start tool dispatch started {"tool_name": "file_read", "phase": "execute", "arguments": {"path": "debounce.ts"}, "requested_tool_name": null}
+2026-09-16T21:41:06.085+00:00 dispatch_spec tool metadata {"tool_name": "file_read", "category": "filesystem", "risk": "low", "phase": "execute"}
+2026-09-16T21:41:06.126+00:00 dispatch_complete tool dispatch finished {"tool_name": "file_read", "success": false, "tier": "tier1", "output": null, "error": "File does not exist: /work/debounce.ts"}
+2026-09-16T21:41:06.166+00:00 tool_result canonical tool outcome {"tool_name": "file_read", "outcome": "failure", "success": false, "status": "failure", "reason": "", "failure_class": "tool_error", "error": "File does not exist: /work/debounce.ts", "phase": "execute", "source": "model", "duration_ms": 118.296, "requested_tool_name": ""}

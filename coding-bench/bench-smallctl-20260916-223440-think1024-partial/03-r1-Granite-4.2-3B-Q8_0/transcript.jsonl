@@ -1,0 +1,82 @@
+{"status": "logging_ready", "run_log_dir": "/work/logs/e2f870f6-20260916-212246"}
+{"status": "log_dir_finalized", "run_log_dir": "/work/logs/b66aade8-20260916-212246"}
+{
+  "behavioral_verified": false,
+  "deliverable_verified": false,
+  "diagnostic_only": true,
+  "error": {
+    "details": {
+      "attempt": 2,
+      "elapsed_seconds": 109.536,
+      "halt_reason": "reasoning_only_stream_stall",
+      "max_reasoning_only_retries": 1,
+      "progress": {
+        "distinct_word_count": 80,
+        "fragment_count": 312,
+        "novel_word_count": 22,
+        "novel_word_ratio": 0.564,
+        "progress": true,
+        "unique_ratio": 0.375
+      },
+      "reason": "reasoning_only_stream_stall",
+      "reasoning_elapsed_seconds": 30.076,
+      "reasoning_only_chunks": 326,
+      "retrying": false,
+      "tools_available": [
+        "ask_human",
+        "ast_patch",
+        "dir_list",
+        "dir_tree",
+        "file_append",
+        "file_delete",
+        "file_download",
+        "file_patch",
+        "file_read",
+        "file_write",
+        "file_write_chunk",
+        "find_files",
+        "git_diff",
+        "git_status",
+        "grep",
+        "http_get",
+        "http_post",
+        "interactive_run",
+        "json_query",
+        "log_note",
+        "loop_status",
+        "memory_update",
+        "phase_contract_update",
+        "read_log",
+        "shell_exec",
+        "ssh_dir_list",
+        "ssh_session_close",
+        "ssh_session_read",
+        "ssh_session_send",
+        "ssh_session_start",
+        "task_complete",
+        "task_fail",
+        "web_fetch",
+        "web_search",
+        "yaml_read"
+      ]
+    },
+    "message": "Model stream halted repeatedly without a tool call or final actionable answer. Halt reason: reasoning_only_stream_stall.",
+    "type": "model_stream_stall"
+  },
+  "inactive_steps": 3,
+  "latency_metrics": {
+    "model_call_duration_sec": 272.762,
+    "overhead_preparation_duration_sec": 0.002,
+    "ttft_sec": 242.596
+  },
+  "no_op": false,
+  "reason": "Model stream halted repeatedly without a tool call or final actionable answer. Halt reason: reasoning_only_stream_stall.",
+  "recovery_metrics": {
+    "model_stream_halt_count": 3
+  },
+  "status": "failed",
+  "step_count": 3,
+  "structural_verified": false,
+  "token_usage": 0,
+  "verification_level": "none"
+}

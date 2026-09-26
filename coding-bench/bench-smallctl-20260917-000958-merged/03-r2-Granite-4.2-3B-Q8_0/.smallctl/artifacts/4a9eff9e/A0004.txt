@@ -1,0 +1,5 @@
+{
+  "job_id": "10da88a5710b4f6889ad98ca054df1a9",
+  "pid": 8,
+  "command": "cd /work && python3 server.py > server.log 2>&1 &"
+}

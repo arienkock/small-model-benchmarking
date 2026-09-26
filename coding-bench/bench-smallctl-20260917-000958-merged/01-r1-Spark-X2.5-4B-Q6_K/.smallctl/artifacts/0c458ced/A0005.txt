@@ -1,0 +1,4 @@
+all tests passed
+
+
+--- [EXIT CODE: 0] ---

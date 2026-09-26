@@ -1,0 +1,9 @@
+ggml_cuda_init: found 1 CUDA devices (Total VRAM: 6143 MiB):
+  Device 0: NVIDIA GeForce GTX 970M, compute capability 5.2, VMM: yes, VRAM: 6143 MiB
+load_backend: loaded CUDA backend from D:\llama.cpp\ggml-cuda.dll
+load_backend: loaded RPC backend from D:\llama.cpp\ggml-rpc.dll
+load_backend: loaded CPU backend from D:\llama.cpp\ggml-cpu-haswell.dll
+llama_bench: error: failed to load model 'D:/models/qwen3.6-35b-a3b/Qwen3.6-35B-A3B-Q4_K_M.gguf'
+| model                          |       size |     params | backend    | ngl |  n_cpu_moe | threads |            test |                  t/s |
+| ------------------------------ | ---------: | ---------: | ---------- | --: | ---------: | ------: | --------------: | -------------------: |
+EXIT:1

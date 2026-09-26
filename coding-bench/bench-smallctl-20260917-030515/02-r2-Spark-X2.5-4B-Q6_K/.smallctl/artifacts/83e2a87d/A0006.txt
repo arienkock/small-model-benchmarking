@@ -1,0 +1,74 @@
+import { pathToFileURL } from 'node:url';
+import assert from 'node:assert';
+
+/**
+ * throttle(fn, maxPerWindow, windowMs)
+ *
+ * Returns a wrapper around `fn` that invokes `fn` at most `maxPerWindow`
+ * times within any sliding window of `windowMs` milliseconds. Excess calls
+ * are silently skipped.
+ */
+export function throttle<T extends (...args: never[]) => void>(
+  fn: T,
+  maxPerWindow: number,
+  windowMs: number
+): (...args: Parameters<T>) => void {
+  const calls: number[] = [];
+  const now = (): number => Date.now();
+
+  const throttled = (...args: Parameters<T>): void => {
+    const start = now();
+    const sinceLast = start - calls[calls.length - 1] ?? start;
+
+    if (calls.length === 0 || sinceLast >= windowMs) {
+      calls.push(start);
+      fn(...args);
+    }
+    // Otherwise: window still has enough room -> silently skip.
+  };
+
+  return throttled;
+}
+
+/**
+ * Self-test: run with `node throttle.ts`.
+ * Verifies that the wrapper calls fn at most maxPerWindow times per window.
+ */
+function selfTest(): void {
+  let callCount = 0;
+  let lastCallAt = -Infinity;
+  let lastWindowStart = 0;
+
+  const fn = (): void => {
+    callCount++;
+    lastCallAt = Date.now();
+  };
+
+  const wrapped = throttle(fn, 3, 1000); // 3 calls per 1000ms
+
+  // First three calls should all fire.
+  wrapped();
+  wrapped();
+  wrapped();
+  assert.strictEqual(callCount, 3, 'first three calls should fire');
+
+  // Fourth call within the same window should be skipped.
+  wrapped();
+  assert.strictEqual(callCount, 3, 'fourth call within window should be skipped');
+
+  // Wait for the window to elapse, then a new call should fire again.
+  const waitStart = Date.now();
+  while (Date.now() - waitStart < 1000) {
+    /* busy-wait */
+  }
+
+  wrapped();
+  assert.strictEqual(callCount, 4, 'call after window reset should fire');
+
+  console.log('all tests passed');
+}
+
+// Run self-test when executed directly.
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  selfTest();
+}

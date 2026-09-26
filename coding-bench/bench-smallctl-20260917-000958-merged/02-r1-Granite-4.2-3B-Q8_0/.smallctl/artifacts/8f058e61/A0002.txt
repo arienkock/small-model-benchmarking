@@ -1,0 +1,82 @@
+#!/usr/bin/env python3
+"""
+Rate-limited API server.
+- GET /api/time returns {"now": <unix timestamp>}
+- Per-client rate limit: 5 requests per 60 seconds, keyed by client IP
+- 6th+ requests within window return 429 with Retry-After header
+"""
+
+import http.server
+import socketserver
+import urllib.parse
+import time
+from datetime import datetime
+import threading
+
+# Rate limiting storage: ip -> list of timestamps
+rate_limit = {}
+rate_limit_lock = threading.Lock()
+
+class RateLimitedHandler(http.server.BaseHTTPRequestHandler):
+    def do_GET(self):
+        parsed = urllib.parse.urlparse(self.path)
+        if parsed.path != '/api/time':
+            self.send_error(404)
+            return
+        
+        client_ip = self.client_address[0]
+        
+        # Get current time for window calculation
+        now = time.time()
+        
+        # Clean old timestamps (older than 60 seconds)
+        with rate_limit_lock:
+            if client_ip in rate_limit:
+                # Keep only timestamps within the last 60 seconds
+                rate_limit[client_ip] = [
+                    ts for ts in rate_limit[client_ip] 
+                    if now - ts < 60
+                ]
+        
+        # Count requests in the last window
+        recent_count = len(rate_limit[client_ip])
+        
+        with rate_limit_lock:
+            if recent_count >= 5:
+                # Rate limit exceeded - return 429
+                retry_after = 60 - (now - rate_limit[client_ip][0])
+                retry_after = max(1, int(retry_after))
+                self.send_response(429)
+                self.send_header('Retry-After', str(retry_after))
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(b'{"error": "Rate limit exceeded"}')
+                return
+            
+            # Add current request timestamp
+            rate_limit[client_ip] = [now] + rate_limit[client_ip]
+            # Keep only timestamps within the last 60 seconds
+            rate_limit[client_ip] = [ts for ts in rate_limit[client_ip] if now - ts < 60]
+        
+        # Success - return time
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/json')
+        self.end_headers()
+        response = {"now": int(now)}
+        self.wfile.write(response.json().encode())
+    
+    def log_message(self, format, *args):
+        # Suppress default log output
+        pass
+
+class SimpleTCPServer(socketserver.TCPServer):
+    allow_reuse_address = True
+
+def run_server(port=8000):
+    handler = RateLimitedHandler
+    with SimpleTCPServer(('', port), handler) as httpd:
+        httpd.serve_forever()
+
+if __name__ == '__main__':
+    # Run on port 8000
+    run_server()

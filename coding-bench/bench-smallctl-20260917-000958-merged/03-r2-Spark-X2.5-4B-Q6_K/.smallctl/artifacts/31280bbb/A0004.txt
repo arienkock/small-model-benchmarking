@@ -1,0 +1,12 @@
+HTTP/1.0 200 OK
+Server: BaseHTTP/0.6 Python/3.12.14
+Date: Thu, 17 Sep 2026 03:19:36 GMT
+Content-Type: application/json
+Content-Length: 110
+
+[{"id": 1, "title": "Dune", "author": "Frank Herbert"}, {"id": 2, "title": "1984", "author": "George Orwell"}]
+---STATUS---
+200
+
+
+--- [EXIT CODE: 0] ---

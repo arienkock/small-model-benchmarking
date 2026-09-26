@@ -1,0 +1,13 @@
+{"status": "logging_ready", "run_log_dir": "/work/logs/ebc88aaa-20260917-010545"}
+{"status": "log_dir_finalized", "run_log_dir": "/work/logs/ed45b895-20260917-010545"}
+
+
+
+
+
+
+
+
+
+Let me first read the current debounce.ts file to understand its exact content, then fix the self-test logic to be simpler and more reliable.
+

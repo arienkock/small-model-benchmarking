@@ -1,0 +1,32 @@
+{
+  "success": true,
+  "status": null,
+  "output": "#!/usr/bin/env python3\n\"\"\"\nRate-limited API server.\n- GET /api/time returns {\"now\": <unix timestamp>}\n- Per-client rate limit: 5 requests per 60 seconds, keyed by client IP\n- 6th+ requests within window return 429 with Retry-After header\n\"\"\"\n\nimport http.server\nimport socketserver\nimport urllib.parse\nimport time\nfrom datetime import datetime\nimport threading\n\n# Rate limiting storage: ip -> list of timestamps\nrate_limit = {}\nrate_limit_lock = threading.Lock()\n\nclass RateLimitedHandler(http.server.BaseHTTPRequestHandler):\n    def do_GET(self):\n        parsed = urllib.parse.urlparse(self.path)\n        if parsed.path != '/api/time':\n            self.send_error(404)\n            return\n        \n        client_ip = self.client_address[0]\n        \n        # Get current time for window calculation\n        now = time.time()\n        \n        # Clean old timestamps (older than 60 seconds)\n        with rate_limit_lock:\n            if client_ip in rate_limit:\n                # Keep only timestamps within the last 60 seconds\n                rate_limit[client_ip] = [\n                    ts for ts in rate_limit[client_ip] \n                    if now - ts < 60\n                ]\n        \n        # Count requests in the last window\n        recent_count = len(rate_limit[client_ip])\n        \n        with rate_limit_lock:\n            if recent_count >= 5:\n                # Rate limit exceeded - return 429\n                retry_after = 60 - (now - rate_limit[client_ip][0])\n                retry_after = max(1, int(retry_after))\n                self.send_response(429)\n                self.send_header('Retry-After', str(retry_after))\n                self.send_header('Content-Type', 'application/json')\n                self.end_headers()\n                self.wfile.write(b'{\"error\": \"Rate limit exceeded\"}')\n                return\n            \n            # Add current request timestamp\n            rate_limit[client_ip] = [now] + rate_limit[client_ip]\n            # Keep only timestamps within the last 60 seconds\n            rate_limit[client_ip] = [ts for ts in rate_limit[client_ip] if now - ts < 60]\n        \n        # Success - return time\n        self.send_response(200)\n        self.send_header('Content-Type', 'application/json')\n        self.end_headers()\n        response = {\"now\": int(now)}\n        self.wfile.write(response.json().encode())\n    \n    def log_message(self, format, *args):\n        # Suppress default log output\n        pass\n\nclass SimpleTCPServer(socketserver.TCPServer):\n    allow_reuse_address = True\n\ndef run_server(port=8000):\n    handler = RateLimitedHandler\n    with SimpleTCPServer(('', port), handler) as httpd:\n        httpd.serve_forever()\n\nif __name__ == '__main__':\n    # Run on port 8000\n    run_server()",
+  "error": null,
+  "metadata": {
+    "tool_name": "file_read",
+    "tier": "tier1",
+    "tool_risk": "low",
+    "tool_category": "filesystem",
+    "dispatch_phase": "execute",
+    "path": "/work/server.py",
+    "source_path": "/work/server.py",
+    "bytes": 2748,
+    "elapsed_ms": 4,
+    "requested_start_line": null,
+    "requested_end_line": null,
+    "max_bytes": 100000,
+    "line_start": 1,
+    "line_end": 82,
+    "total_lines": 82,
+    "complete_file": true,
+    "truncated": false,
+    "read_from_staging": false,
+    "staged_only": false,
+    "dotenv_read_redacted": false,
+    "dotenv_permissions_warning": "",
+    "write_session_id": "",
+    "write_session_status": "",
+    "system_repair_cycle_id": ""
+  }
+}

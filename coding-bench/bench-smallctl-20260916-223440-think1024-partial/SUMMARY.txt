@@ -1,0 +1,5 @@
+run: 1 model: Granite-4.2-3B-Q8_0 repeat: 1 exit_code: 124 duration_sec: 1427 status: unknown
+run: 2 model: Granite-4.2-3B-Q8_0 repeat: 1 exit_code: 124 duration_sec: 1427 status: unknown
+run: 3 model: Granite-4.2-3B-Q8_0 repeat: 1 exit_code: 1 duration_sec: 770 status: failed
+run: 1 model: Granite-4.2-3B-Q8_0 repeat: 2 exit_code: 1 duration_sec: 809 status: failed
+run: 1 model: Spark-X2.5-4B-Q6_K repeat: 1 exit_code: 1 duration_sec: 525 status: failed

@@ -1,0 +1,13 @@
+{"status": "logging_ready", "run_log_dir": "/work/logs/11247858-20260916-221014"}
+{"status": "log_dir_finalized", "run_log_dir": "/work/logs/7799c65b-20260916-221014"}
+
+
+
+
+I see the corrected version was already written to `debounce.ts`. Let me verify the current file and run the self-test to confirm it works correctly.
+
+
+
+
+
+

@@ -1,0 +1,32 @@
+{
+  "success": true,
+  "status": null,
+  "output": "import { pathToFileURL } from 'node:url';\nimport assert from 'node:assert';\n\n/**\n * throttle(fn, maxPerWindow, windowMs)\n *\n * Returns a wrapper around `fn` that invokes `fn` at most `maxPerWindow`\n * times within any sliding window of `windowMs` milliseconds. Excess calls\n * are silently skipped.\n */\nexport function throttle<T extends (...args: never[]) => void>(\n  fn: T,\n  maxPerWindow: number,\n  windowMs: number\n): (...args: Parameters<T>) => void {\n  // Sliding-window counters per window start.\n  // windowStart -> count of allowed calls in that window.\n  const windowCounts: Map<number, number> = new Map();\n  const now = (): number => Date.now();\n\n  const throttled = (...args: Parameters<T>): void => {\n    const start = now();\n    // Find the latest window start <= current time.\n    let windowStart = start;\n    if (windowCounts.has(start)) {\n      windowStart = start;\n    } else {\n      // Step backwards to the most recent window boundary.\n      let t = start;\n      while (!windowCounts.has(t)) {\n        t -= windowMs;\n      }\n      windowStart = t;\n    }\n\n    const count = windowCounts.get(windowStart) ?? 0;\n    if (count < maxPerWindow) {\n      windowCounts.set(windowStart, count + 1);\n      fn(...args);\n    }\n    // Otherwise: window still has room for more calls -> silently skip.\n  };\n\n  return throttled;\n}\n\n/**\n * Self-test: run with `node throttle.ts`\n */\nfunction selfTest(): void {\n  let calls = 0;\n  let lastCall = 0;\n  let firstCalls = 0;\n\n  const fn = (...args: number[]): void => {\n    calls++;\n    lastCall = Date.now();\n    firstCalls = firstCalls === 0 ? Date.now() : firstCalls;\n  };\n\n  const throttled = throttle(fn, 3, 10);\n\n  // Fire three calls quickly -> all should fire.\n  throttled();\n  throttled();\n  throttled();\n  assert.strictEqual(calls, 3, 'first three calls should fire');\n\n  // Fire a fourth call within the same window -> silently skipped.\n  throttled();\n  assert.strictEqual(calls, 3, 'fourth call within window should be skipped');\n\n  // Wait for the window to elapse, then a new window starts.\n  // Ensure the counter resets after windowMs.\n  const t0 = Date.now();\n  while (Date.now() - t0 < 10) {\n    // yield to let timers/clock settle\n  }\n\n  calls = 0;\n  throttled();\n  throttled();\n  throttled();\n  assert.strictEqual(calls, 3, 'three calls after window reset should fire');\n\n  console.log('all tests passed');\n}\n\n// Run the self-test when executed directly.\nif (import.meta.url === pathToFileURL(process.argv[1]).href) {\n  selfTest();\n}",
+  "error": null,
+  "metadata": {
+    "tool_name": "file_read",
+    "tier": "tier1",
+    "tool_risk": "low",
+    "tool_category": "filesystem",
+    "dispatch_phase": "repair",
+    "path": "/work/throttle.ts",
+    "source_path": "/work/throttle.ts",
+    "bytes": 2503,
+    "elapsed_ms": 5,
+    "requested_start_line": null,
+    "requested_end_line": null,
+    "max_bytes": 100000,
+    "line_start": 1,
+    "line_end": 92,
+    "total_lines": 92,
+    "complete_file": true,
+    "truncated": false,
+    "read_from_staging": false,
+    "staged_only": false,
+    "dotenv_read_redacted": false,
+    "dotenv_permissions_warning": "",
+    "write_session_id": "",
+    "write_session_status": "",
+    "system_repair_cycle_id": "repair-7a35f5ea"
+  }
+}

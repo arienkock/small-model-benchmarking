@@ -1,0 +1,30 @@
+{
+  "success": false,
+  "status": null,
+  "output": {
+    "stdout": "",
+    "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: first three calls should fire\n\n1 !== 3\n\n    at selfTest (file:///work/throttle.ts:53:10)\n    at file:///work/throttle.ts:73:3\n    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)\n    at async node:internal/modules/esm/loader:647:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: 1,\n  expected: 3,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v24.21.0\n",
+    "exit_code": 1
+  },
+  "error": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: first three calls should fire\n\n1 !== 3\n\n    at selfTest (file:///work/throttle.ts:53:10)\n    at file:///work/throttle.ts:73:3\n    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)\n    at async node:internal/modules/esm/loader:647:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: 1,\n  expected: 3,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v24.21.0",
+  "metadata": {
+    "tool_name": "shell_exec",
+    "tier": "tier1",
+    "tool_risk": "high",
+    "tool_category": "shell",
+    "dispatch_phase": "repair",
+    "output": {
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: first three calls should fire\n\n1 !== 3\n\n    at selfTest (file:///work/throttle.ts:53:10)\n    at file:///work/throttle.ts:73:3\n    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)\n    at async node:internal/modules/esm/loader:647:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: 1,\n  expected: 3,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v24.21.0\n",
+      "exit_code": 1
+    },
+    "command": "node throttle.ts",
+    "execution_sec": 0.106,
+    "arguments": {
+      "command": "node throttle.ts",
+      "timeout_sec": 30
+    },
+    "model_visible": false,
+    "hidden": true
+  }
+}

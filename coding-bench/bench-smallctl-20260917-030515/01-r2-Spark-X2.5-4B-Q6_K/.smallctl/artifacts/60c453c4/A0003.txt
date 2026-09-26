@@ -1,0 +1,53 @@
+import assert from 'node:assert';
+import { pathToFileURL } from 'node:url';
+
+export function debounce(fn: (...args: any[]) => void, waitMs: number) {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    return (...args: any[]) => {
+        if (timer !== null) {
+            clearTimeout(timer);
+            timer = null;
+        }
+        timer = setTimeout(() => {
+            timer = null;
+            fn(...args);
+        }, waitMs);
+    };
+}
+
+// Self-test: runs when the file is executed directly.
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+    const { debounce } = await import('./debounce.ts');
+
+    let calls: any[] = [];
+    let lastArgs: any[] = [];
+    let lastCall: { at: number; args: any[] } | null = null;
+
+    const d = debounce((...args: any[]) => {
+        calls.push(args);
+        lastArgs = args;
+        lastCall = { at: Date.now(), args };
+    }, 30);
+
+    d('a', '1');
+    d('b', '2');
+    d('c', '3');
+
+    // Wait a bit longer than waitMs so the debounced call fires.
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    // Only one call should have happened, with the latest arguments.
+    assert.deepStrictEqual(calls, [['c', '3']], 'debounce should call fn exactly once with the latest args');
+    assert.deepStrictEqual(lastArgs, ['c', '3'], 'latest arguments should be passed to fn');
+
+    // Second batch should cancel the pending call and only fire once after waitMs.
+    calls.length = 0;
+    d('d', '4');
+    d('e', '5');
+
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    assert.deepStrictEqual(calls, [['e', '5']], 'subsequent calls should cancel pending call and fire once with latest args');
+
+    console.log('all tests passed');
+}

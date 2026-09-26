@@ -1,0 +1,7 @@
+########## run-mode=loop ##########
+rc=124
+debounce.ts: /d/llama.cpp/smallctl-container/probe512/debounce.ts
+tools:       8 "tool_name": "file_read"       4 "tool_name": "file_write" 
+content-vs-thinking:     460 model_token     443 thinking token 
+status: 
+PROBE_DONE

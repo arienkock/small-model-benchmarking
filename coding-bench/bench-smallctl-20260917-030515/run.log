@@ -1,0 +1,25 @@
+[03:05:15] extracted 2829 chars of shared benchmark rules from run-filter-bench.sh
+[03:05:16] loaded 3 prompts from prompts-filter.txt
+[03:05:16] roster restricted to: Granite-4.2-3B-Q8_0,Spark-X2.5-4B-Q6_K (2 model(s))
+[03:05:16] === SmallCTL arm: 2 models x 3 tasks x 1 reps (from r2) = 6 cells ===
+[03:05:16] deadline: 2026-09-17 07:00
+[03:05:16] === Granite-4.2-3B-Q8_0 (budget 1424s/cell) ===
+[03:05:33]   server up for Granite-4.2-3B-Q8_0 (n_ctx=24576)
+[03:05:33] [1/6] task 1 rep 2 — Granite-4.2-3B-Q8_0
+[03:29:20]     rc=124 1426s status=unknown tool_calls=0
+[03:29:20] [2/6] task 2 rep 2 — Granite-4.2-3B-Q8_0
+[03:53:09]     rc=124 1428s status=unknown tool_calls=0
+[03:53:11] [3/6] task 3 rep 2 — Granite-4.2-3B-Q8_0
+[04:12:01]     rc=1 1130s status=failed tool_calls=8
+[04:12:01] === finished Granite-4.2-3B-Q8_0 ===
+[04:12:01] === Spark-X2.5-4B-Q6_K (budget 1757s/cell) ===
+[04:12:11]   server up for Spark-X2.5-4B-Q6_K (n_ctx=24576)
+[04:12:11] [4/6] task 1 rep 2 — Spark-X2.5-4B-Q6_K
+[04:41:31]     rc=124 1760s status=unknown tool_calls=0
+[04:41:31] [5/6] task 2 rep 2 — Spark-X2.5-4B-Q6_K
+[05:10:51]     rc=124 1760s status=unknown tool_calls=0
+[05:10:53] [6/6] task 3 rep 2 — Spark-X2.5-4B-Q6_K
+[05:40:12]     rc=124 1759s status=unknown tool_calls=0
+[05:40:12] === finished Spark-X2.5-4B-Q6_K ===
+[05:40:14] === done. run dir: /d/llama.cpp/coding-bench/bench-smallctl-20260917-030515 ===
+[05:40:15] grade with: ./grade-run.sh bench-smallctl-20260917-030515

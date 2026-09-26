@@ -1,0 +1,11 @@
+{
+  "model": "VibeThinker",
+  "top_p": 0.95,
+  "max_tokens": 24000,
+  "messages": [
+    {
+      "role": "user",
+      "content": "Buggy module (debounce.ts):\n\n```ts\nexport function debounce(fn: (...args: any[]) => void, waitMs: number) {\n    let timer: ReturnType<typeof setTimeout> | null = null;\n    return (...args: any[]) => {\n        if (timer !== null) {\n            return; // already scheduled\n        }\n        timer = setTimeout(() => fn(args), waitMs);\n        timer = null;\n    };\n}\n```\n\nIntended behaviour:\ndebounce(fn, waitMs) returns a function that delays calling fn until waitMs milliseconds\nhave passed since the LAST call, passing through the latest arguments, and cancelling any\npending call when a new one arrives.\n\nYou are analysing a buggy TypeScript module. Do NOT rewrite the module.\n\nFor EVERY separate defect you find, output a block in EXACTLY this format:\n\n### DEFECT\nWHY: <one sentence naming the defect and the exact wrong line>\nFIX: <one sentence stating the concrete change>\nTEST:\n```ts\n<a complete, self-contained TypeScript test file>\n```\n\nRules for each TEST file, which are strict because the tests are executed automatically:\n- It MUST import the function under test with exactly: import { debounce } from \"./target.ts\";\n- It MUST import assert with exactly: import assert from \"node:assert\";\n- It MUST be a DISCRIMINATING test: it has to FAIL (throw) on the buggy module above, and\n  PASS on a correctly fixed module. A test that passes on the buggy module proves nothing.\n- debounce is asynchronous, so you MUST wait for timers. Use:\n  await new Promise(r => setTimeout(r, <ms>));\n  inside a top-level async function that you then call. Waits must be comfortably longer\n  than the waitMs you choose.\n- On success it MUST print exactly: TEST PASSED\n- On failure it MUST throw (assert does this for you). Do not catch errors.\n- Use ESM only. No require, no module.exports, no __filename, no test framework.\n- Keep each test under 30 lines and test ONE defect.\n\nOutput only the DEFECT blocks. No preamble, no summary, no corrected module."
+    }
+  ]
+}

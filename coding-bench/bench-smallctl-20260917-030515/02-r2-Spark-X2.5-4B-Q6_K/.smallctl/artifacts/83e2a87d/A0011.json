@@ -1,0 +1,20 @@
+{
+  "success": false,
+  "status": "blocked",
+  "output": null,
+  "error": "VERIFIER LOOP HARD STOP: loop_status is not in an allowed action class after 3 verifier rejections. Allowed classes are: ask_user, mutation, research, stop_blocked.",
+  "metadata": {
+    "tool_name": "loop_status",
+    "reason": "verifier_loop_hard_stop",
+    "rejection_count": 3,
+    "allowed_action_classes": [
+      "ask_user",
+      "mutation",
+      "research",
+      "stop_blocked"
+    ],
+    "action_class": null,
+    "active_mitigation": "verifier_loop_dispatch_block",
+    "arguments": {}
+  }
+}

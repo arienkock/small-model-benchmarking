@@ -1,0 +1,32 @@
+{
+  "success": true,
+  "status": null,
+  "output": "#!/usr/bin/env python3\n\"\"\"A rate-limited HTTP API using only the Python standard library.\n\nEndpoints:\n  GET /api/time -> {\"now\": <unix timestamp>}\n\nRate limiting:\n  Per-client (by client IP) limit of 5 requests per 60 seconds.\n  The 6th and further requests within the window return 429\n  with a Retry-After header set to the window duration.\n\"\"\"\n\nimport json\nimport time\nfrom http.server import BaseHTTPRequestHandler, HTTPServer\nfrom urllib.parse import urlparse\n\n\n# Rate limit configuration\nMAX_REQUESTS = 5\nWINDOW_SECONDS = 60\n\n# In-memory sliding window per client IP.\n# Maps an IP address -> list of request timestamps (seconds since epoch).\n_REQUEST_LOG: dict[str, list[float]] = {}\n\n\ndef _client_ip(handler: BaseHTTPRequestHandler) -> str:\n    \"\"\"Return the client IP address from the request.\"\"\"\n    forwarded = handler.headers.get(\"X-Forwarded-For\")\n    if forwarded:\n        # Take the first address in the chain (the original client).\n        return forwarded.split(\",\")[0].strip()\n    return handler.client_address[0]\n\n\ndef _is_rate_limited(ip: str) -> tuple[bool, int]:\n    \"\"\"Check whether the client is rate-limited for the current window.\n\n    Returns (is_limited, retry_after_seconds).\n    \"\"\"\n    now = time.time()\n    timestamps = _REQUEST_LOG.get(ip, [])\n\n    # Drop timestamps that are outside the current window.\n    recent = [t for t in timestamps if now - t <= WINDOW_SECONDS]\n\n    if len(recent) < MAX_REQUESTS:\n        # Allow the request; record it.\n        recent.append(now)\n        # Keep only the most recent MAX_REQUESTS timestamps to bound memory.\n        _REQUEST_LOG[ip] = recent[-MAX_REQUESTS:]\n        return False, 0\n\n    # Rate limited: tell the client how long to wait until the window resets.\n    return True, WINDOW_SECONDS\n\n\nclass RateLimitedHandler(BaseHTTPRequestHandler):\n    \"\"\"HTTP request handler with per-client rate limiting.\"\"\"\n\n    def _send_json(self, status: int, payload: dict) -> None:\n        body = json.dumps(payload).encode(\"utf-8\")\n        self.send_response(status)\n        self.send_header(\"Content-Type\", \"application/json\")\n        self.send_header(\"Content-Length\", str(len(body)))\n        self.end_headers()\n        self.wfile.write(body)\n\n    def do_GET(self) -> None:  # noqa: N802 (http.server convention)\n        parsed = urlparse(self.path)\n        path = parsed.path\n\n        if path == \"/api/time\":\n            is_limited, retry_after = _is_rate_limited(_client_ip(self))\n            if is_limited:\n                self.send_response(429)\n                self.send_header(\"Content-Type\", \"application/json\")\n                self.send_header(\"Retry-After\", str(retry_after))\n                self.end_headers()\n                self._send_json_body(429, {\"error\": \"rate_limit_exceeded\"})\n                return\n\n            now = time.time()\n            self._send_json(200, {\"now\": int(now)})\n            return\n\n        # Unknown path -> 404.\n        self._send_json(404, {\"error\": \"not_found\"})\n\n    def _send_json_body(self, status: int, payload: dict) -> None:\n        body = json.dumps(payload).encode(\"utf-8\")\n        self.send_response(status)\n        self.send_header(\"Content-Type\", \"application/json\")\n        self.send_header(\"Content-Length\", str(len(body)))\n        self.end_headers()\n        self.wfile.write(body)\n\n    def log_message(self, fmt: str, *args) -> None:  # noqa: A003\n        # Keep default logging but keep it quiet-friendly.\n        super().log_message(fmt, *args)\n\n\ndef main() -> None:\n    host = \"127.0.0.1\"\n    port = 8000\n    server = HTTPServer((host, port), RateLimitedHandler)\n    server.allow_reuse_address = True\n    print(f\"Rate-limited API listening on http://{host}:{port}\")\n    try:\n        server.serve_forever()\n    except KeyboardInterrupt:\n        pass\n    finally:\n        server.server_close()\n\n\nif __name__ == \"__main__\":\n    main()",
+  "error": null,
+  "metadata": {
+    "tool_name": "file_read",
+    "tier": "tier1",
+    "tool_risk": "low",
+    "tool_category": "filesystem",
+    "dispatch_phase": "execute",
+    "path": "/work/server.py",
+    "source_path": "/work/server.py",
+    "bytes": 3857,
+    "elapsed_ms": 5,
+    "requested_start_line": null,
+    "requested_end_line": null,
+    "max_bytes": 100000,
+    "line_start": 1,
+    "line_end": 119,
+    "total_lines": 119,
+    "complete_file": true,
+    "truncated": false,
+    "read_from_staging": false,
+    "staged_only": false,
+    "dotenv_read_redacted": false,
+    "dotenv_permissions_warning": "",
+    "write_session_id": "",
+    "write_session_status": "",
+    "system_repair_cycle_id": ""
+  }
+}

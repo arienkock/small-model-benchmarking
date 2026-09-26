@@ -1,0 +1,85 @@
+{
+  "success": false,
+  "status": null,
+  "output": null,
+  "error": "Cannot complete the task until the reported runtime error is verified fixed.",
+  "metadata": {
+    "tool_name": "task_complete",
+    "tier": "tier1",
+    "tool_risk": "medium",
+    "tool_category": "control",
+    "dispatch_phase": "repair",
+    "reason": "reported_runtime_error_unverified",
+    "reported_runtime_error": {
+      "kind": "RuntimeError",
+      "message": "",
+      "module": "",
+      "entrypoint": "",
+      "traceback_line": "",
+      "signature": "RuntimeError",
+      "repeated_count": 1
+    },
+    "last_verifier_verdict": {
+      "tool": "shell_exec",
+      "target": "node debounce.ts",
+      "command": "node debounce.ts",
+      "exit_code": 0,
+      "key_stdout": "all tests passed",
+      "key_stderr": "",
+      "verdict": "fail",
+      "failure_mode": "insufficient_verifier",
+      "acceptance_delta": {
+        "status": "blocked",
+        "notes": [
+          "This is an install task, but the verifier `node debounce.ts` is not a post-condition check. For install tasks, verify with service status, package status, listening port, or version command."
+        ]
+      },
+      "insufficient_verifier": true,
+      "verifier_kind": "diagnostic",
+      "latest_blocker": {
+        "tool": "shell_exec",
+        "command": "node debounce.ts",
+        "target": "node debounce.ts",
+        "exit_code": 0,
+        "blocker_class": "execution_failure",
+        "failure_class": "insufficient_verifier",
+        "salient_error": "all tests passed"
+      },
+      "stale": true,
+      "stale_reason": "file_changed_after_verifier",
+      "stale_after_tool": "file_write",
+      "stale_after_paths": [
+        "/work/verify_import.ts",
+        "verify_import.ts"
+      ],
+      "next_required_action": {
+        "tool_name": "shell_exec",
+        "notes": [
+          "Rerun the focused verifier after the latest file change: `node debounce.ts`.",
+          "Do not poll `loop_status` waiting for a stale verifier verdict to change."
+        ]
+      }
+    },
+    "next_required_action": {
+      "tool_names": [
+        "file_read",
+        "dir_list",
+        "find_files",
+        "file_patch",
+        "shell_exec"
+      ],
+      "required_arguments": {
+        "command": "run the smallest focused verifier that reproduces the reported traceback entrypoint"
+      },
+      "notes": [
+        "The user reported `RuntimeError` and this runtime error is still open.",
+        "Do not finish, fail, or ask the user to retry until the exact reported error is localized, patched, and verified.",
+        "Run or inspect the traceback entrypoint/import target, apply a direct fix, then run a verifier that covers the same entrypoint or import."
+      ]
+    },
+    "acceptance_checklist": [],
+    "arguments": {
+      "message": "The bug in debounce.ts was that when a new call arrived while a timer was still pending, the function returned early without cancelling the pending setTimeout. This meant fn would still fire after waitMs even though a newer call was made, defeating debounce. The corrected version cancels the pending call (clearTimeout + reset timer), reschedules with the latest arguments using spread (...args), and passes them to fn. The self-test verifies that a second call cancels the pending call and reschedules with latest args. Verification: node debounce.ts printed \"all tests passed\"."
+    }
+  }
+}

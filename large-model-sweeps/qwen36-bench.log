@@ -1,0 +1,8 @@
+ggml_cuda_init: found 1 CUDA devices (Total VRAM: 6143 MiB):
+  Device 0: NVIDIA GeForce GTX 970M, compute capability 5.2, VMM: yes, VRAM: 6143 MiB
+load_backend: loaded CUDA backend from D:\llama.cpp\ggml-cuda.dll
+load_backend: loaded RPC backend from D:\llama.cpp\ggml-rpc.dll
+load_backend: loaded CPU backend from D:\llama.cpp\ggml-cpu-haswell.dll
+common_pull_file: download failed: Failed to read connection (status: -1)
+common_download_file_single_online: retrying after 2 seconds...
+EXIT:1

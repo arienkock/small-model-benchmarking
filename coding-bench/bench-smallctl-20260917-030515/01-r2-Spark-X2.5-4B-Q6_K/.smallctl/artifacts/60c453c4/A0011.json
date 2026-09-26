@@ -1,0 +1,32 @@
+{
+  "success": false,
+  "status": null,
+  "output": null,
+  "error": "Repair cycle requires reading the target file before patching it again.",
+  "metadata": {
+    "tool_name": "file_patch",
+    "tier": "tier1",
+    "tool_risk": "high",
+    "tool_category": "filesystem",
+    "dispatch_phase": "repair",
+    "path": "/work/debounce.ts",
+    "system_repair_cycle_id": "repair-8342411a",
+    "required_read_paths": [],
+    "error_kind": "repair_cycle_read_required",
+    "recovery_hint": "This is a new repair-cycle read requirement. Prior file_read artifacts do not satisfy the current repair cycle; call file_read on this path to refresh the disk snapshot, even if the file is currently missing.",
+    "next_required_tool": {
+      "tool_name": "file_read",
+      "required_arguments": {
+        "path": "/work/debounce.ts"
+      },
+      "reason": "new_repair_cycle_requires_fresh_disk_snapshot",
+      "system_repair_cycle_id": "repair-8342411a"
+    },
+    "requested_path": "/work/debounce.ts",
+    "arguments": {
+      "path": "/work/debounce.ts",
+      "target_text": "import assert from 'node:assert';\nimport { pathToFileURL } from 'node:url';\n\nexport function debounce(fn: (...args: any[]) => void, waitMs: number) {",
+      "replacement_text": "import assert from 'node:assert';\nimport { pathToFileURL } from 'node:url';\nimport { debounce } from './debounce.ts';\n\nexport function debounce(fn: (...args: any[]) => void, waitMs: number) {"
+    }
+  }
+}

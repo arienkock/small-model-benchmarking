@@ -1,0 +1,32 @@
+{
+  "success": true,
+  "status": null,
+  "output": "import json\nfrom http.server import HTTPServer, BaseHTTPRequestHandler\nfrom urllib.parse import urlparse\n\nBOOKS = [\n    {\"id\": 1, \"title\": \"Dune\", \"author\": \"Frank Herbert\"},\n    {\"id\": 2, \"title\": \"1984\", \"author\": \"George Orwell\"},\n]\n\n\nclass Handler(BaseHTTPRequestHandler):\n    def do_GET(self):\n        path = urlparse(self.path).path\n        if path == \"/api/books\":\n            self.send_response(200)\n            self.send_header(\"Content-Type\", \"application/json\")\n            self.send_header(\"Content-Length\", str(len(json.dumps(BOOKS).encode())))\n            body = json.dumps(BOOKS).encode()\n            self.end_headers()\n            self.wfile.write(body)\n        else:\n            self.send_response(404)\n            self.send_header(\"Content-Length\", \"0\")\n            self.end_headers()\n\n    def log_message(self, fmt, *args):\n        # Custom log format for clarity (standard library only)\n        super().log_message(fmt, *args)\n\n\nHTTPServer((\"127.0.0.1\", 8000), Handler).serve_forever()",
+  "error": null,
+  "metadata": {
+    "tool_name": "file_read",
+    "tier": "tier1",
+    "tool_risk": "low",
+    "tool_category": "filesystem",
+    "dispatch_phase": "execute",
+    "path": "/work/server.py",
+    "source_path": "/work/server.py",
+    "bytes": 1006,
+    "elapsed_ms": 3,
+    "requested_start_line": null,
+    "requested_end_line": null,
+    "max_bytes": 100000,
+    "line_start": 1,
+    "line_end": 31,
+    "total_lines": 31,
+    "complete_file": true,
+    "truncated": false,
+    "read_from_staging": false,
+    "staged_only": false,
+    "dotenv_read_redacted": false,
+    "dotenv_permissions_warning": "",
+    "write_session_id": "",
+    "write_session_status": "",
+    "system_repair_cycle_id": ""
+  }
+}

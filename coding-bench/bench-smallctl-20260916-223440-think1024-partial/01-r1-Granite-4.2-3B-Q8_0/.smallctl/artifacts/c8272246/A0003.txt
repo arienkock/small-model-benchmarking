@@ -1,0 +1,50 @@
+--- [FAILURE SUMMARY] ---
+Command failed with exit code 1.
+
+file:///work/debounce.ts:13
+
+if (import.meta.url === new URL(process.argv[1], import.assert.cache).href) {
+                                                              ^
+    // Self-test
+
+SyntaxError [ERR_INVALID_TYPESCRIPT_SYNTAX]: Unexpected token `.`. Expected meta
+    at parseTypeScript (node:internal/modules/typescript:72:36)
+    at processTypeScriptCode (node:internal/modules/typescript:146:42)
+    at stripTypeScriptModuleTypes (node:internal/modules/typescript:215:22)
+    at Module._compile (node:internal/modules/cjs/loader:1883:15)
+    at Object..js (node:internal/modules/cjs/loader:2060:10)
+    at Module.load (node:internal/modules/cjs/loader:1651:32)
+    at Module._load (node:internal/modules/cjs/loader:1443:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)
+    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)
+    at node:internal/main/run_main_module:33:47 {
+  code: 'ERR_INVALID_TYPESCRIPT_SYNTAX'
+}
+
+Node.js v24.21.0
+
+--- [STDERR] ---
+file:///work/debounce.ts:13
+
+if (import.meta.url === new URL(process.argv[1], import.assert.cache).href) {
+                                                              ^
+    // Self-test
+
+SyntaxError [ERR_INVALID_TYPESCRIPT_SYNTAX]: Unexpected token `.`. Expected meta
+    at parseTypeScript (node:internal/modules/typescript:72:36)
+    at processTypeScriptCode (node:internal/modules/typescript:146:42)
+    at stripTypeScriptModuleTypes (node:internal/modules/typescript:215:22)
+    at Module._compile (node:internal/modules/cjs/loader:1883:15)
+    at Object..js (node:internal/modules/cjs/loader:2060:10)
+    at Module.load (node:internal/modules/cjs/loader:1651:32)
+    at Module._load (node:internal/modules/cjs/loader:1443:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)
+    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)
+    at node:internal/main/run_main_module:33:47 {
+  code: 'ERR_INVALID_TYPESCRIPT_SYNTAX'
+}
+
+Node.js v24.21.0
+
+
+--- [EXIT CODE: 1] ---

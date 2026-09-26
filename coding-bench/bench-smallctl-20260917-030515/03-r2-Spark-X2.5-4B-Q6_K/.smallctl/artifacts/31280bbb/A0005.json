@@ -1,0 +1,36 @@
+{
+  "success": false,
+  "status": null,
+  "output": {
+    "stdout": "server stopped\npost-stop status: 000\nconnection refused (server stopped)\n",
+    "stderr": "",
+    "exit_code": 0
+  },
+  "error": "server stopped\npost-stop status: 000\nconnection refused (server stopped)",
+  "metadata": {
+    "tool_name": "shell_exec",
+    "tier": "tier1",
+    "tool_risk": "high",
+    "tool_category": "shell",
+    "dispatch_phase": "repair",
+    "output": {
+      "stdout": "server stopped\npost-stop status: 000\nconnection refused (server stopped)\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    "command": "kill 10 2>/dev/null; sleep 0.5; echo \"server stopped\"; curl -s -o /dev/null -w \"post-stop status: %{http_code}\\n\" --max-time 2 http://127.0.0.1:8000/api/books || echo \"connection refused (server stopped)\"",
+    "classification": {
+      "status": "failure",
+      "kind": "masked_pipeline_failure",
+      "exit_code": 0,
+      "failure_mode": "masked_pipeline_failure"
+    },
+    "execution_sec": 0.516,
+    "arguments": {
+      "command": "kill 10 2>/dev/null; sleep 0.5; echo \"server stopped\"; curl -s -o /dev/null -w \"post-stop status: %{http_code}\\n\" --max-time 2 http://127.0.0.1:8000/api/books || echo \"connection refused (server stopped)\"",
+      "timeout_sec": 10
+    },
+    "model_visible": false,
+    "hidden": true
+  }
+}

@@ -1,0 +1,10 @@
+prompt chars: 969, rules chars: 2829
+server up
+cell rc=1
+=== DID IT WRITE debounce.ts? ===
+ls: cannot access '/d/llama.cpp/smallctl-container/smoke2/debounce.ts': No such file or directory
+=== status ===
+"final_task_status": "failed"
+"total_tool_calls": 1
+=== tools ===
+SMOKE2_DONE

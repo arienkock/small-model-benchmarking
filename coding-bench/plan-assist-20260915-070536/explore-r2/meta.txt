@@ -1,0 +1,9 @@
+exit_code: 124
+duration_sec: 903
+context: 16384
+run_budget_sec: 900
+tool_calls: 6
+guard_blocks: 0
+files_created:
+  investigate.ts (4874 bytes)
+  meta.txt (113 bytes)

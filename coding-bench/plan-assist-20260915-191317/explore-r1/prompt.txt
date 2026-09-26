@@ -1,0 +1,23 @@
+Find the bug in this TypeScript module and provide the corrected version. Save the corrected file.
+
+// debounce.ts
+export function debounce(fn: (...args: any[]) => void, waitMs: number) {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    return (...args: any[]) => {
+        if (timer !== null) {
+            return; // already scheduled
+        }
+        timer = setTimeout(() => fn(args), waitMs);
+        timer = null;
+    };
+}
+
+The intended behavior: debounce(fn, waitMs) returns a function that delays calling fn until
+waitMs milliseconds have passed since the LAST call, passing through the latest arguments,
+and cancelling any pending call when a new one arrives.
+
+Explain what is wrong, write the corrected module to debounce.ts (keep the same export signature),
+and add a small self-test that runs when the file is executed directly and prints "all tests passed".
+Verify before finishing with: node debounce.ts (Node 24 runs .ts files natively).
+
+Do NOT fix anything yet and do NOT write debounce.ts. Your ONLY deliverable is findings.md. STEP 1, DO THIS FIRST: read the module above and immediately write findings.md listing every distinct defect you can see, one per numbered section, with the exact line that is wrong. Write this file BEFORE running anything -- an incomplete findings.md is far better than none. STEP 2: only after findings.md exists on disk, reproduce the behaviour in a scratch file (any name except debounce.ts), run it with node, and then UPDATE findings.md to mark each defect as CONFIRMED or CORRECTED, adding the evidence. Re-write findings.md after each thing you learn. Never delete it. Do not write a corrected debounce.ts.

@@ -1,0 +1,32 @@
+{
+  "success": true,
+  "status": null,
+  "output": "import assert from 'node:assert';\n\nexport function debounce(fn: (...args: any[]) => void, waitMs: number) {\n    let timer: ReturnType<typeof setTimeout> | null = null;\n    let lastCallTime: number | null = null;\n    \n    return (...args: any[]) => {\n        // Cancel any pending timer\n        if (timer !== null) {\n            clearTimeout(timer);\n            timer = null;\n        }\n        \n        // Record the time of this call\n        lastCallTime = Date.now();\n        \n        // Schedule the function to run after waitMs\n        timer = setTimeout(() => {\n            // Only call if this is still the most recent call\n            if (lastCallTime === Date.now()) {\n                fn(...args);\n            }\n        }, waitMs);\n    };\n}\n\n// Self-test\nif (import.meta.url === new URL('debounce.ts', import.meta.url).href) {\n    // Test 1: Basic debounce behavior\n    let called = false;\n    const debounced = debounce(() => {\n        called = true;\n    }, 100);\n    \n    // Call multiple times quickly - only the last call should trigger\n    debounced();\n    debounced();\n    debounced();\n    \n    // Wait for debounce\n    setTimeout(() => {\n        // After 100ms, the function should have been called once\n        if (called) {\n            console.log('Test 1 passed: debounce called after wait');\n        } else {\n            console.error('Test 1 failed: debounce did not call');\n            assert.fail('Test 1 failed');\n        }\n    }, 150);\n    \n    // Test 2: Ensure cancellation works\n    called = false;\n    const debounced2 = debounce(() => {\n        called = true;\n    }, 50);\n    \n    // Call first\n    debounced2();\n    // Call second before first timeout\n    debounced2();\n    \n    // Wait for timeout\n    setTimeout(() => {\n        // Only the last call should trigger\n        if (called) {\n            console.log('Test 2 passed: debounce cancellation works');\n        } else {\n            console.error('Test 2 failed: debounce did not respect cancellation');\n            assert.fail('Test 2 failed');\n        }\n    }, 80);\n    \n    // Run assertions after the timeouts\n    setTimeout(() => {\n        assert.ok(called, 'Test 1 passed');\n        // Note: Test 2's assertion will be checked after its timeout\n    }, 200);\n    \n    console.log('all tests passed');\n}",
+  "error": null,
+  "metadata": {
+    "tool_name": "file_read",
+    "tier": "tier1",
+    "tool_risk": "low",
+    "tool_category": "filesystem",
+    "dispatch_phase": "execute",
+    "path": "/work/debounce.ts",
+    "source_path": "/work/debounce.ts",
+    "bytes": 2293,
+    "elapsed_ms": 3,
+    "requested_start_line": null,
+    "requested_end_line": null,
+    "max_bytes": 100000,
+    "line_start": 1,
+    "line_end": 80,
+    "total_lines": 80,
+    "complete_file": true,
+    "truncated": false,
+    "read_from_staging": false,
+    "staged_only": false,
+    "dotenv_read_redacted": false,
+    "dotenv_permissions_warning": "",
+    "write_session_id": "",
+    "write_session_status": "",
+    "system_repair_cycle_id": ""
+  }
+}

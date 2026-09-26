@@ -1,0 +1,13 @@
+{
+  "model": "VT-plan",
+  "temperature": 0.6,
+  "top_p": 0.95,
+  "top_k": 0,
+  "max_tokens": 31568,
+  "messages": [
+    {
+      "role": "user",
+      "content": "Find the bug in this TypeScript module and provide the corrected version.\n\n// debounce.ts\nexport function debounce(fn: (...args: any[]) => void, waitMs: number) {\n    let timer: ReturnType<typeof setTimeout> | null = null;\n    return (...args: any[]) => {\n        if (timer !== null) {\n            return; // already scheduled\n        }\n        timer = setTimeout(() => fn(args), waitMs);\n        timer = null;\n    };\n}\n\nIntended behavior: debounce(fn, waitMs) returns a function that delays calling fn until\nwaitMs ms have passed since the LAST call, passing through the latest arguments, and\ncancelling any pending call when a new one arrives.\n\nProduce a short numbered PLAN for another engineer who will make the fix. Enumerate EVERY separate defect, and for each state concretely what to change. Then list the behaviors their self-test must assert. Do NOT write the corrected code."
+    }
+  ]
+}
