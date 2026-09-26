@@ -42,6 +42,14 @@
  *   generation, so the model never "remembers" saying something nobody heard
  *   and the next message does not queue behind it. The same on PERSONA_WAIT.
  *
+ *   A warm model while idle. On Windows, every PERSONA_KEEPWARM seconds without a
+ *   turn, persona/keepwarm.exe reads through llama-server's memory, so Windows
+ *   does not page the model out between conversations (the first turn after a
+ *   quiet spell was 3-5x slower, and paging the whole model back in took 129 s).
+ *   It also raises llama-server to normal (memory) priority: the scheduled
+ *   task's priority 7 made it below normal. It never touches llama-server's
+ *   state. start.sh builds keepwarm.exe from keepwarm.cs.
+ *
  *   Failing loudly. When the model cannot answer (llama-server down, a model
  *   error), the request gets an HTTP error with a readable message, never an
  *   empty 200 that a speech client would play as silence. pi's own retries
@@ -57,12 +65,13 @@
  *   PERSONA_FIRST_REPLY_WAIT  seconds to wait for a tool when the model said nothing first (8)
  *   PERSONA_FOLLOWUP_TTL      seconds after the question a follow-up is still worth saying (120)
  *   PERSONA_FOLLOWUP_URL      webhook for follow-ups
+ *   PERSONA_KEEPWARM          seconds between keep-warm passes while idle (60; 0 = off)
  *   PERSONA_CHILD             command for the child, space-separated (tests)
  *   PI_SMALL_PERSONA_HOME     logs go to <home>/logs
  */
 
-import { spawn, spawnSync } from "node:child_process";
-import { appendFileSync, mkdirSync } from "node:fs";
+import { execFile, spawn, spawnSync } from "node:child_process";
+import { appendFileSync, existsSync, mkdirSync } from "node:fs";
 import { createServer } from "node:http";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -81,6 +90,7 @@ const WAIT_MS = num("PERSONA_WAIT", 120) * 1000;
 const FIRST_REPLY_WAIT_MS = num("PERSONA_FIRST_REPLY_WAIT", 8) * 1000;
 const FOLLOWUP_TTL_MS = num("PERSONA_FOLLOWUP_TTL", 120) * 1000;
 const FOLLOWUP_URL = env.PERSONA_FOLLOWUP_URL;
+const KEEPWARM_S = num("PERSONA_KEEPWARM", 60);
 const HOME = personaHome();
 const LOG_DIR = join(HOME, "logs");
 
@@ -472,6 +482,35 @@ async function afterSettled() {
 			if (Date.now() - lastActivity >= IDLE_COMPACT_S * 1000) startCompaction(`idle ${IDLE_COMPACT_S}s`);
 		}, IDLE_COMPACT_S * 1000);
 	}
+}
+
+/**
+ * Keep the model in RAM while idle (see the header). Skipped while a turn or
+ * compaction runs and shortly after one: that work keeps the pages warm
+ * itself. A pass takes ~3 s when nothing was paged out; one that had to page
+ * the model back in is logged, as is one pass in 60 (so the log shows it runs).
+ */
+const KEEPWARM_EXE = join(HERE, "keepwarm.exe");
+let keepwarmRunning = false;
+let keepwarmPasses = 0;
+function keepWarm() {
+	if (keepwarmRunning || busy || compacting || pi.state !== "ready") return;
+	if (Date.now() - lastActivity < KEEPWARM_S * 1000) return;
+	keepwarmRunning = true;
+	execFile(KEEPWARM_EXE, [], { timeout: 600_000, windowsHide: true }, (err, stdout) => {
+		keepwarmRunning = false;
+		keepwarmPasses++;
+		let r = null;
+		try {
+			r = JSON.parse(String(stdout).trim().split("\n").pop());
+		} catch {}
+		if (err || !r || r.error) return log({ type: "keepwarm_failed", error: r?.error ?? err?.message ?? String(stdout).slice(0, 200) });
+		if (r.seconds > 10 || r.wsAfterGiB - r.wsBeforeGiB > 1 || keepwarmPasses % 60 === 1) log({ type: "keepwarm", pass: keepwarmPasses, ...r });
+	});
+}
+if (KEEPWARM_S > 0 && process.platform === "win32") {
+	if (existsSync(KEEPWARM_EXE)) setInterval(keepWarm, KEEPWARM_S * 1000).unref();
+	else log({ type: "keepwarm_failed", error: `${KEEPWARM_EXE} not built (start.sh builds it)` });
 }
 
 // -------------------------------------------------------------------- http --

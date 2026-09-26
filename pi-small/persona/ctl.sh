@@ -30,6 +30,8 @@ START_SH="$(cd "$HERE" && pwd)/start.sh"
 # an always-on service needs, and its defaults quietly break one:
 #   - it kills a task after 3 days (ExecutionTimeLimit 72h)   -> no limit
 #   - it will not start on battery, and stops when unplugged  -> both off
+#   - it runs the task at priority 7, below normal, and with it llama-server,
+#     whose memory Windows then pages out first            -> 4 (normal)
 #   - "run whether logged on or not" needs a stored password, and its password
 #     prompt does not work in Git Bash (it echoed the password and hung)
 #     -> S4U logon: the user's own account, no password stored, no login needed.
@@ -41,7 +43,7 @@ install_task() {
 		\$ErrorActionPreference = 'Stop'
 		\$action = New-ScheduledTaskAction -Execute '$BASH_EXE' -Argument '-lc $START_SH'
 		\$principal = New-ScheduledTaskPrincipal -UserId \$env:USERNAME -LogonType S4U -RunLevel Limited
-		\$settings = New-ScheduledTaskSettingsSet -ExecutionTimeLimit ([TimeSpan]::Zero) -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1) -MultipleInstances IgnoreNew
+		\$settings = New-ScheduledTaskSettingsSet -Priority 4 -ExecutionTimeLimit ([TimeSpan]::Zero) -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1) -MultipleInstances IgnoreNew
 		\$args = @{ TaskName = '$TASK'; Action = \$action; Principal = \$principal; Settings = \$settings; Force = \$true }
 		if ('$trigger' -eq 'boot') { \$t = New-ScheduledTaskTrigger -AtStartup; \$t.Delay = 'PT1M'; \$args.Trigger = \$t }
 		Register-ScheduledTask @args | Out-Null

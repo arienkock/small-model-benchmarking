@@ -537,6 +537,32 @@ loading. At start it refuses while `coding-bench/.bench-lock/` is held.
 Nothing restarts the persona automatically when the other work finishes.
 
 
+### Keeping the model in RAM while idle
+
+Measured 2026-09-26: after a few quiet minutes, Windows had paged llama-server
+out almost completely (working set 0 GiB of the ~18.5 GiB readable model;
+the rest on the low-priority standby list and in the pagefile). The first
+turn after a quiet spell then read its ~40 new tokens at 3-6 t/s instead of
+11-13, and paging the whole model back in took **129 s**. Two causes:
+
+- **Priority.** The scheduled task ran at Task Scheduler's default priority 7,
+  so llama-server was below normal with memory priority 2. Its trimmed pages
+  were the first to be reused. `ctl.sh install` now registers the task at
+  priority 4 (normal).
+- **Nothing touches the model between turns.** `persona/keepwarm.exe`
+  (`keepwarm.cs`, built by `start.sh` with the .NET Framework's `csc`) reads
+  through llama-server's private memory with `ReadProcessMemory`. That brings
+  paged-out pages back into llama-server's working set and marks them recently
+  used, without touching llama-server's state or its slot cache. It also sets
+  llama-server's priority and memory priority to normal. The server runs it
+  every `PERSONA_KEEPWARM` seconds (default 60; 0 = off) while no turn or
+  compaction has run for that long. A pass takes ~3 s when the model is
+  resident. With the model resident, ~1 GiB of RAM stays available.
+
+The server log has a `keepwarm` line for every pass that had to page the model
+back in (over 10 s, or the working set grew by over 1 GiB), and for one pass
+in 60.
+
 ### Hybrid cache: measure before trusting the latency numbers
 
 Qwen3.5-family models are hybrid, and llama.cpp can only resume a hybrid
@@ -730,6 +756,7 @@ clients already run next to it.
         server.mjs            the OpenAI-compatible front end
         ctl.sh                install / start / stop / status / uninstall
         start.sh              the boot task's target: sources llama-cache.env, runs the server in a restart loop
+        keepwarm.cs           keeps the model in RAM while idle (built by start.sh into keepwarm.exe)
       test/persona-test.ts    tier parsing, shrink guard, sanitiser, server ↔ stub pi round trip
 
     D:/persona/               PERSONA_HOME on the laptop, not in git

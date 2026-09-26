@@ -28,6 +28,14 @@ if [[ -f "$HERE/../../coding-bench/.bench-lock/info" ]]; then
 	exit 1
 fi
 
+# keepwarm.exe (see keepwarm.cs) keeps the model in RAM while the persona is
+# idle. Built with the C# compiler every Windows 10 ships (.NET Framework 4).
+CSC=/c/Windows/Microsoft.NET/Framework64/v4.0.30319/csc.exe
+if [[ -x "$CSC" && ( ! -f "$HERE/keepwarm.exe" || "$HERE/keepwarm.cs" -nt "$HERE/keepwarm.exe" ) ]]; then
+	"$CSC" -nologo -optimize -platform:x64 -out:"$(cygpath -w "$HERE/keepwarm.exe")" "$(cygpath -w "$HERE/keepwarm.cs")" \
+		|| echo "persona: could not build keepwarm.exe; the model may be paged out while idle" >&2
+fi
+
 KEY_FILE="$PI_SMALL_PERSONA_HOME/api-key"
 if [[ ! -s "$KEY_FILE" ]]; then
 	node -e 'process.stdout.write("sk-persona-" + require("node:crypto").randomBytes(18).toString("base64url"))' > "$KEY_FILE"
