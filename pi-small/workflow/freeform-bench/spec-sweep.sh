@@ -2,7 +2,7 @@
 # Server-config sweep for Qwen3.6 at 32k. Usage: .sweep.sh "<label>|<extra args>" ...
 cd /d/llama.cpp/pi-small || exit 1
 source ../llama-cache.env
-BASE=(-m D:/models/qwen3.6-35b-a3b/Qwen3.6-35B-A3B-Q4_K_M.gguf --alias Qwen3.6-35B-A3B-Q4_K_M --jinja -c 32768 -ngl 999 --parallel 1 --reasoning-budget -1 --chat-template-kwargs '{"enable_thinking":true}' --temp 1 --top-p 0.95 --top-k 20 --repeat-penalty 1 --min-p 0 --presence-penalty 1.5 --load-mode none -b 2048 -ub 2048 --n-cpu-moe 35 -t 8 --api-key sk-bench --host 127.0.0.1 --port 8125)
+BASE=(-m C:/models/qwen3.6-35b-a3b/Qwen3.6-35B-A3B-Q4_K_M.gguf --alias Qwen3.6-35B-A3B-Q4_K_M --jinja -c 32768 -ngl 999 --parallel 1 --reasoning-budget -1 --chat-template-kwargs '{"enable_thinking":true}' --temp 1 --top-p 0.95 --top-k 20 --repeat-penalty 1 --min-p 0 --presence-penalty 1.5 --load-mode none -b 2048 -ub 2048 --n-cpu-moe 35 -t 8 --api-key sk-bench --host 127.0.0.1 --port 8125)
 for cfg in "$@"; do
   label=${cfg%%|*}; extra=${cfg#*|}
   echo "=== $label: $extra  ($(date -u +%H:%M:%S))"
