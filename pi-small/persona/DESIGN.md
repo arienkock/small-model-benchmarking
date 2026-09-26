@@ -376,9 +376,12 @@ tool returns.
 **In pi this is ordinary agent behaviour.** One assistant message can carry
 text *and* a tool call. pi runs the tool and then calls the model again, and
 that second assistant message is the follow-up. The style prompt adds one
-constraint, and it is about behaviour, not wording: *before calling a tool,
-say briefly in the same reply what you are doing*. How it says so is the
-model's.
+constraint, and it is about behaviour, not wording: *call the tool in the
+same reply, with a few words first saying what you are doing*. How it says
+so is the model's. The rule has to say that the call itself belongs in the
+reply: phrased only as "say what you are doing before the call", Qwen3.6
+announced the check and ended its reply without calling in 6 of 8 weather
+questions (2026-09-26), so no follow-up ever came.
 
 **On the wire, plain OpenAI chat completions cannot do this.** One request
 gets exactly one response, and nothing can be pushed afterwards. The server

@@ -37,9 +37,15 @@ export const PERSONA_STYLE = [
 	"Each message starts with the date and time it was said, in square brackets. It is there for you; do not repeat it.",
 ].join("\n");
 
-/** Added when the model has tools: a constraint on behaviour, not on wording. */
+/**
+ * Added when the model has tools: a constraint on behaviour, not on wording.
+ * "Say what you are doing before the call" alone made Qwen3.6 (thinking off)
+ * say it and end the reply without calling: 2 of 8 weather questions reached
+ * the tool (2026-09-26). Saying outright that the call belongs in the same
+ * reply, and that announcing it does nothing by itself: 8 of 8.
+ */
 export const PERSONA_TOOL_STYLE =
-	"Tools take a few seconds and the people you talk to hear nothing meanwhile. When you call one, say briefly what you are doing in the same reply, before the call; the result reaches you afterwards and you then tell them what you found.";
+	"Tools take a few seconds and the people you talk to hear nothing meanwhile. When a question needs a tool, call it in this reply: a few words first saying what you are doing, then the tool call itself. Saying you will check something without calling the tool does nothing. The result reaches you afterwards and you then tell them what you found.";
 
 export interface MemoryWords {
 	permanent: number;
