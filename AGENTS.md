@@ -55,6 +55,13 @@ card is 6144 MiB / ~6 GiB total; the host itself has ~24 GiB of system RAM).
 ssh benchlaptop 'cat /d/llama.cpp/coding-bench/.bench-lock/info 2>/dev/null; tasklist //FI "IMAGENAME eq llama-server.exe"'
 ```
 
+**The persona may own the GPU.** Since 2026-09-26, `pi-small/persona/` (see its
+`DESIGN.md`) can run as the `PersonaServer` scheduled task, serving Qwen3.6 on
+8123 behind its own endpoint on 8130. A llama-server you find running may be
+the persona's. Check with `ssh benchlaptop /d/llama.cpp/pi-small/persona/ctl.sh status`,
+and free the GPU with `ctl.sh stop`, never by killing llama-server (pi would
+just be left without a server). `ctl.sh start` brings it back.
+
 ## Starting a long run
 
 Runs take 8-10 h and must outlive the SSH session. **Do not use `nohup ... &`** — Windows sshd
