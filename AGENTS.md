@@ -40,6 +40,11 @@ the mistake is expensive:
 
 `migrate-llama-cache.sh` moved the roster off `C:` (which was at 93%).
 
+**One exception, on purpose:** Qwen3.6-35B-A3B is a `"repo": "local"` roster entry whose file
+lives on the SSD at `C:/models/qwen3.6-35b-a3b/` (load 265 s → 80 s, 2026-09-26). It never goes
+through `LLAMA_CACHE`. Don't put a second model on C: — the ~16 GB left there is the pagefile's
+room to grow.
+
 ## Before running anything
 
 A run holds `coding-bench/.bench-lock/` and occupies essentially the whole GPU for hours (the

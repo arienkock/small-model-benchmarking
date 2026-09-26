@@ -63,8 +63,9 @@ the style2 text.
    much less spread, one 27/28 in four runs. The model card's default is thinking on.
 2. **A fourth 8 GB RAM stick:** channel A has 16 GB, channel B 8 GB, so 8 GB runs
    single-channel. Generation speed here depends mostly on memory bandwidth.
-3. **Models on the SSD:** they are on D:, a 7200 rpm hard disk, so each load takes 4–5 minutes.
-   C: is too full for the 19 GB file next to the larger pagefile.
+3. ~~**Models on the SSD**~~ **Done for Qwen3.6 only (2026-09-26):** about 16 GB freed on C:
+   (Steam, Nsight, caches), the file moved to `C:/models/`, load 265 s → 80 s. Every other
+   model stays on D:; C: has ~16 GB left for the pagefile.
 4. **Startup checks once per server:** each session spends 17–40 s on pi-small's template and
    sampler checks, 1.5–3.5 min on a freshly loaded server. Caching them per server would save
    that time, but it weakens a safety check.
