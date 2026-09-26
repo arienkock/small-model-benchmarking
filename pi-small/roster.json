@@ -15,6 +15,14 @@
 		"maxTokens": 4096,
 		"ngl": 999,
 		"llamaCache": "D:/llama-cache",
+		"persona": {
+			"_readme": "Persona mode (bin/sm-persona, persona/DESIGN.md). model is the persona's default model only; coding sessions keep the default:true entry. thinking off: every thought is silence before the first word. maxTokens is a ceiling for one spoken reply, not the length control (the prompt is). A model may override thinking/maxTokens/memoryWords in its own persona block.",
+			"model": "Qwen3.6-35B-A3B-Q4_K_M",
+			"thinking": "off",
+			"maxTokens": 300,
+			"memoryWords": { "permanent": 300, "ongoing": 200, "recent": 120 },
+			"tools": ["weather"]
+		},
 		"serverArgs": [],
 		"ctxCandidates": [16384, 12288, 8192],
 		"tools": ["bash"],

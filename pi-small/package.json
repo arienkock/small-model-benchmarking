@@ -14,11 +14,12 @@
 	},
 	"scripts": {
 		"check": "node check-roster.mjs",
-		"test": "node test/plugin-test.ts && node test/serve-test.ts && node test/workflow-test.ts && node test/fix-loop-test.ts",
+		"test": "node test/plugin-test.ts && node test/serve-test.ts && node test/workflow-test.ts && node test/fix-loop-test.ts && node test/persona-test.ts",
 		"test:fix-e2e": "node test/fix-e2e.ts",
 		"typecheck": "tsc --noEmit -p tsconfig.json",
 		"test:workflow-e2e": "node test/workflow-e2e.ts",
 		"test:review-e2e": "node test/review-e2e.ts",
+		"test:persona-e2e": "node test/persona-e2e.ts",
 		"workflow": "node workflow/run.ts"
 	},
 	"peerDependencies": {

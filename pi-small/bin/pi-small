@@ -17,8 +17,10 @@
 # Env:
 #   PI_SMALL_MODEL          roster alias to start with (default: pi's own saved
 #                           default for "small-local" if there is one — set via
-#                           /model's "set as default" — else the roster's
+#                           /model's "set as default" — else, in persona mode,
+#                           defaults.persona.model, else the roster's
 #                           `default: true` entry)
+#   PI_SMALL_MODE           "persona" for the conversational mode (bin/sm-persona)
 #   PI_SMALL_ROSTER         path to roster.json
 #   PI_SMALL_SYSTEM_PROMPT  fallback system prompt for models with none of their
 #                           own set in roster.json (default: near-empty)
@@ -62,6 +64,9 @@ PI_BIN="${PI_SMALL_PI_BIN:-pi}"
 # overriding PI_CODING_AGENT_DIR a second time.
 if [[ -n "${PI_SMALL_PI_HOME:-}" ]]; then
 	PI_HOME="$PI_SMALL_PI_HOME"
+	# pi has to be told, too: seeding a directory pi never reads would leave the
+	# session on ~/.pi/agent's settings (bin/sm-persona depends on this).
+	export PI_CODING_AGENT_DIR="$PI_HOME"
 elif [[ "${PI_SMALL_REMOTE:-}" == "1" ]]; then
 	PI_HOME="${HOME:-$HERE}/.pi/agent"
 else
@@ -137,7 +142,10 @@ ALIAS="${PI_SMALL_MODEL:-$(node -e '
       process.exit(0);
     }
   } catch {}
-  const m = j.models.find((x) => x.default) || j.models[0];
+  // Persona mode (bin/sm-persona) has its own default, defaults.persona.model,
+  // so persona and coding defaults never move together.
+  const personaWant = process.env.PI_SMALL_MODE === "persona" ? j.defaults?.persona?.model : undefined;
+  const m = (personaWant && j.models.find((x) => x.alias === personaWant)) || j.models.find((x) => x.default) || j.models[0];
   process.stdout.write(m.alias);
 ' "$ROSTER" "$PI_HOME/settings.json")}"
 

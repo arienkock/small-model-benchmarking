@@ -61,6 +61,10 @@ console.log(`\n${local} local, ${remote} would download${missing ? `, ${missing}
 // the wrong settings — a per-mode sampler with a missing row, a thinking switch
 // fighting a hand-written --chat-template-kwargs.
 const problems = roster.models.flatMap(validateSpec);
+const personaModel = roster.defaults.persona?.model;
+if (personaModel && !roster.models.some((m) => m.alias === personaModel)) {
+	problems.push(`defaults.persona.model ${JSON.stringify(personaModel)} is not a roster alias — bin/sm-persona would fall back to the roster default`);
+}
 if (problems.length) {
 	console.log(`\nCONFIG PROBLEMS (${problems.length}):`);
 	for (const p of problems) console.log(`  ${p}`);

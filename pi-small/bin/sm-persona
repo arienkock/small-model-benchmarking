@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+#
+# sm-persona — pi-small's conversational persona mode. See persona/DESIGN.md.
+#
+# The same pi-small (same roster, same server management, same probes) with
+# PI_SMALL_MODE=persona: no tools, a spoken-style system prompt with the
+# persona's memory in it, memory-keeping compaction, a short reply cap, and
+# thinking off by default. Its default model is roster defaults.persona.model.
+#
+#   ./bin/sm-persona                 a typed chat with the persona, for testing
+#   ./bin/sm-persona --mode rpc      what persona/server.mjs runs
+#
+# Everything personal lives in PI_SMALL_PERSONA_HOME (default D:/persona on
+# the laptop, ~/.sm-persona elsewhere), never in the checkout:
+#
+#   memory.md          the Permanent and Ongoing tiers, loaded into the system prompt
+#   memory-history/    every previous memory.md
+#   persona.md         optional: overrides the repo's persona/persona.md
+#   sessions/          pi's session files — --continue resumes the latest
+#   pi/                the persona's own pi home (settings.json)
+#   logs/              llama-server and session logs
+#
+set -euo pipefail
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+if [[ -z "${PI_SMALL_PERSONA_HOME:-}" ]]; then
+	if [[ -d /d ]]; then PI_SMALL_PERSONA_HOME="D:/persona"; else PI_SMALL_PERSONA_HOME="$HOME/.sm-persona"; fi
+fi
+export PI_SMALL_PERSONA_HOME
+export PI_SMALL_MODE=persona
+export PI_SMALL_PI_HOME="${PI_SMALL_PI_HOME:-$PI_SMALL_PERSONA_HOME/pi}"
+export PI_SMALL_LOG_DIR="${PI_SMALL_LOG_DIR:-$PI_SMALL_PERSONA_HOME/logs}"
+mkdir -p "$PI_SMALL_PI_HOME" "$PI_SMALL_PERSONA_HOME/sessions" "$PI_SMALL_LOG_DIR"
+
+# The cache root, from the one file that defines it (see the repo CLAUDE.md).
+# The plugin also sets it from roster defaults.llamaCache; this keeps the two
+# agreeing when the laptop's file changes.
+if [[ -z "${LLAMA_CACHE:-}" && -f "$HERE/../llama-cache.env" ]]; then
+	# shellcheck disable=SC1091
+	source "$HERE/../llama-cache.env"
+fi
+
+# Seeded once, before bin/pi-small's own seed would write the coding values.
+# keepRecentTokens 1536: a handful of verbatim exchanges survive each
+# compaction, so the reply after one does not lose the thread. bin/pi-small
+# still raises reserveTokens to what the roster needs.
+if [[ ! -f "$PI_SMALL_PI_HOME/settings.json" ]]; then
+	printf '{\n  "compaction": { "reserveTokens": 6144, "keepRecentTokens": 1536 }\n}\n' > "$PI_SMALL_PI_HOME/settings.json"
+fi
+
+exec "$HERE/bin/pi-small" --session-dir "$PI_SMALL_PERSONA_HOME/sessions" --continue "$@"

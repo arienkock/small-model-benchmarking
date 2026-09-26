@@ -152,6 +152,64 @@ export interface ModelSpec {
 	 * summary (lib/compaction.ts). Overrides `defaults.compactionWords`.
 	 */
 	compactionWords?: number;
+	/** This model's persona-mode settings, field by field over `defaults.persona`. See PersonaSettings. */
+	persona?: PersonaFields;
+}
+
+/**
+ * Persona mode (PI_SMALL_MODE=persona, bin/sm-persona) — see persona/DESIGN.md.
+ * Resolved field by field: the model's own `persona`, then `defaults.persona`,
+ * then the built-in defaults below.
+ */
+export interface PersonaFields {
+	/** Thinking mode in persona mode (default "off": every thought is silence before the first word). */
+	thinking?: ThinkingMode;
+	/** Largest single spoken reply (default 300). A ceiling, not the length control — the prompt is. */
+	maxTokens?: number;
+	/** Word limit per memory tier written at compaction. */
+	memoryWords?: { permanent?: number; ongoing?: number; recent?: number };
+	/** Persona tools (lib/persona-tools.ts) this model gets. Replaces the default list; [] for none. */
+	tools?: string[];
+}
+
+export interface PersonaDefaults extends PersonaFields {
+	/** The persona's default model. Only defaults.persona has it; coding sessions keep `default: true`. */
+	model?: string;
+}
+
+export interface PersonaSettings {
+	thinking: ThinkingMode;
+	maxTokens: number;
+	memoryWords: { permanent: number; ongoing: number; recent: number };
+	tools: string[];
+}
+
+export const PERSONA_BUILTIN: PersonaSettings = {
+	thinking: "off",
+	maxTokens: 300,
+	memoryWords: { permanent: 300, ongoing: 200, recent: 120 },
+	tools: ["weather"],
+};
+
+export function resolvePersona(spec: ModelSpec, d: RosterDefaults): PersonaSettings {
+	const own = spec.persona ?? {};
+	const def = d.persona ?? {};
+	return {
+		thinking: own.thinking ?? def.thinking ?? PERSONA_BUILTIN.thinking,
+		maxTokens: own.maxTokens ?? def.maxTokens ?? PERSONA_BUILTIN.maxTokens,
+		memoryWords: { ...PERSONA_BUILTIN.memoryWords, ...(def.memoryWords ?? {}), ...(own.memoryWords ?? {}) },
+		tools: own.tools ?? def.tools ?? PERSONA_BUILTIN.tools,
+	};
+}
+
+/**
+ * The persona's startup model when PI_SMALL_MODEL does not name one (and pi has
+ * no saved default in the persona's own pi home — bin/pi-small checks that
+ * first): defaults.persona.model, else the roster's `default: true` entry.
+ */
+export function personaDefaultModel(roster: Roster): ModelSpec {
+	const want = roster.defaults.persona?.model;
+	return (want ? roster.models.find((m) => m.alias === want) : undefined) ?? roster.models.find((m) => m.default) ?? roster.models[0];
 }
 
 export interface RosterDefaults {
@@ -195,6 +253,8 @@ export interface RosterDefaults {
 	 * side; $LLAMA_CACHE in the environment still wins over both.
 	 */
 	llamaCache?: string;
+	/** Persona-mode defaults; see PersonaFields. */
+	persona?: PersonaDefaults;
 }
 
 export interface Roster {
@@ -561,6 +621,12 @@ export function validateSpec(spec: ModelSpec): string[] {
 	}
 	if (spec.samplers && !spec.thinking) {
 		out.push(`${spec.alias}: has per-mode "samplers" but no "thinking" mode, so neither row is ever used`);
+	}
+	if (spec.persona?.thinking !== undefined && spec.persona.thinking !== "on" && spec.persona.thinking !== "off") {
+		out.push(`${spec.alias}: persona.thinking must be "on" or "off", got ${JSON.stringify(spec.persona.thinking)}`);
+	}
+	if (spec.persona?.maxTokens !== undefined && !(Number.isInteger(spec.persona.maxTokens) && spec.persona.maxTokens > 0)) {
+		out.push(`${spec.alias}: persona.maxTokens must be a positive integer`);
 	}
 	if (spec.thinking && spec.samplers) {
 		const keys: (keyof SamplerFields)[] = ["temp", "topP", "topK", "repeatPenalty", "minP", "presencePenalty"];

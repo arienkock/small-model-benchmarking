@@ -6,6 +6,7 @@ install and can be updated whenever; everything specific to this experiment
 lives in this directory and moves on its own schedule.
 
     bin/pi-small        the entry point: pi with nothing of its own
+    bin/sm-persona      the same pi-small in persona mode: a spoken conversational agent (persona/)
     pi-small-docker.sh  the same thing, sandboxed  <- use this one
     serve.mjs           starts llama-server on the host, for the container
     proxy.mjs           or: a host daemon in front of llama-server that switches models on request
@@ -16,6 +17,42 @@ lives in this directory and moves on its own schedule.
     docker/             the sandbox image
     templates/          chat templates, for models whose GGUF ships a bad one
     test/               stub llama-server + a test that drives the plugin
+
+## Persona mode: a conversational agent behind an OpenAI endpoint
+
+`bin/sm-persona` runs pi-small as a long-lived voice companion instead of a
+coding agent. `persona/server.mjs` puts it behind an OpenAI-compatible
+endpoint for a speech-to-text / text-to-speech pipeline. The design, and why
+each piece is the way it is, is in [`persona/DESIGN.md`](persona/DESIGN.md).
+
+    ./bin/sm-persona                                  # typed chat with the persona, for testing
+    PERSONA_API_KEY=... node persona/server.mjs       # the endpoint, on :8130
+
+What `PI_SMALL_MODE=persona` changes in the plugin:
+- **Prompt and memory.** The system prompt is `persona.md` (personality,
+  editable), then `PERSONA_STYLE` (spoken, short, no markup, misheard input,
+  unknown speaker), then `memory.md`.
+- **Timestamps.** Every message is stamped with its time.
+- **Tools.** Only the persona tools (`weather`), never bash.
+- **Model, thinking and length.** The default model is
+  `defaults.persona.model` (Qwen3.6), with thinking off and a 300-token reply
+  cap.
+- **Compaction keeps memory.** The model rewrites three tiers (Permanent,
+  Ongoing, Recent). The first two go to `memory.md`, and only once pi has
+  committed the compaction.
+
+The server adds three things:
+- **Speculative compaction.** It starts in quiet spells and is cancelled by
+  the next request.
+- **Follow-up replies.** When the persona calls a tool, the answer arrives
+  later on `/persona/events`, by webhook, or by polling.
+- **Speech-safe output.** Markup is stripped, and no word is changed.
+
+State lives in `PI_SMALL_PERSONA_HOME` (`D:/persona` on the laptop), never in
+the checkout.
+
+    npm test                     # includes test/persona-test.ts
+    npm run test:persona-e2e     # server + real pi RPC + stub llama-server + fake weather
 
 ## Running it in a container (the normal way)
 
@@ -562,7 +599,9 @@ nothing could be created under it anyway. `bin/pi-small` detects
 `PI_SMALL_REMOTE=1` and seeds `HOME/.pi/agent/settings.json` directly instead
 of exporting `PI_CODING_AGENT_DIR` a second time.
 
-Override the directory entirely with `PI_SMALL_PI_HOME`.
+Override the directory entirely with `PI_SMALL_PI_HOME`. That also points
+pi at it (`PI_CODING_AGENT_DIR`). Before 2026-09-26 the override only seeded
+the directory, and pi kept reading `~/.pi/agent`.
 
 ## Roster
 

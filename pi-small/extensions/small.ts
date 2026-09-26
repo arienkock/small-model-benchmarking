@@ -67,6 +67,22 @@ import { SESSION_STYLE } from "../lib/workflow.ts";
 import { proxyStatus, proxySwitch } from "../lib/proxy-client.ts";
 import { registerWorkflowCommand } from "../lib/workflow-command.ts";
 import {
+	acceptTiers,
+	buildMemoryInstruction,
+	buildMemoryPrompt,
+	buildPersonaSystemPrompt,
+	forgetInMemory,
+	type Memory,
+	parseTiers,
+	personaHome,
+	readMemory,
+	readPersonaPrompt,
+	timestamp,
+	TIMESTAMP_RE,
+	writeMemory,
+} from "../lib/persona.ts";
+import { buildPersonaTools, readPersonaConfig } from "../lib/persona-tools.ts";
+import {
 	buildServerArgs,
 	compareProps,
 	ctxUsabilityWarning,
@@ -76,8 +92,10 @@ import {
 	quoteForCmdShell,
 	resolveCtxLadder,
 	resolveMaxTokens,
+	resolvePersona,
 	resolveSampler,
 	modelReserveTokens,
+	personaDefaultModel,
 	resolveCompactionWords,
 	resolveSystemPrompt,
 	resolveThinking,
@@ -120,6 +138,21 @@ const probeTimeoutMs = (): number => Number(process.env.PI_SMALL_PROBE_TIMEOUT ?
  * Ignored for a model with no thinking mode.
  */
 let thinkingOverride: string | undefined = process.env.PI_SMALL_THINKING || undefined;
+
+/**
+ * Persona mode (PI_SMALL_MODE=persona, bin/sm-persona): no coding tools, a
+ * spoken-style prompt with the persona's memory in it, memory-keeping
+ * compaction, a short reply cap. See ../persona/DESIGN.md and ../lib/persona.ts.
+ */
+const PERSONA = process.env.PI_SMALL_MODE === "persona";
+
+/**
+ * The mode a model runs in when nothing explicit was asked for: in persona
+ * mode its roster `persona.thinking` (default off). Set by the extension,
+ * which has the roster defaults; PI_SMALL_THINKING / /sm-thinking still win.
+ */
+let defaultThinkingFor: (spec: ModelSpec) => string | undefined = () => undefined;
+const modeOverride = (spec: ModelSpec): string | undefined => thinkingOverride ?? defaultThinkingFor(spec);
 
 // ---------------------------------------------------------------- state ---
 
@@ -169,7 +202,7 @@ class ServerState {
 		this.spec = spec;
 		this.requestedCtx = spec.ctx ?? d.ctx;
 		this.servedCtx = this.requestedCtx;
-		this.thinking = resolveThinking(spec, thinkingOverride);
+		this.thinking = resolveThinking(spec, modeOverride(spec));
 		const s = resolveSampler(spec, d, this.thinking);
 		this.temp = s.temp;
 		this.topP = s.topP;
@@ -622,7 +655,7 @@ class ServerManager {
 		const proxy = await proxyStatus({ host: this.d.host, port: this.d.port, apiKey: this.d.apiKey });
 		this.proxied = proxy !== null;
 		if (proxy && this.rosterSpec?.(wanted.alias)) {
-			const mode = resolveThinking(wanted, thinkingOverride);
+			const mode = resolveThinking(wanted, modeOverride(wanted));
 			if (proxy.alias !== wanted.alias || (mode !== null && proxy.thinking !== mode)) {
 				notify(`asking the host proxy for ${wanted.alias}${mode ? ` (thinking ${mode})` : ""} — it was serving ${proxy.alias ?? "nothing"}`);
 				await proxySwitch({ host: this.d.host, port: this.d.port, apiKey: this.d.apiKey }, wanted.alias, mode);
@@ -661,10 +694,13 @@ class ServerManager {
 		return !this.remote || this.proxied;
 	}
 
+	/** False when the session has no tools at all (a persona with persona.tools []): the tool-call probe tests nothing it uses. */
+	probeTools: (spec: ModelSpec) => boolean = () => true;
+
 	async runProbes(): Promise<void> {
 		const mode = this.state.thinking;
 		this.state.probes.turnBoundary = await probeTurnBoundary(this.d, mode);
-		this.state.probes.toolCalls = await probeToolCalls(this.d, mode);
+		this.state.probes.toolCalls = this.probeTools(this.state.spec) ? await probeToolCalls(this.d, mode) : undefined;
 		this.state.probes.sampler = await probeSampler(this.d, this.state, this.remote);
 		this.state.probes.thinking = await probeThinking(this.d, mode);
 	}
@@ -712,7 +748,9 @@ export default function (pi: ExtensionAPI) {
 
 	const byAlias = (alias: string) => roster.models.find((m) => m.alias === alias);
 	const requested = process.env.PI_SMALL_MODEL;
-	const initial = (requested ? byAlias(requested) : undefined) ?? roster.models.find((m) => m.default) ?? roster.models[0];
+	const initial =
+		(requested ? byAlias(requested) : undefined) ??
+		(process.env.PI_SMALL_MODE === "persona" ? personaDefaultModel(roster) : (roster.models.find((m) => m.default) ?? roster.models[0]));
 
 	// Remote mode: the server is not a process this pi can manage. Explicit via
 	// PI_SMALL_REMOTE, and inferred whenever the host is not loopback, which is
@@ -723,6 +761,16 @@ export default function (pi: ExtensionAPI) {
 
 	const mgr = new ServerManager(initial, d, remote);
 	mgr.rosterSpec = byAlias;
+
+	// Persona mode: its own thinking default, reply cap and tools, all per model
+	// from the roster's persona block (resolvePersona).
+	const home = PERSONA ? personaHome() : "";
+	const maxTokensFor = (spec: ModelSpec) => (PERSONA ? resolvePersona(spec, d).maxTokens : resolveMaxTokens(spec, d));
+	if (PERSONA) {
+		defaultThinkingFor = (spec) => resolvePersona(spec, d).thinking;
+		mgr.state = new ServerState(initial, d);
+		mgr.probeTools = (spec) => resolvePersona(spec, d).tools.length > 0;
+	}
 
 	/**
 	 * notify(), and ALSO stderr when there is no interactive UI. In `-p`
@@ -788,7 +836,7 @@ export default function (pi: ExtensionAPI) {
 				// roster entry can end up at 16384 or 8192 depending on what
 				// actually fit. The half-window floor only matters for a window
 				// too small for the cap.
-				maxTokens: Math.min(resolveMaxTokens(spec, d), Math.floor(ctxWindow / 2)),
+				maxTokens: Math.min(maxTokensFor(spec), Math.floor(ctxWindow / 2)),
 				compat: {
 					supportsDeveloperRole: false,
 					supportsReasoningEffort: false,
@@ -822,6 +870,13 @@ export default function (pi: ExtensionAPI) {
 	// below would switch it off.
 	const workflowStep = loadStepFile();
 	const registerToolsFor = (spec: ModelSpec): string[] => {
+		if (PERSONA) {
+			// Never bash or file tools: the persona runs uncontained.
+			const { tools, unknown } = buildPersonaTools(resolvePersona(spec, d).tools, readPersonaConfig(home));
+			for (const t of tools) pi.registerTool(t);
+			if (unknown.length) console.error(`pi-small: unknown persona tools ignored: ${unknown.join(", ")}`);
+			return tools.map((t) => t.name);
+		}
 		const kinds = workflowStep?.toolKinds ?? resolveTools(spec, d);
 		for (const kind of kinds) pi.registerTool(buildTool(kind, process.cwd(), resolveToolOptions(spec, d, kind)));
 		if (!workflowStep) return kinds;
@@ -871,6 +926,20 @@ export default function (pi: ExtensionAPI) {
 	// (PI_SMALL_WORKFLOW_STEP) sends its own text instead — the terse style by
 	// default, or none when its config's systemPrompt is "".
 	pi.on("before_agent_start", (event: any, ctx: any) => {
+		if (PERSONA) {
+			// Re-read every turn: a hand edit to memory.md or persona.md applies to
+			// the next reply. Both only change at a compaction or by hand, so the
+			// prompt prefix, and the server's cache, stay stable in between.
+			const persona = readPersonaPrompt(home);
+			const effective = buildPersonaSystemPrompt({ persona: persona.text, memory: readMemory(home), tools: pi.getActiveTools().length > 0 });
+			const hash = createHash("sha256").update(effective).digest("hex").slice(0, 12);
+			if (hash !== lastPromptHash) {
+				lastPromptHash = hash;
+				sessionLog.write({ type: "system_prompt", model: mgr.state.spec.alias, source: `persona (${persona.path}) + memory`, chars: effective.length, sha256: hash });
+				if (ctx) say(ctx, `pi-small: persona system prompt — ${persona.path}, ${effective.length} chars, sha256 ${hash}`, "info");
+			}
+			return { systemPrompt: effective };
+		}
 		const override = resolveSystemPrompt(mgr.state.spec, d);
 		const base = String(override ?? event?.systemPrompt ?? "");
 		// PI_SMALL_STYLE replaces the terse style text in a plain session (an
@@ -888,6 +957,17 @@ export default function (pi: ExtensionAPI) {
 		}
 		return override === undefined && !extra ? {} : { systemPrompt: effective };
 	});
+
+	// Persona mode: every message says when it was said. On the message, never
+	// in the system prompt, which must stay stable for the prompt cache. Commands
+	// and already-stamped text pass through.
+	if (PERSONA) {
+		pi.on("input", (event: any) => {
+			const text = String(event?.text ?? "");
+			if (!text.trim() || text.startsWith("/") || TIMESTAMP_RE.test(text)) return { action: "continue" };
+			return { action: "transform", text: `${timestamp()} ${text}`, images: event.images };
+		});
+	}
 
 	// ----------------------------------------------------------- responses --
 	// Every assistant response, recorded with what it cost, and a loud warning
@@ -915,7 +995,7 @@ export default function (pi: ExtensionAPI) {
 			wallMs: responseStartedAt ? Date.now() - responseStartedAt : null,
 		});
 		if (m.stopReason === "length" && ctx) {
-			const cap = resolveMaxTokens(mgr.state.spec, d);
+			const cap = maxTokensFor(mgr.state.spec);
 			say(
 				ctx,
 				answered
@@ -956,7 +1036,8 @@ export default function (pi: ExtensionAPI) {
 			`context: ${s.servedCtx}${s.servedCtx !== s.requestedCtx ? ` (asked for ${s.requestedCtx})` : ""}`,
 			`thinking: ${s.thinking ?? "n/a (no thinking mode)"}`,
 			`sampler: temp=${s.temp}${s.tempOverride !== null ? " (/sm-temp)" : ""} top_p=${s.topP} top_k=${s.topK} repeat_penalty=${s.repeatPenalty} min_p=${s.minP} presence_penalty=${s.presencePenalty}`,
-			`max_tokens: ${resolveMaxTokens(s.spec, d)} per response (thinking + answer)`,
+			`max_tokens: ${maxTokensFor(s.spec)} per response (thinking + answer)`,
+			...(PERSONA ? [`persona: home ${home}, memory ${readMemory(home) ? "present" : "none yet"}`] : []),
 			`template: ${s.spec.chatTemplate ?? "embedded in the GGUF (--jinja)"}`,
 			`extra flags: ${(s.spec.serverArgs ?? []).join(" ") || "(none)"}`,
 			`tools:   ${resolveTools(s.spec, d).join(", ")}`,
@@ -1015,7 +1096,7 @@ export default function (pi: ExtensionAPI) {
 			ctx,
 			`pi-small: ${spec.alias} ready at ctx ${st.servedCtx}, thinking ${st.thinking ?? "n/a"}, ` +
 				`temp ${st.temp} top_p ${st.topP} top_k ${st.topK} min_p ${st.minP} repeat ${st.repeatPenalty} presence ${st.presencePenalty}, ` +
-				`max_tokens ${resolveMaxTokens(spec, d)}, tools [${kinds.join(", ")}]`,
+				`max_tokens ${maxTokensFor(spec)}, tools [${kinds.join(", ")}]` + (PERSONA ? ", persona mode" : ""),
 			"info",
 		);
 		const overrideWarning = thinkingOverrideWarning(spec, thinkingOverride);
@@ -1028,7 +1109,8 @@ export default function (pi: ExtensionAPI) {
 			thinking: st.thinking,
 			sampler: { temp: st.temp, topP: st.topP, topK: st.topK, minP: st.minP, repeatPenalty: st.repeatPenalty, presencePenalty: st.presencePenalty },
 			tempOverride: st.tempOverride,
-			maxTokens: resolveMaxTokens(spec, d),
+			maxTokens: maxTokensFor(spec),
+			persona: PERSONA ? { home, tools: kinds } : undefined,
 			probes: st.probes,
 			piSession: ctx.sessionManager?.getSessionFile?.() ?? null,
 		});
@@ -1056,6 +1138,18 @@ export default function (pi: ExtensionAPI) {
 
 	// ----------------------------------------------------------- lifecycle --
 	pi.on("session_start", async (_event: any, ctx: any) => {
+		// A crash between pi committing a compaction and session_compact writing
+		// memory.md leaves the session newer than the file. The session is the
+		// record; bring the file up to it.
+		if (PERSONA) {
+			const fromSession = sessionMemory(ctx);
+			const onDisk = readMemory(home);
+			if (fromSession?.updated && (!onDisk?.updated || fromSession.updated > onDisk.updated)) {
+				writeMemory(home, fromSession);
+				sessionLog.write({ type: "memory_reconciled", updated: fromSession.updated, was: onDisk?.updated ?? null });
+				say(ctx, `pi-small: memory.md was behind the session; restored it from the compaction of ${fromSession.updated}`, "warn");
+			}
+		}
 		await switchTo(mgr.state.spec, mgr.state.requestedCtx, ctx);
 	});
 
@@ -1093,6 +1187,7 @@ export default function (pi: ExtensionAPI) {
 		const { messagesToSummarize, turnPrefixMessages, tokensBefore, firstKeptEntryId, previousSummary, settings } = preparation;
 		const model = ctx.model;
 		if (!model || !firstKeptEntryId) return;
+		if (PERSONA) return personaCompaction(event, ctx, model);
 		// pi's reserve is the roster's largest (see modelReserveTokens); hold off
 		// until the context passes this model's own threshold.
 		const ownThreshold = model.contextWindow - modelReserveTokens(mgr.state.spec, d);
@@ -1146,6 +1241,96 @@ export default function (pi: ExtensionAPI) {
 		return;
 	});
 
+	// Persona compaction. pi's own threshold is held back to a hard backstop:
+	// compaction normally comes from persona/server.mjs, speculatively, during a
+	// quiet spell (reason "manual"), so it never sits between a question and its
+	// spoken answer. The summary pi keeps is the Recent tier; Permanent and
+	// Ongoing go into the compaction entry's details and reach memory.md only
+	// in session_compact, i.e. only once pi has committed the compaction — a
+	// cancelled speculative one never touches the file.
+	const personaCompaction = async (event: any, ctx: any, model: any) => {
+		const { preparation, signal } = event;
+		const { messagesToSummarize, turnPrefixMessages, tokensBefore, firstKeptEntryId, previousSummary, settings } = preparation;
+		const persona = resolvePersona(mgr.state.spec, d);
+		// pi's clamp keeps a fixed 4096 free, the reply needs its cap, plus room for one more exchange.
+		const hard = model.contextWindow - 4096 - persona.maxTokens - 1024;
+		if (event.reason === "threshold" && tokensBefore <= hard) {
+			sessionLog.write({ type: "compaction_deferred", tokensBefore, hardThreshold: hard });
+			return { cancel: true };
+		}
+		const old = readMemory(home);
+		const words = persona.memoryWords;
+		const maxTokens = Math.floor(0.8 * settings.reserveTokens);
+		const attempts: Array<{ mode: string; build: () => any }> = [
+			{
+				mode: "in-context",
+				build: () => {
+					const sm = ctx.sessionManager;
+					const messages = convertToLlm(buildSessionContext(sm.getEntries(), sm.getLeafId()).messages);
+					messages.push({ role: "user", content: [{ type: "text", text: buildMemoryInstruction(words) }], timestamp: Date.now() });
+					// Same tools as a normal turn: templates render them into the
+					// prompt, and the prefix has to match for the cache to be reused.
+					const all = pi.getAllTools();
+					const tools = pi.getActiveTools().map((n: string) => all.find((t: any) => t.name === n)).filter(Boolean)
+						.map((t: any) => ({ name: t.name, description: t.description, parameters: t.parameters }));
+					return { systemPrompt: ctx.getSystemPrompt(), messages, tools };
+				},
+			},
+			{
+				mode: "serialized",
+				build: () => ({
+					messages: [{ role: "user", content: [{ type: "text", text: buildMemoryPrompt({ conversation: serializeConversation(convertToLlm([...messagesToSummarize, ...turnPrefixMessages])), previousSummary, memory: old, words }) }], timestamp: Date.now() }],
+				}),
+			},
+		];
+		for (const { mode, build } of attempts) {
+			if (signal.aborted) return;
+			const startedAt = Date.now();
+			let result: { summary: string; failure: string; usage?: any };
+			try {
+				result = await compactionModelCall(ctx, model, build(), maxTokens, signal);
+			} catch (error) {
+				result = { summary: "", failure: error instanceof Error ? error.message : String(error) };
+			}
+			const tiers = parseTiers(result.summary);
+			if (!result.failure && tiers.permanent === undefined && tiers.ongoing === undefined && tiers.recent === undefined) result.failure = "no memory tiers in the reply";
+			const seconds = Math.round((Date.now() - startedAt) / 1000);
+			if (result.failure) {
+				sessionLog.write({ type: "compaction", persona: true, mode, reason: event.reason, ok: false, failure: result.failure, tokensBefore, seconds, aborted: signal.aborted, usage: result.usage });
+				if (!signal.aborted) say(ctx, `pi-small: ${mode} memory compaction failed (${result.failure})`, "warn");
+				continue;
+			}
+			const now = new Date().toISOString();
+			const { memory, rejected } = acceptTiers(old, tiers, now);
+			const summary = tiers.recent?.trim() || "(nothing recent)";
+			sessionLog.write({ type: "compaction", persona: true, mode, reason: event.reason, ok: true, tokensBefore, seconds, rejected, chars: { permanent: memory.permanent.length, ongoing: memory.ongoing.length, recent: summary.length }, usage: result.usage });
+			return { compaction: { summary, firstKeptEntryId, tokensBefore, usage: result.usage, details: { persona: { memory, rejected } } } };
+		}
+		if (!signal.aborted) say(ctx, "pi-small: memory compaction failed; falling back to pi's own (memory.md is not updated this time)", "warn");
+		return;
+	};
+
+	/** The newest memory any committed compaction in this session holds, if any. */
+	const sessionMemory = (ctx: any): Memory | null => {
+		const entries: any[] = ctx.sessionManager?.getEntries?.() ?? [];
+		for (let i = entries.length - 1; i >= 0; i--) {
+			const m = entries[i]?.type === "compaction" ? entries[i]?.details?.persona?.memory : undefined;
+			if (m) return m;
+		}
+		return null;
+	};
+
+	if (PERSONA) {
+		pi.on("session_compact", async (event: any, ctx: any) => {
+			const m = event?.compactionEntry?.details?.persona?.memory as Memory | undefined;
+			if (!m) return;
+			writeMemory(home, m);
+			const rejected: string[] = event.compactionEntry.details.persona.rejected ?? [];
+			sessionLog.write({ type: "memory_written", reason: event.reason, updated: m.updated, rejected });
+			say(ctx, `pi-small: memory written (${m.permanent.length} + ${m.ongoing.length} chars)` + (rejected.length ? `; kept previous: ${rejected.join("; ")}` : ""), "info");
+		});
+	}
+
 	pi.on("session_shutdown", async () => {
 		await mgr.stop();
 	});
@@ -1173,6 +1358,40 @@ export default function (pi: ExtensionAPI) {
 	// /workflow run <spec>: the staged workflow, driven from inside this process
 	// (../lib/workflow-command.ts); the host proxy switches models for it.
 	registerWorkflowCommand(pi, { host: d.host, port: d.port, apiKey: d.apiKey }, (c, msg) => say(c, `pi-small: ${msg}`, "info"));
+
+	pi.registerCommand("sm-persona", {
+		description: "Persona memory: show | remember (compact now) | forget <text>",
+		getArgumentCompletions: () => [
+			{ value: "remember", label: "remember" },
+			{ value: "forget ", label: "forget <text>" },
+		],
+		handler: async (args: string, ctx: any) => {
+			if (!PERSONA) {
+				ctx.ui.notify("not in persona mode (start with bin/sm-persona)", "error");
+				return;
+			}
+			const [cmd, ...rest] = args.trim().split(/\s+/);
+			if (cmd === "remember") {
+				ctx.compact({
+					onComplete: () => ctx.ui.notify("pi-small: compacted; memory written", "info"),
+					onError: (e: Error) => ctx.ui.notify(`pi-small: compaction failed: ${e.message}`, "error"),
+				});
+				return;
+			}
+			if (cmd === "forget") {
+				const n = forgetInMemory(home, rest.join(" "), new Date().toISOString());
+				ctx.ui.notify(n ? `pi-small: removed ${n} line(s) from memory` : "pi-small: nothing in memory matched", "info");
+				return;
+			}
+			const m = readMemory(home);
+			ctx.ui.notify(
+				m
+					? `memory (${home}/memory.md, updated ${m.updated ?? "unknown"}):\n\n## Permanent\n${m.permanent || "(empty)"}\n\n## Ongoing\n${m.ongoing || "(empty)"}`
+					: `no memory yet (${home}/memory.md is written at the first compaction)`,
+				"info",
+			);
+		},
+	});
 
 	pi.registerCommand("sm-status", {
 		description: "Show the local model, server, sampler, tools and prompt state",

@@ -30,7 +30,7 @@
  *        at load time, for testing ServerManager's context ladder fallback.
  *        PI_SMALL_STUB_SCRIPT=<module.mjs> to let a script play the model: its
  *        `respond(payload)` is asked first and may return
- *        { kind: "tool", name, args } or { kind: "text", text }; returning
+ *        { kind: "tool", name, args, text? } or { kind: "text", text }; returning
  *        nothing falls through to the behaviour above (so the probes still
  *        work). A response with `delayMs` is sent that much later (a slow
  *        model). test/fixtures/workflow-script.mjs drives the workflow e2e test.
@@ -151,7 +151,7 @@ function nonStreaming(res, payload) {
 		r.kind === "tool"
 			? {
 					role: "assistant",
-					content: "",
+					content: r.text ?? "",
 					tool_calls: [toolCall(r)],
 				}
 			: { role: "assistant", content: r.text };
@@ -185,6 +185,8 @@ function streaming(res, payload) {
 	if (thinks(payload)) send({ ...base, choices: [{ index: 0, delta: { reasoning_content: "stub thoughts" }, finish_reason: null }] });
 
 	if (r.kind === "tool") {
+		// Text before the call, as a model says what it is about to do.
+		if (r.text) send({ ...base, choices: [{ index: 0, delta: { content: r.text }, finish_reason: null }] });
 		send({
 			...base,
 			choices: [
