@@ -46,3 +46,7 @@ pi-small/eval/supervisor/out/probe-jobs-*/
 pi-small/eval/supervisor/out/probe-results/
 pi-small/eval/supervisor/out/*.log
 
+
+# smallctl on the laptop: its scratch workspace and server log
+smallctl/ws/
+smallctl/*.log

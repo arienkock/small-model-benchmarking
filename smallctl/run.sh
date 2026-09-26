@@ -3,7 +3,7 @@
 # models. Intended to be run ON the benchmark laptop (that is where the GPU,
 # the weights and a working Docker Hub route all are):
 #
-#   ssh benchlaptop '/d/llama.cpp/smallctl-container/run.sh --task "..."'
+#   ssh benchlaptop '/d/llama.cpp/smallctl/run.sh --task "..."'
 #
 # Everything after the script name is passed straight through to smallctl.
 #

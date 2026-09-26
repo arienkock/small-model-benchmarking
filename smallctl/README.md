@@ -25,7 +25,9 @@ way:
     start-server.sh   llama-server launcher, same conventions as
                       run-filter-bench.sh (port 8123, api key sk-bench)
 
-These live on the laptop at `/d/llama.cpp/smallctl-container/`.
+On the laptop they run from the repo checkout, `/d/llama.cpp/smallctl/`
+(until 2026-09-26 from a separate deployed copy, `smallctl-container/`). The
+scratch workspace `ws/` and `*.log` there are gitignored.
 
 ## The model cache
 
@@ -43,22 +45,19 @@ not the command.
 
 Start the server:
 
-    ssh benchlaptop 'schtasks //create //tn SmallctlServer //sc once //st 00:00 //f //tr "\"C:\Program Files\Git\bin\bash.exe\" -lc \"cd /d/llama.cpp/smallctl-container && ./start-server.sh > server.log 2>&1\""
+    ssh benchlaptop 'schtasks //create //tn SmallctlServer //sc once //st 00:00 //f //tr "\"C:\Program Files\Git\bin\bash.exe\" -lc \"cd /d/llama.cpp/smallctl && ./start-server.sh > server.log 2>&1\""
     schtasks //run //tn SmallctlServer'
 
 Then run a task:
 
-    ssh benchlaptop 'cd /d/llama.cpp/smallctl-container && WORKSPACE=D:/llama.cpp/smallctl-container/ws ./run.sh --preset coding-local --task "..."'
+    ssh benchlaptop 'cd /d/llama.cpp/smallctl && WORKSPACE=D:/llama.cpp/smallctl/ws ./run.sh --preset coding-local --task "..."'
 
 `WORKSPACE` is mounted at `/work` and is the only thing the agent can touch.
 Point it at a scratch copy — smallctl writes files. It also drops its run logs
 in `$WORKSPACE/logs/<run-id>/`, which is where the useful detail is:
 `task_summary.json` gives the verdict, `tools.jsonl` every tool call.
 
-Copy files to the laptop with a **Windows-style** path — `scp` does not
-understand the MINGW `/d/...` mapping:
-
-    scp run.sh 'benchlaptop:D:/llama.cpp/smallctl-container/run.sh'
+Changes reach the laptop like any other code: commit, then `git push bench master`.
 
 ## Status: works
 

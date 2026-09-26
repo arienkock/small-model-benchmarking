@@ -83,16 +83,18 @@ its `transcript.jsonl` may end in a torn line.
 
 ## Pushing code without the GitHub round trip
 
-`git push bench master` once these are set (not yet configured):
+`git push bench master`. Both halves are configured (2026-09-26):
 
 ```bash
 # on this machine
 git remote add bench ssh://benchlaptop/d/llama.cpp
-# on the laptop, once
+# on the laptop
 ssh benchlaptop 'cd /d/llama.cpp && git config receive.denyCurrentBranch updateInstead'
 ```
 
-`origin` (GitHub) stays the backup remote.
+`updateInstead` refuses the push if the laptop's working tree has changes to
+tracked files, so keep it clean: commit what a run produced, or copy it back
+and commit it here. `origin` (GitHub) stays the backup remote.
 
 ## pi-small — the small-model agent scaffold
 
