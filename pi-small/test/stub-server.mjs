@@ -30,7 +30,8 @@
  *        at load time, for testing ServerManager's context ladder fallback.
  *        PI_SMALL_STUB_SCRIPT=<module.mjs> to let a script play the model: its
  *        `respond(payload)` is asked first and may return
- *        { kind: "tool", name, args, text? } or { kind: "text", text }; returning
+ *        { kind: "tool", name, args, text? }, { kind: "text", text } or
+ *        { kind: "error" } (answered with HTTP 500); returning
  *        nothing falls through to the behaviour above (so the probes still
  *        work). A response with `delayMs` is sent that much later (a slow
  *        model). test/fixtures/workflow-script.mjs drives the workflow e2e test.
@@ -244,6 +245,8 @@ createServer((req, res) => {
 			}
 			console.log(`stub-server: chat request temp=${payload.temperature} top_p=${payload.top_p} top_k=${payload.top_k} stream=${!!payload.stream} tools=${(payload.tools ?? []).length} kwargs=${JSON.stringify(payload.chat_template_kwargs ?? null)}`);
 			console.log(`stub-server: system prompt = ${JSON.stringify(payload.messages?.find((m) => m.role === "system")?.content ?? null)}`);
+			// A scripted { kind: "error" } is a server-side failure (HTTP 500).
+			if (script?.respond(payload)?.kind === "error") return json(res, 500, { error: { message: "stub: scripted failure" } });
 			// A scripted response may carry delayMs: a model that takes that long to
 			// answer, for testing the harness's session time limit.
 			const delay = script?.respond(payload)?.delayMs ?? 0;

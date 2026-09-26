@@ -7,6 +7,8 @@
  *   "...weather..."                         -> says it is looking, and calls weather
  *   "...quietly..."                         -> calls weather without a word first
  *   "...list..."                            -> a markdown list (the server must strip it)
+ *   "...take your time..."                  -> a reply 4 s late (the client gives up first)
+ *   "...break down..."                      -> the model server fails (HTTP 500)
  *   the memory instruction                  -> three tiers, slowly (PERSONA_TEST_COMPACT_DELAY_MS)
  */
 
@@ -28,6 +30,8 @@ export function respond(payload) {
 			text: "## Permanent\nSomeone here asked about the weather.\n\n## Ongoing\nNothing planned yet.\n\n## Recent\nTalked about the weather.",
 		};
 	}
+	if (/take your time/i.test(said)) return { kind: "text", text: "Sorry for the wait.", delayMs: 4000 };
+	if (/break down/i.test(said)) return { kind: "error" };
 	if (/quietly/i.test(said)) return { kind: "tool", name: "weather", args: {} };
 	if (/weather/i.test(said)) return { kind: "tool", name: "weather", args: {}, text: "Let me check." };
 	if (/list/i.test(said)) return { kind: "text", text: "**Three** things:\n- one\n- two\n- three" };

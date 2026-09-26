@@ -11,7 +11,7 @@
 
 import assert from "node:assert";
 import { spawn } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -186,6 +186,35 @@ try {
 	assert.match(again.body.choices[0].message.content, /you said: .*hello again/, "answered after the tool, in the same run");
 	await until("the run to settle", async () => !(await status()).busy, 10_000);
 	pass("a message during a running tool is steered into the run and answered");
+
+	// --- a client that gives up cancels the turn ------------------------------------------------------
+	const logFile = () => readFileSync(join(HOME, "logs", readdirSync(join(HOME, "logs")).find((f) => f.startsWith("server-") && f.endsWith(".jsonl"))!), "utf8");
+	await fetch(`${base}/v1/chat/completions`, {
+		method: "POST",
+		headers: auth,
+		body: JSON.stringify({ messages: [{ role: "user", content: "take your time" }] }),
+		signal: AbortSignal.timeout(800),
+	}).then(
+		() => assert.fail("the request should have been cut off"),
+		() => {},
+	);
+	await until("the turn to be aborted", async () => /"type":"turn_aborted"[^\n]*client disconnected/.test(logFile()), 5_000);
+	const t1 = Date.now();
+	r = await chat("hello after the interruption");
+	assert.match(r.body.choices[0].message.content, /hello after the interruption/);
+	assert.ok(Date.now() - t1 < 3000, "the next message did not wait for the abandoned reply");
+	pass("a client that disconnects aborts its turn; the next message is not held up by it");
+
+	// --- the model cannot answer: an informative error, not silence -------------------------------------
+	const t2 = Date.now();
+	r = await chat("please break down");
+	assert.equal(r.status, 502, JSON.stringify(r.body));
+	assert.match(r.body.error.message, /^persona: Granite-4\.2-3B-Q8_0 could not answer: /, r.body.error.message);
+	assert.equal(r.body.error.type, "model_unavailable");
+	assert.ok(Date.now() - t2 < 5000, "no retries: it fails fast");
+	r = await chat("and now?");
+	assert.equal(r.status, 200, "the next turn works again");
+	pass("a model failure is a 502 with a readable message, fast, and the persona recovers");
 
 	// --- streaming, and silence ---------------------------------------------------------------------------
 	const s = await chat("stream this please.", { stream: true });

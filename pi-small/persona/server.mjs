@@ -37,6 +37,17 @@
  *   Speech-safe text. Replies pass through sanitizeSpeech (lib/persona.ts):
  *   markup removed, no word changed.
  *
+ *   Cancelled requests cancel the turn. A client that disconnects before its
+ *   reply (the speaker interrupted, the speech server gave up) aborts the
+ *   generation, so the model never "remembers" saying something nobody heard
+ *   and the next message does not queue behind it. The same on PERSONA_WAIT.
+ *
+ *   Failing loudly. When the model cannot answer (llama-server down, a model
+ *   error), the request gets an HTTP error with a readable message, never an
+ *   empty 200 that a speech client would play as silence. pi's own retries
+ *   (2 s, 4 s, 8 s) are switched off: for speech, an answer 14 s late is worse
+ *   than a prompt error the client can say something about.
+ *
  * Env (all optional except the key):
  *   PERSONA_API_KEY           bearer key for every route but /health (required)
  *   PERSONA_PORT / _BIND      8130 / 0.0.0.0
@@ -175,6 +186,7 @@ class Pi {
 		if (ready) {
 			this.state = "ready";
 			this.model = { alias: ready[1], ctx: Number(ready[2]) };
+			this.send({ type: "set_auto_retry", enabled: false }).catch((e) => log({ type: "set_auto_retry_failed", error: e.message }));
 		}
 		if (level === "error" || level === "warning" || ready || /memory|compaction/.test(text)) log({ type: "notice", level: level ?? "info", text });
 	}
@@ -283,7 +295,8 @@ function newTurn(question) {
 		first: new Promise((r) => (resolveFirst = r)),
 		firstTimer: null,
 		onDelta: null,
-		sanitized: false,
+		/** The model call's error, when it failed (llama-server down, 5xx…). */
+		error: null,
 	};
 	turn.sendFirst = (text, followup) => {
 		if (turn.firstSent) return;
@@ -306,6 +319,7 @@ pi.on((ev) => {
 	if (ev.type === "_exit") {
 		busy = false;
 		compacting = null;
+		if (turn && !turn.firstSent) turn.error = "the persona process exited mid-turn";
 		turn?.sendFirst("", false);
 		return;
 	}
@@ -320,6 +334,10 @@ pi.on((ev) => {
 		if (s.changed && raw) log({ type: "sanitized", turn: turn.id, before: raw.length, after: s.text.length });
 		const toolCall = (ev.message.content ?? []).some((c) => c.type === "toolCall");
 		if (ev.message.stopReason === "length") log({ type: "truncated", turn: turn.id });
+		if (ev.message.stopReason === "error") {
+			turn.error = ev.message.errorMessage || "the model call failed";
+			log({ type: "model_error", turn: turn.id, firstSent: turn.firstSent, error: turn.error });
+		}
 		if (!turn.firstSent) {
 			if (s.text) turn.sendFirst(s.text, toolCall);
 			else if (toolCall && !turn.firstTimer) turn.firstTimer = setTimeout(() => turn.sendFirst("", true), FIRST_REPLY_WAIT_MS);
@@ -339,7 +357,29 @@ pi.on((ev) => {
 /** Queue: one request at a time reaches pi's prompt; later ones wait for the previous FIRST reply. */
 let gate = Promise.resolve();
 
-async function runTurn(text, onDelta) {
+const httpError = (status, message) => Object.assign(new Error(message), { status });
+
+/**
+ * Abort the turn in pi, so a reply nobody will hear is neither finished nor
+ * kept waiting on. pi's abort returns once the agent is idle.
+ */
+async function abortTurn(turn, why) {
+	if (current !== turn || !busy) return;
+	log({ type: "turn_aborted", turn: turn.id, why, firstSent: turn.firstSent, ms: Date.now() - turn.startedAt });
+	try {
+		await pi.send({ type: "abort" }, 30_000);
+	} catch (e) {
+		log({ type: "abort_failed", error: e.message });
+	}
+	busy = false;
+	turn.sendFirst("", false);
+}
+
+/**
+ * `cancel` is the request's cancellation: `cancelled` once the client has gone,
+ * and `onCancel` called when that happens.
+ */
+async function runTurn(text, onDelta, cancel) {
 	const queuedAt = Date.now();
 	let release;
 	const prev = gate;
@@ -347,10 +387,11 @@ async function runTurn(text, onDelta) {
 	const waited = await Promise.race([prev.then(() => true), new Promise((r) => setTimeout(() => r(false), WAIT_MS))]);
 	if (!waited) {
 		release();
-		throw Object.assign(new Error("the persona is still answering an earlier message"), { status: 503 });
+		throw httpError(503, "the persona is still answering an earlier message");
 	}
 	try {
-		if (pi.state !== "ready") throw Object.assign(new Error(`the persona is ${pi.state}${pi.lastNotice ? `: ${pi.lastNotice}` : ""}`), { status: 503 });
+		if (cancel.cancelled) throw httpError(499, "the client went away while the request was queued");
+		if (pi.state !== "ready") throw httpError(503, `the persona is not available (${pi.state})${pi.lastNotice ? `: ${pi.lastNotice}` : ""}`);
 		lastActivity = Date.now();
 		clearTimeout(idleTimer);
 		if (compacting) await abortCompaction();
@@ -359,9 +400,21 @@ async function runTurn(text, onDelta) {
 		const steering = busy; // tools still running from an earlier turn
 		current = turn;
 		busy = true;
+		const cancelled = new Promise((r) => (cancel.onCancel = () => r("cancelled")));
 		await pi.send(steering ? { type: "prompt", message: text, streamingBehavior: "steer" } : { type: "prompt", message: text });
-		const first = await Promise.race([turn.first, new Promise((r) => setTimeout(() => r(null), WAIT_MS))]);
-		if (!first) throw Object.assign(new Error("no reply in time"), { status: 504 });
+		const first = await Promise.race([turn.first, cancelled, new Promise((r) => setTimeout(() => r("timeout"), WAIT_MS))]);
+		if (first === "cancelled") {
+			await abortTurn(turn, "client disconnected");
+			throw httpError(499, "the client went away");
+		}
+		if (first === "timeout") {
+			await abortTurn(turn, `no reply in ${WAIT_MS / 1000}s`);
+			throw httpError(504, `the model did not answer within ${WAIT_MS / 1000} s`);
+		}
+		if (!first.text && turn.error) {
+			const model = pi.model?.alias ?? "the language model";
+			throw httpError(502, `${model} could not answer: ${turn.error}`);
+		}
 		return { turn, ...first, queueMs: turn.startedAt - queuedAt, steering };
 	} finally {
 		release();
@@ -489,13 +542,23 @@ async function chat(req, res) {
 			}
 		: null;
 
+	// The client hanging up before its reply cancels the turn (see runTurn).
+	const cancel = { cancelled: false, onCancel: null };
+	res.on("close", () => {
+		if (res.writableFinished) return;
+		cancel.cancelled = true;
+		cancel.onCancel?.();
+	});
+
 	let r;
 	try {
-		r = await runTurn(text, onDelta);
+		r = await runTurn(text, onDelta, cancel);
 	} catch (e) {
-		log({ type: "request", error: e.message, status: e.status ?? 500, ms: Date.now() - started });
+		const status = e.status ?? 500;
+		log({ type: "request", error: e.message, status, ms: Date.now() - started });
+		if (status === 499 || res.destroyed) return; // nobody to tell
 		if (res.headersSent) return res.end();
-		return json(res, e.status ?? 500, { error: { message: `persona: ${e.message}` } });
+		return json(res, status, { error: { message: `persona: ${e.message}`, type: status === 502 ? "model_unavailable" : status === 503 ? "persona_unavailable" : "persona_error", code: status } });
 	}
 	const extra = r.followup ? { persona: { followup: true, turn: r.turn.id } } : { persona: { followup: false, turn: r.turn.id } };
 	log({ type: "request", turn: r.turn.id, chars: text.length, replyChars: r.text.length, followup: r.followup, steering: r.steering, queueMs: r.queueMs, firstChunkMs: firstChunkAt ? firstChunkAt - started : null, ms: Date.now() - started });
