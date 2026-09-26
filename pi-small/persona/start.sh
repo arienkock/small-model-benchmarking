@@ -1,12 +1,10 @@
 #!/usr/bin/env bash
 #
 # persona/start.sh — start the persona server (and, through pi, its
-# llama-server). The target of the PersonaServer scheduled task: /tr is capped
-# at 261 characters, so the task runs this script rather than the command.
-#
-#   schtasks //create //tn PersonaServer //sc once //st 00:00 //f \
-#     //tr "\"C:\Program Files\Git\bin\bash.exe\" -lc /d/llama.cpp/pi-small/persona/start.sh"
-#   schtasks //run //tn PersonaServer
+# llama-server), and keep it up. The target of the PersonaServer scheduled
+# task (/tr is capped at 261 characters, so the task runs this script). Use
+# persona/ctl.sh rather than running it by hand: over ssh it would die with
+# the session.
 #
 # The API key is read from $PI_SMALL_PERSONA_HOME/api-key, and generated there
 # on first start. Logs: $PI_SMALL_PERSONA_HOME/logs/.
@@ -37,4 +35,26 @@ fi
 export PERSONA_API_KEY="${PERSONA_API_KEY:-$(cat "$KEY_FILE")}"
 
 cd "$HERE/.."
-exec node persona/server.mjs >> "$PI_SMALL_PERSONA_HOME/logs/server-stdout.log" 2>&1
+OUT="$PI_SMALL_PERSONA_HOME/logs/server-stdout.log"
+STOPPED="$PI_SMALL_PERSONA_HOME/stopped"
+rm -f "$STOPPED"   # a start is a start, whatever stopped it last time
+
+# Restart loop: the server restarts its own pi child, and this restarts the
+# server. `ctl.sh stop` writes $STOPPED first, so a deliberate stop stays down.
+# Backs off, and gives up after 5 crashes within an hour.
+crashes=()
+while :; do
+	echo "[start.sh $(date -Is)] starting persona/server.mjs" >> "$OUT"
+	node persona/server.mjs >> "$OUT" 2>&1 && code=0 || code=$?
+	[[ -e "$STOPPED" ]] && { echo "[start.sh $(date -Is)] stopped on purpose (exit $code)" >> "$OUT"; exit 0; }
+	now=$(date +%s)
+	recent=()
+	for t in "${crashes[@]}"; do (( now - t < 3600 )) && recent+=("$t"); done
+	crashes=("${recent[@]}" "$now")
+	if (( ${#crashes[@]} > 5 )); then
+		echo "[start.sh $(date -Is)] exit $code; 5 crashes within an hour, giving up" >> "$OUT"
+		exit 1
+	fi
+	echo "[start.sh $(date -Is)] exit $code; restarting in $(( 10 * ${#crashes[@]} ))s" >> "$OUT"
+	sleep $(( 10 * ${#crashes[@]} ))
+done
