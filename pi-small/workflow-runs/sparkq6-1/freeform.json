@@ -1,0 +1,15 @@
+{
+  "model": "Spark-X2.5-4B-Q6_K",
+  "thinking": null,
+  "capMin": 40,
+  "end": "cap",
+  "minutes": 40,
+  "turns": 45,
+  "assistantMessages": 45,
+  "toolCalls": 44,
+  "compactions": 3,
+  "inputTokens": 24412,
+  "outputTokens": 19752,
+  "cacheReadTokens": 255215,
+  "maxTurnOutputTokens": 2684
+}

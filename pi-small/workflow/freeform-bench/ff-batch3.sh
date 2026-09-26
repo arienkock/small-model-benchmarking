@@ -2,14 +2,14 @@
 # Free-form batch: load Qwen3.6 once (one proxy for the whole batch), then run
 # N graded free-form sessions on books-api back to back.
 #   ff-batch3.sh <prefix> <count> <cap-min>
-# Extra env passes through: PI_SMALL_STYLE (style text), THINKING=on/off.
+# Extra env passes through: MODEL (roster alias, default Qwen3.6), PI_SMALL_STYLE (style text), THINKING=on/off.
 # Before each run a one-token completion must succeed; if it does not within
 # ~3 minutes the proxy and server are restarted (base32k-4 hit a server that
 # had vanished: ECONNREFUSED on its first request).
 # Each run: workflow-runs/<prefix>-<i>; one summary line per run in ff-batch-<prefix>.txt.
 cd /d/llama.cpp/pi-small || exit 1
 prefix=$1; count=$2; cap=$3
-MODEL=Qwen3.6-35B-A3B-Q4_K_M
+MODEL=${MODEL:-Qwen3.6-35B-A3B-Q4_K_M}
 out=ff-batch-$prefix.txt
 AUTH="Authorization: Bearer sk-bench"
 start_proxy() {

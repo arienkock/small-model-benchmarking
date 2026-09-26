@@ -1,0 +1,16 @@
+-rw-r--r-- 1 zenfi 197609 2600224096 Sep 26 10:46 /d/models/spark-x2.5-4b/Spark-X2.5-4B-Q4_K_M.gguf
+=== Q4_K_M:   (08:46:07)
+  loaded after 6 s; 3300 MiB GPU
+  1.2k run 0: pp 1258 @ 190.3 t/s, tg 256 @ 16.13 t/s, wall 22s
+  1.2k run 1: pp 1260 @ 191.1 t/s, tg 256 @ 16.08 t/s, wall 23s
+  6k run 0: pp 6122 @ 181.1 t/s, tg 256 @ 15.49 t/s, wall 50s
+  6k run 1: pp 6122 @ 180.2 t/s, tg 256 @ 15.46 t/s, wall 51s
+=== done 08:48:43
+-rw-r--r-- 1 zenfi 197609 4375020896 Sep 26 10:50 /d/models/spark-x2.5-4b/Spark-X2.5-4B-Q8_0.gguf
+=== Q8_0:   (08:50:37)
+  loaded after 6 s; 4993 MiB GPU
+  1.2k run 0: pp 1259 @ 196.5 t/s, tg 256 @ 16.42 t/s, wall 22s
+  1.2k run 1: pp 1260 @ 196.9 t/s, tg 256 @ 16.40 t/s, wall 22s
+  6k run 0: pp 6122 @ 185.4 t/s, tg 256 @ 15.78 t/s, wall 49s
+  6k run 1: pp 6122 @ 183.5 t/s, tg 256 @ 15.75 t/s, wall 50s
+=== done 08:53:10

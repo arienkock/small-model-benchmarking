@@ -1,0 +1,7 @@
+[run 09:00:41] proxy already on port 8123, serving Spark-X2.5-4B-Q6_K (ready)
+[run 09:00:41] agent: pi-small in RPC mode (container); free-form session on Spark-X2.5-4B-Q6_K, cap 40 min
+[run 09:40:42] free-form: the 40-minute cap — aborting the session
+[run 09:40:42] free-form session ended (cap) after 40.0 min
+[run 09:40:45] free-form: cap after 40 min; 45 turn(s), 44 tool call(s), 3 compaction(s); tokens in 24412 (+255215 cached), out 19752
+[run 09:40:51] grader: 4/28 checks passed
+[run 09:40:51] run directory: D:\llama.cpp\pi-small\workflow-runs\sparkq6-1

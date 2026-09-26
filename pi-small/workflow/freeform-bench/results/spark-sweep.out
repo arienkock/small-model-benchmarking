@@ -1,0 +1,37 @@
+=== base:   (08:23:32)
+  loaded after 45 s; 4043 MiB GPU
+  1.2k run 0: pp 1260 @ 196.4 t/s, tg 256 @ 13.25 t/s, wall 26s
+  1.2k run 1: pp 1260 @ 201.5 t/s, tg 256 @ 13.23 t/s, wall 26s
+  6k run 0: pp 6122 @ 189.4 t/s, tg 256 @ 12.81 t/s, wall 52s
+  6k run 1: pp 6122 @ 188.1 t/s, tg 256 @ 12.79 t/s, wall 53s
+=== fa-on: -fa on  (08:27:01)
+  loaded after 6 s; 4043 MiB GPU
+  1.2k run 0: pp 1260 @ 195.4 t/s, tg 256 @ 13.19 t/s, wall 26s
+  1.2k run 1: pp 1260 @ 199.0 t/s, tg 256 @ 13.14 t/s, wall 26s
+  6k run 0: pp 6121 @ 187.0 t/s, tg 256 @ 12.77 t/s, wall 53s
+  6k run 1: pp 6122 @ 187.2 t/s, tg 256 @ 12.78 t/s, wall 53s
+=== fa-off: -fa off  (08:29:50)
+  loaded after 6 s; 4540 MiB GPU
+  1.2k run 0: pp 1259 @ 144.6 t/s, tg 256 @ 11.03 t/s, wall 32s
+  1.2k run 1: pp 1259 @ 145.6 t/s, tg 256 @ 11.02 t/s, wall 34s
+  6k run 0: pp 6122 @ 185.3 t/s, tg 256 @ 9.42 t/s, wall 62s
+  6k run 1: pp 6122 @ 184.9 t/s, tg 256 @ 9.42 t/s, wall 63s
+=== ub1024: -b 2048 -ub 1024  (08:33:10)
+  loaded after 6 s; 4185 MiB GPU
+  1.2k run 0: pp 1260 @ 201.2 t/s, tg 256 @ 13.05 t/s, wall 26s
+  1.2k run 1: pp 1260 @ 203.2 t/s, tg 256 @ 13.03 t/s, wall 26s
+  6k run 0: pp 6122 @ 186.3 t/s, tg 256 @ 12.66 t/s, wall 53s
+  6k run 1: pp 6122 @ 185.3 t/s, tg 256 @ 12.66 t/s, wall 53s
+=== ub2048: -b 2048 -ub 2048  (08:35:59)
+  loaded after 6 s; 4472 MiB GPU
+  1.2k run 0: pp 1260 @ 206.5 t/s, tg 256 @ 13.06 t/s, wall 26s
+  1.2k run 1: pp 1260 @ 204.8 t/s, tg 256 @ 13.04 t/s, wall 26s
+  6k run 0: pp 6122 @ 176.5 t/s, tg 256 @ 12.43 t/s, wall 55s
+  6k run 1: pp 6121 @ 175.9 t/s, tg 256 @ 12.42 t/s, wall 56s
+=== kvq8: -fa on -ctk q8_0 -ctv q8_0  (08:38:51)
+  loaded after 6 s; 3763 MiB GPU
+  1.2k run 0: pp 1260 @ 195.6 t/s, tg 256 @ 11.85 t/s, wall 28s
+  1.2k run 1: pp 1260 @ 196.9 t/s, tg 256 @ 11.91 t/s, wall 28s
+  6k run 0: pp 6122 @ 184.5 t/s, tg 256 @ 10.94 t/s, wall 57s
+  6k run 1: pp 6122 @ 184.4 t/s, tg 256 @ 10.93 t/s, wall 57s
+=== done 08:41:50

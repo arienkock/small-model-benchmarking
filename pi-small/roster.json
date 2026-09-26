@@ -35,7 +35,7 @@
 			"file": "Spark-X2.5-4B-Q6_K.gguf",
 			"localFile": "D:/llama-cache/models--sizzlebop--Spark-X2.5-4B-GGUF/snapshots/*/Spark-X2.5-4B-Q6_K.gguf",
 			"default": true,
-			"notes": "No official Q6_K; third-party build. Round 3' PKG 6/6, probed response headers 3/3. Its embedded template carries a working tool-call channel — no override needed. reasoningBudget 512 (default 2048): it always thinks, and in the 2026-09-24 overnight workflow runs every turn used the whole 2048-token budget (7-8k characters of thinking, ~3 min a turn), so a 15-minute session got 6 turns, mostly `cat`. At 1024 it still ran out of turns in every review-1 session (~90 s a turn), hence 512.",
+			"notes": "No official Q6_K; third-party build. Round 3' PKG 6/6, probed response headers 3/3. Its embedded template carries a working tool-call channel — no override needed. reasoningBudget 512 (default 2048): it always thinks, and in the 2026-09-24 overnight workflow runs every turn used the whole 2048-token budget (7-8k characters of thinking, ~3 min a turn), so a 15-minute session got 6 turns, mostly `cat`. At 1024 it still ran out of turns in every review-1 session (~90 s a turn), hence 512. SPEED (2026-09-26): server flags gain nothing on the GTX 970M (fa, -b/-ub, q8_0 KV: equal or slower); the card is compute-bound, and Q8_0 (D:/models/spark-x2.5-4b/, not in LLAMA_CACHE) generates 16.4 t/s against this Q6_K's 13.2, at 4993 vs 4043 MiB. Not switched. In-context compaction fails for this model every time (it calls a tool instead of writing the summary). See ../pi-small-spark-speed-20260926.md.",
 			"reasoningBudget": 512,
 			"chatTemplate": null,
 			"serverArgs": []

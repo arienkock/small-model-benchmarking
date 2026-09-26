@@ -1,0 +1,3 @@
+=== sparkq6 (Q6_K) 09:00:25
+proxy ready after 10 s (09:00:39)
+workflow-runs/sparkq6-1: end=cap min=40 turns=45 tools=44 compactions=3 out=19752 grade=4/28
