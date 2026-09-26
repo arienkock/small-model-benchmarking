@@ -1,0 +1,133 @@
+{
+  "tool": "submit_task_plan",
+  "accepted": true,
+  "args": {
+    "scenarios": [
+      {
+        "kind": "happy",
+        "title": "T4-H1 GET lists books ordered by id",
+        "given": "Books with ids 1, 2, 3 exist in memory with distinct titles.",
+        "when": "GET /books",
+        "then": "Response is 200 with JSON array of 3 books ordered by id 1, 2, 3."
+      },
+      {
+        "kind": "happy",
+        "title": "T4-H2 GET filters by title case-insensitively",
+        "given": "Books with id 1 (title 'Dune'), id 2 (title 'Brave New World'), id 3 (title '1984') exist.",
+        "when": "GET /books?title=dune",
+        "then": "Response is 200 with JSON array containing only the book with title 'Dune'."
+      },
+      {
+        "kind": "happy",
+        "title": "T4-H3 GET uses q= search case-insensitively",
+        "given": "Books with id 1 (title 'Dune', author 'Frank Herbert'), id 2 (title 'Brave New World', author 'Asimov') exist.",
+        "when": "GET /books?q=herbert",
+        "then": "Response is 200 with JSON array containing only the book with author 'Frank Herbert'."
+      },
+      {
+        "kind": "happy",
+        "title": "T4-H4 GET combines multiple filters all must match",
+        "given": "Books with id 1 (title 'Dune', author 'Frank Herbert'), id 2 (title 'Dune 2', author 'Other'), id 3 (author 'Frank Herbert', title 'Other') exist.",
+        "when": "GET /books?title=dune&author=herbert",
+        "then": "Response is 200 with JSON array containing only the book with id 1."
+      },
+      {
+        "kind": "happy",
+        "title": "T4-H5 GET filters by synopsis",
+        "given": "Books with id 1 (synopsis 'A vast empire'), id 2 (synopsis 'Dune rules') exist.",
+        "when": "GET /books?synopsis=dune",
+        "then": "Response is 200 with JSON array containing only the book with id 2."
+      },
+      {
+        "kind": "unhappy",
+        "title": "T4-U1 GET rejects unknown query parameter (S11)",
+        "given": "Book store has books.",
+        "when": "GET /books?unknownParam=value",
+        "then": "Response is 400 with JSON {'error': '<message>'}."
+      }
+    ],
+    "logic": [
+      "Extract all query parameters from the request URL using urllib.parse.urlparse and parse_qs.",
+      "Define the known query parameter set as {'id', 'title', 'author', 'isbn', 'synopsis', 'q'}.",
+      "Check every query parameter name against the known set; if any name is unknown, return HTTP 400 with JSON {'error': 'unknown query parameter'}.",
+      "Start with a copy of all books in the BookStore.",
+      "Apply field-level filters: for each known query parameter present in the request:",
+      "    - 'q': keep books where the query value is a case-insensitive substring of title, author, isbn, or synopsis (OR across those fields).",
+      "    - 'id': keep only books whose id exactly equals the given integer value.",
+      "    - 'title', 'author', 'isbn', 'synopsis': keep books whose field value is a case-insensitive substring of the query value.",
+      "    - If multiple parameters are provided, they must all match (in filter); no AND/OR confusion across different field params is ambiguous.",
+      "Sort the filtered books by id in ascending order.",
+      "Return HTTP 200 with the JSON list of filtered and sorted books.",
+      "On any missing or malformed input to the filtering logic, return appropriate errors (400 for invalid id type, etc.)."
+    ]
+  },
+  "refusals": 0,
+  "at": "2026-09-24T10:24:31.001Z",
+  "value": {
+    "scenarios": [
+      {
+        "id": "T4.S1",
+        "kind": "happy",
+        "title": "T4-H1 GET lists books ordered by id",
+        "given": "Books with ids 1, 2, 3 exist in memory with distinct titles.",
+        "when": "GET /books",
+        "then": "Response is 200 with JSON array of 3 books ordered by id 1, 2, 3."
+      },
+      {
+        "id": "T4.S2",
+        "kind": "happy",
+        "title": "T4-H2 GET filters by title case-insensitively",
+        "given": "Books with id 1 (title 'Dune'), id 2 (title 'Brave New World'), id 3 (title '1984') exist.",
+        "when": "GET /books?title=dune",
+        "then": "Response is 200 with JSON array containing only the book with title 'Dune'."
+      },
+      {
+        "id": "T4.S3",
+        "kind": "happy",
+        "title": "T4-H3 GET uses q= search case-insensitively",
+        "given": "Books with id 1 (title 'Dune', author 'Frank Herbert'), id 2 (title 'Brave New World', author 'Asimov') exist.",
+        "when": "GET /books?q=herbert",
+        "then": "Response is 200 with JSON array containing only the book with author 'Frank Herbert'."
+      },
+      {
+        "id": "T4.S4",
+        "kind": "happy",
+        "title": "T4-H4 GET combines multiple filters all must match",
+        "given": "Books with id 1 (title 'Dune', author 'Frank Herbert'), id 2 (title 'Dune 2', author 'Other'), id 3 (author 'Frank Herbert', title 'Other') exist.",
+        "when": "GET /books?title=dune&author=herbert",
+        "then": "Response is 200 with JSON array containing only the book with id 1."
+      },
+      {
+        "id": "T4.S5",
+        "kind": "happy",
+        "title": "T4-H5 GET filters by synopsis",
+        "given": "Books with id 1 (synopsis 'A vast empire'), id 2 (synopsis 'Dune rules') exist.",
+        "when": "GET /books?synopsis=dune",
+        "then": "Response is 200 with JSON array containing only the book with id 2."
+      },
+      {
+        "id": "T4.S6",
+        "kind": "unhappy",
+        "title": "T4-U1 GET rejects unknown query parameter (S11)",
+        "given": "Book store has books.",
+        "when": "GET /books?unknownParam=value",
+        "then": "Response is 400 with JSON {'error': '<message>'}."
+      }
+    ],
+    "logic": [
+      "Extract all query parameters from the request URL using urllib.parse.urlparse and parse_qs.",
+      "Define the known query parameter set as {'id', 'title', 'author', 'isbn', 'synopsis', 'q'}.",
+      "Check every query parameter name against the known set; if any name is unknown, return HTTP 400 with JSON {'error': 'unknown query parameter'}.",
+      "Start with a copy of all books in the BookStore.",
+      "Apply field-level filters: for each known query parameter present in the request:",
+      "- 'q': keep books where the query value is a case-insensitive substring of title, author, isbn, or synopsis (OR across those fields).",
+      "- 'id': keep only books whose id exactly equals the given integer value.",
+      "- 'title', 'author', 'isbn', 'synopsis': keep books whose field value is a case-insensitive substring of the query value.",
+      "- If multiple parameters are provided, they must all match (in filter); no AND/OR confusion across different field params is ambiguous.",
+      "Sort the filtered books by id in ascending order.",
+      "Return HTTP 200 with the JSON list of filtered and sorted books.",
+      "On any missing or malformed input to the filtering logic, return appropriate errors (400 for invalid id type, etc.)."
+    ]
+  },
+  "check": null
+}

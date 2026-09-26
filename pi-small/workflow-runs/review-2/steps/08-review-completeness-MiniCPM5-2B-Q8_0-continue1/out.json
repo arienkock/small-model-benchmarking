@@ -1,0 +1,84 @@
+{
+  "tool": "submit_findings",
+  "accepted": true,
+  "args": {
+    "findings": [
+      {
+        "priority": "high",
+        "title": "PUT path validation missing for non-integer IDs",
+        "where": "app.py:do_PUT",
+        "detail": "int(self.path.split('/')[-1]) called without try/except, raises ValueError instead of returning 400"
+      },
+      {
+        "priority": "high",
+        "title": "GET /books q filter logic broken",
+        "where": "app.py:do_GET_all",
+        "detail": "When field == 'q', code accesses b['q'] which doesn't exist on book dicts; should search across title/author/isbn/synopsis"
+      },
+      {
+        "priority": "high",
+        "title": "Type validation missing in POST and PUT",
+        "where": "app.py:do_POST, do_PUT",
+        "detail": "Task requires 400 for field of wrong type, but only missing/empty required fields and id-in-body checks exist; fields aren't validated to be strings"
+      },
+      {
+        "priority": "high",
+        "title": "GET /books/{id} path validation missing for non-integer IDs",
+        "where": "app.py:do_GET",
+        "detail": "int(path.split('/')[-1]) in try/except returns 404 for non-integer, should return 400 per spec"
+      },
+      {
+        "priority": "high",
+        "title": "DELETE /books/{id} path validation missing for non-integer IDs",
+        "where": "app.py:do_DELETE",
+        "detail": "int(path.split('/')[-1]) called without try/except, ValueError will crash server instead of returning 400"
+      },
+      {
+        "priority": "medium",
+        "title": "GET /books id query param without type validation",
+        "where": "app.py:do_GET_all",
+        "detail": "int(filters['id']) called without try/except, raises ValueError instead of returning 400"
+      }
+    ]
+  },
+  "value": [
+    {
+      "priority": "high",
+      "title": "PUT path validation missing for non-integer IDs",
+      "where": "app.py:do_PUT",
+      "detail": "int(self.path.split('/')[-1]) called without try/except, raises ValueError instead of returning 400"
+    },
+    {
+      "priority": "high",
+      "title": "GET /books q filter logic broken",
+      "where": "app.py:do_GET_all",
+      "detail": "When field == 'q', code accesses b['q'] which doesn't exist on book dicts; should search across title/author/isbn/synopsis"
+    },
+    {
+      "priority": "high",
+      "title": "Type validation missing in POST and PUT",
+      "where": "app.py:do_POST, do_PUT",
+      "detail": "Task requires 400 for field of wrong type, but only missing/empty required fields and id-in-body checks exist; fields aren't validated to be strings"
+    },
+    {
+      "priority": "high",
+      "title": "GET /books/{id} path validation missing for non-integer IDs",
+      "where": "app.py:do_GET",
+      "detail": "int(path.split('/')[-1]) in try/except returns 404 for non-integer, should return 400 per spec"
+    },
+    {
+      "priority": "high",
+      "title": "DELETE /books/{id} path validation missing for non-integer IDs",
+      "where": "app.py:do_DELETE",
+      "detail": "int(path.split('/')[-1]) called without try/except, ValueError will crash server instead of returning 400"
+    },
+    {
+      "priority": "medium",
+      "title": "GET /books id query param without type validation",
+      "where": "app.py:do_GET_all",
+      "detail": "int(filters['id']) called without try/except, raises ValueError instead of returning 400"
+    }
+  ],
+  "refusals": 0,
+  "at": "2026-09-25T10:24:41.269Z"
+}

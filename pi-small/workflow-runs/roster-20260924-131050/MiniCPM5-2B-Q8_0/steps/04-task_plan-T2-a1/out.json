@@ -1,0 +1,72 @@
+{
+  "tool": "submit_task_plan",
+  "accepted": true,
+  "args": {
+    "scenarios": [
+      {
+        "kind": "happy",
+        "title": "Retrieve book",
+        "given": "Book id 1 exists",
+        "when": "GET /books/1",
+        "then": "200 with {'id': 1, 'title': 'Dune', 'author': 'Sparaway', 'isbn': '1234567890', 'synopsis': ''}"
+      },
+      {
+        "kind": "happy",
+        "title": "Update book",
+        "given": "Book id 1 exists",
+        "when": "PUT /books/1 with {'title': 'Dune', 'author': 'Huxley', 'isbn': '0987654321', 'synopsis': 'A story of desert'}",
+        "then": "200 with {'id': 1, 'title': 'Dune', 'author': 'Huxley', 'isbn': '0987654321', 'synopsis': 'A story of desert'}"
+      },
+      {
+        "kind": "unhappy",
+        "title": "Non-existent id",
+        "given": "Server running",
+        "when": "GET /books/999",
+        "then": "404 with {}"
+      }
+    ],
+    "logic": [
+      "Parsing path to extract id from /books/{id}; invalid id returns 400",
+      "Looking up book in in-memory dict; missing returns 404 with {}",
+      "GET returns book JSON with 200",
+      "PUT validates title/author/isbn non-empty strings, updates dict, returns 200 or 404 if missing"
+    ]
+  },
+  "refusals": 0,
+  "at": "2026-09-24T13:13:03.465Z",
+  "value": {
+    "scenarios": [
+      {
+        "id": "T2.S1",
+        "kind": "happy",
+        "title": "Retrieve book",
+        "given": "Book id 1 exists",
+        "when": "GET /books/1",
+        "then": "200 with {'id': 1, 'title': 'Dune', 'author': 'Sparaway', 'isbn': '1234567890', 'synopsis': ''}"
+      },
+      {
+        "id": "T2.S2",
+        "kind": "happy",
+        "title": "Update book",
+        "given": "Book id 1 exists",
+        "when": "PUT /books/1 with {'title': 'Dune', 'author': 'Huxley', 'isbn': '0987654321', 'synopsis': 'A story of desert'}",
+        "then": "200 with {'id': 1, 'title': 'Dune', 'author': 'Huxley', 'isbn': '0987654321', 'synopsis': 'A story of desert'}"
+      },
+      {
+        "id": "T2.S3",
+        "kind": "unhappy",
+        "title": "Non-existent id",
+        "given": "Server running",
+        "when": "GET /books/999",
+        "then": "404 with {}"
+      }
+    ],
+    "logic": [
+      "Parsing path to extract id from /books/{id}; invalid id returns 400",
+      "Looking up book in in-memory dict; missing returns 404 with {}",
+      "GET returns book JSON with 200",
+      "PUT validates title/author/isbn non-empty strings, updates dict, returns 200 or 404 if missing"
+    ]
+  },
+  "check": null
+}

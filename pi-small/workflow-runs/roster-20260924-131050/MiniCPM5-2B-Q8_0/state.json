@@ -1,0 +1,283 @@
+{
+  "version": 1,
+  "status": "stopped",
+  "task": "Build a RESTful HTTP API for books in Python.\n\nConstraints:\n- Python 3 standard library only (for example http.server, json, urllib.parse, threading). No third-party packages.\n- Keep the data in memory; nothing is written to disk. Data may be lost when the server stops.\n- The entry point is `/workspace/app.py`. Running `python3 app.py` starts the server on the port given by the environment variable `PORT` (default 8000), listening on 127.0.0.1, and keeps serving until it is stopped.\n\nA book has these fields:\n- `id`: integer, assigned by the server (1, 2, 3, … in creation order, never reused after a delete); never supplied by the client\n- `title`: string, required, not empty\n- `author`: string, required, not empty\n- `isbn`: string, required, not empty\n- `synopsis`: string, optional; defaults to an empty string\n\nEndpoints (all request and response bodies are JSON, with `Content-Type: application/json`):\n- `POST /books` creates a book from a JSON object with title, author, isbn and optionally synopsis. Responds 201 with the created book, including its `id`.\n- `GET /books/{id}` responds 200 with the book.\n- `PUT /books/{id}` replaces the book's title, author, isbn and synopsis with the ones in the body (same rules as create). Responds 200 with the updated book.\n- `DELETE /books/{id}` removes the book. Responds 204 with no body.\n- `GET /books` responds 200 with a JSON list of all books, ordered by id. It supports searching and filtering by every field through query parameters:\n  - `id=<n>` keeps only the book with that id;\n  - `title=…`, `author=…`, `isbn=…`, `synopsis=…` keep books whose field contains the value, ignoring case;\n  - `q=…` keeps books where any of title, author, isbn or synopsis contains the value, ignoring case;\n  - several parameters together must all match. An unknown query parameter is an error.\n\nErrors respond with a JSON object `{\"error\": \"<message>\"}`:\n- 400 for a body that is not valid JSON or not a JSON object, a missing or empty required field, a field of the wrong type, an `id` in a create or update body, an id in the path that is not an integer, or an unknown query parameter;\n- 404 for a book id that does not exist, or any other path.",
+  "profile": {
+    "testCommand": "python3 -m unittest discover -s tests -v",
+    "testFiles": [
+      "tests/*.py"
+    ],
+    "testCountPattern": "^Ran (\\d+) tests?",
+    "conventions": "- Tests are Python unittest files in /workspace/tests/, named test_*.py; each test is a method named after its scenario.\n- Tests that need the HTTP server start it themselves on a free port and shut it down afterwards.",
+    "checks": [
+      {
+        "name": "Python standard library only",
+        "command": "python3 /opt/pi-small/workflow/checks/python_stdlib_only.py"
+      }
+    ]
+  },
+  "testCommand": "python3 -m unittest discover -s tests -v",
+  "preexistingCode": false,
+  "scenarios": [
+    {
+      "id": "S1",
+      "kind": "happy",
+      "title": "Create book",
+      "given": "No books in store",
+      "when": "POST /books with {'title': 'Dune', 'author': 'Sparaway', 'isbn': '1234567890'}",
+      "then": "201 with {'id': 1, 'title': 'Dune', 'author': 'Sparaway', 'isbn': '1234567890', 'synopsis': ''}"
+    },
+    {
+      "id": "S2",
+      "kind": "happy",
+      "title": "Retrieve book",
+      "given": "Book id 1 exists",
+      "when": "GET /books/1",
+      "then": "200 with {'id': 1, 'title': 'Dune', 'author': 'Sparaway', 'isbn': '1234567890', 'synopsis': ''}"
+    },
+    {
+      "id": "S3",
+      "kind": "happy",
+      "title": "Update book",
+      "given": "Book id 1 exists",
+      "when": "PUT /books/1 with {'title': 'Dune', 'author': 'Huxley', 'isbn': '0987654321', 'synopsis': 'A story of desert'}",
+      "then": "200 with {'id': 1, 'title': 'Dune', 'author': 'Huxley', 'isbn': '0987654321', 'synopsis': 'A story of desert'}"
+    },
+    {
+      "id": "S4",
+      "kind": "happy",
+      "title": "List books by query",
+      "given": "Two books exist",
+      "when": "GET /books?q=1234567890",
+      "then": "200 with a list containing the book id 1"
+    },
+    {
+      "id": "S5",
+      "kind": "unhappy",
+      "title": "Invalid JSON body",
+      "given": "Server running.",
+      "when": "POST /books with body 'not json'",
+      "then": "400 with {'error': 'Invalid JSON'}"
+    },
+    {
+      "id": "S6",
+      "kind": "unhappy",
+      "title": "Missing required field",
+      "given": "Server running.",
+      "when": "POST /books with JSON {'author': 'Test', 'isbn': '000'}",
+      "then": "400 with {'error': 'title is required'}"
+    },
+    {
+      "id": "S7",
+      "kind": "unhappy",
+      "title": "Wrong type",
+      "given": "Server running.",
+      "when": "POST /books with JSON {'title': 123, 'author': 'Test', 'isbn': '000'}",
+      "then": "400 with {'error': 'title must be a string'}"
+    },
+    {
+      "id": "S8",
+      "kind": "unhappy",
+      "title": "Unknown query param",
+      "given": "GET /books",
+      "when": "GET /books?id=5",
+      "then": "400 with {'error': 'id is not a valid query parameter'}"
+    },
+    {
+      "id": "S9",
+      "kind": "unhappy",
+      "title": "Non-existent id",
+      "given": "Server running.",
+      "when": "GET /books/999",
+      "then": "404 with {}"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "POST /books",
+      "goal": "Implement POST /books with validation and 201 response.",
+      "files": [
+        "app.py",
+        "tests/test_s1.py",
+        "tests/test_s5.py",
+        "tests/test_s6.py",
+        "tests/test_s7.py"
+      ],
+      "covers": [
+        "S1",
+        "S5",
+        "S6",
+        "S7"
+      ],
+      "scenarios": [
+        {
+          "id": "T1.S1",
+          "kind": "happy",
+          "title": "Create book",
+          "given": "No books in store",
+          "when": "POST /books with {'title': 'Dune', 'author': 'Sparaway', 'isbn': '1234567890'}",
+          "then": "201 with {'id': 1, 'title': 'Dune', 'author': 'Sparaway', 'isbn': '1234567890', 'synopsis': ''}"
+        },
+        {
+          "id": "T1.S2",
+          "kind": "unhappy",
+          "title": "Invalid JSON body",
+          "given": "Server running",
+          "when": "POST /books with body 'not json'",
+          "then": "400 with {'error': 'Invalid JSON'}"
+        },
+        {
+          "id": "T1.S3",
+          "kind": "unhappy",
+          "title": "Missing required field",
+          "given": "Server running",
+          "when": "POST /books with JSON {'author': 'Test', 'isbn': '000'}",
+          "then": "400 with {'error': 'title is required'}"
+        },
+        {
+          "id": "T1.S4",
+          "kind": "unhappy",
+          "title": "Wrong type",
+          "given": "Server running",
+          "when": "POST /books with JSON {'title': 123, 'author': 'Test', 'isbn': '000'}",
+          "then": "400 with {'error': 'title must be a string'}"
+        }
+      ],
+      "logic": [
+        "In-memory list of book dicts; each dict has keys id, title, author, isbn, synopsis.",
+        "Function parse_and_validate_body(body) returns dict or raises ValidationError.",
+        "Function create_book(body) assigns id by len(books)+1, populates fields, sets synopsis default ''.",
+        "Endpoint POST /books calls parse_and_validate_body, creates book, returns 201.",
+        "Validation checks: body is dict, title/author/isbn are non-empty strings, types correct.",
+        "Unknown query params and unknown path segments raise 400/404 respectively."
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "T2",
+      "title": "Get and update by id",
+      "goal": "Implement GET /books/{id}, PUT /books/{id}, and 404 for non-existent id.",
+      "files": [
+        "app.py",
+        "tests/test_s2.py",
+        "tests/test_s3.py",
+        "tests/test_s9.py"
+      ],
+      "covers": [
+        "S2",
+        "S3",
+        "S9"
+      ],
+      "scenarios": [
+        {
+          "id": "T2.S1",
+          "kind": "happy",
+          "title": "Retrieve book",
+          "given": "Book id 1 exists",
+          "when": "GET /books/1",
+          "then": "200 with {'id': 1, 'title': 'Dune', 'author': 'Sparaway', 'isbn': '1234567890', 'synopsis': ''}"
+        },
+        {
+          "id": "T2.S2",
+          "kind": "happy",
+          "title": "Update book",
+          "given": "Book id 1 exists",
+          "when": "PUT /books/1 with {'title': 'Dune', 'author': 'Huxley', 'isbn': '0987654321', 'synopsis': 'A story of desert'}",
+          "then": "200 with {'id': 1, 'title': 'Dune', 'author': 'Huxley', 'isbn': '0987654321', 'synopsis': 'A story of desert'}"
+        },
+        {
+          "id": "T2.S3",
+          "kind": "unhappy",
+          "title": "Non-existent id",
+          "given": "Server running",
+          "when": "GET /books/999",
+          "then": "404 with {}"
+        }
+      ],
+      "logic": [
+        "Parsing path to extract id from /books/{id}; invalid id returns 400",
+        "Looking up book in in-memory dict; missing returns 404 with {}",
+        "GET returns book JSON with 200",
+        "PUT validates title/author/isbn non-empty strings, updates dict, returns 200 or 404 if missing"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "T3",
+      "title": "List with query filtering",
+      "goal": "Implement GET /books with id, title, author, isbn, synopsis, q and unknown param error.",
+      "files": [
+        "app.py",
+        "tests/test_s4.py",
+        "tests/test_s8.py"
+      ],
+      "covers": [
+        "S4",
+        "S8"
+      ],
+      "scenarios": [
+        {
+          "id": "T3.S1",
+          "kind": "happy",
+          "title": "List books by query",
+          "given": "Two books exist (id 1 with isbn '1234567890', id 2 with different isbn)",
+          "when": "GET /books?q=1234567890",
+          "then": "200 with a JSON list containing the book id 1"
+        },
+        {
+          "id": "T3.S2",
+          "kind": "unhappy",
+          "title": "Unknown query param",
+          "given": "Server running",
+          "when": "GET /books?id=5",
+          "then": "400 with {'error': 'id is not a valid query parameter'}"
+        }
+      ],
+      "logic": [
+        "> In-memory storage: books: dict[int, dict] and books_list: list[dict] ordered by id",
+        "GET /books handler: parse query params with urllib.parse.parse_qs; validate all params against allowed set {title, author, isbn, synopsis, q}; id param is rejected as unknown per S8",
+        "Filter: id param keeps only that id; field params keep books whose field contains value case-insensitively; q keeps books where any of the four fields contains value case-insensitively; all params must match simultaneously",
+        "Unknown param → 400 {'error': '<message>'}",
+        "Return 200 JSON list ordered by id; 404 for missing book or invalid path",
+        "Tests in tests/test_s4.py and tests/test_s8.py start the server on a free port via threading, run the request, and shut it down"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "T4",
+      "title": "Delete book",
+      "goal": "Implement DELETE /books/{id}",
+      "files": [
+        "app.py"
+      ],
+      "covers": [],
+      "scenarios": [
+        {
+          "id": "T4.S1",
+          "kind": "happy",
+          "title": "Delete existing book",
+          "given": "Book id 1 exists.",
+          "when": "DELETE /books/1",
+          "then": "204 with empty body."
+        },
+        {
+          "id": "T4.S2",
+          "kind": "unhappy",
+          "title": "Delete non-existent id",
+          "given": "Server running.",
+          "when": "DELETE /books/999",
+          "then": "404 with {}."
+        }
+      ],
+      "logic": [
+        "Maintain in-memory dict id->book and list all_books ordered by id.",
+        "do_DELETE parses path /books/{id}; invalid path or non-integer id returns 404 or 400.",
+        "If id exists, remove book from both structures and return 204 with no body.",
+        "Unknown query params error on GET only; DELETE has no query params."
+      ],
+      "status": "planned"
+    }
+  ],
+  "failure": "time budget ran out during implement-T1 attempt 2"
+}

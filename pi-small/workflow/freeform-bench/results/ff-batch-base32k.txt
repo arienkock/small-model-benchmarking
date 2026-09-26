@@ -1,0 +1,2 @@
+proxy ready after 1200 s (19:41:46)
+batch done 20:23:14

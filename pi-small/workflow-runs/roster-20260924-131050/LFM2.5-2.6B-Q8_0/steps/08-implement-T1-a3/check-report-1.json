@@ -1,0 +1,20 @@
+{
+  "ok": false,
+  "problems": [
+    "the test suite failed (`python3 -m unittest discover -s tests -v` exited 1)."
+  ],
+  "missingTokens": [],
+  "checks": [
+    {
+      "name": "Python standard library only",
+      "ok": true,
+      "tail": "only standard-library and local imports"
+    }
+  ],
+  "tests": {
+    "rc": 1,
+    "timedOut": false,
+    "count": 0,
+    "tail": "setUpClass (test_app.TestBookAPI) ... ERROR\n\n======================================================================\nERROR: setUpClass (test_app.TestBookAPI)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tests/test_app.py\", line 22, in setUpClass\n    cls.server_thread = threading.Thread(target=run_server)\n                                                ^^^^^^^^^^\nNameError: name 'run_server' is not defined\n\n----------------------------------------------------------------------\nRan 0 tests in 0.004s\n\nFAILED (errors=1)"
+  }
+}

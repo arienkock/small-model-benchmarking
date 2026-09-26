@@ -1,0 +1,10 @@
+{
+  "tool": "submit_findings",
+  "accepted": true,
+  "args": {
+    "findings": []
+  },
+  "value": [],
+  "refusals": 0,
+  "at": "2026-09-25T07:29:52.696Z"
+}

@@ -1,0 +1,72 @@
+import json
+import os
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
+class BookHandler(BaseHTTPRequestHandler):
+    books = []
+    next_id = 1
+    book_by_id = {}
+
+    def do_POST(self):
+        if not self.is_json():
+            self.send_error(400, "Invalid JSON")
+            return
+
+        content_len = int(self.headers.get('Content-Length', 0))
+        if content_len == 0:
+            self.send_error(400, "Empty body")
+            return
+
+        try:
+            payload = json.loads(self.rfile.read(content_len).decode())
+        except Exception:
+            self.send_error(400, "Invalid JSON")
+            return
+
+        title = payload.get('title')
+        author = payload.get('author')
+        isbn = payload.get('isbn')
+        if not title or not author or not isbn:
+            self.send_error(400, "missing required field isbn")
+            return
+        # additional validation: non-empty strings
+        if not isinstance(title, str) or not title or not isinstance(author, str) or not author or not isinstance(isbn, str) or not isbn:
+            self.send_error(400, "missing required field isbn")
+            return
+
+        book = {
+            'id': BookHandler.next_id,
+            'title': title,
+            'author': author,
+            'isbn': isbn,
+            'synopsis': ""
+        }
+        BookHandler.books.append(book)
+        BookHandler.book_by_id[BookHandler.next_id] = book
+        BookHandler.next_id += 1
+
+        self.send_response(201)
+        self.send_header('Content-Type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps(book).encode())
+
+    def is_json(self):
+        return self.headers.get('Content-Type', '').startswith('application/json')
+
+    def send_error(self, code, message=None):
+        self.send_response(code)
+        self.send_header('Content-Type', 'application/json')
+        self.end_headers()
+        if message:
+            body = json.dumps({'error': message}).encode()
+        else:
+            body = json.dumps({'error': 'Internal server error'}).encode()
+        self.wfile.write(body)
+
+def run_server():
+    port = int(os.getenv('PORT', 8000))
+    server = HTTPServer(('127.0.0.1', port), BookHandler)
+    server.serve_forever()
+
+if __name__ == '__main__':
+    run_server()

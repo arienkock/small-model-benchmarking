@@ -1,0 +1,48 @@
+{
+  "tool": "submit_findings",
+  "accepted": true,
+  "args": {
+    "findings": [
+      {
+        "priority": "high",
+        "title": "POST /books and PUT /books do not validate string types for book fields",
+        "where": "do_POST and do_PUT",
+        "detail": "The task requires 400 for 'a field of the wrong type', but the code accepts non-string types for title, author, isbn, and synopsis without erroring."
+      },
+      {
+        "priority": "high",
+        "title": "GET /books/{id}, PUT /books/{id}, and DELETE /books/{id} return 404 instead of 400 for non-integer path IDs",
+        "where": "do_GET, do_PUT, do_DELETE",
+        "detail": "The task requires 400 for 'an id in the path that is not an integer', but these endpoints return 404 (or crash) when the path ID is not an integer."
+      },
+      {
+        "priority": "medium",
+        "title": "PUT /books/{id} and DELETE /books/{id} do not wrap int() conversion in try/except",
+        "where": "do_PUT, do_DELETE",
+        "detail": "Without try/except, a non-integer path ID triggers an unhandled ValueError instead of returning 400."
+      }
+    ]
+  },
+  "value": [
+    {
+      "priority": "high",
+      "title": "POST /books and PUT /books do not validate string types for book fields",
+      "where": "do_POST and do_PUT",
+      "detail": "The task requires 400 for 'a field of the wrong type', but the code accepts non-string types for title, author, isbn, and synopsis without erroring."
+    },
+    {
+      "priority": "high",
+      "title": "GET /books/{id}, PUT /books/{id}, and DELETE /books/{id} return 404 instead of 400 for non-integer path IDs",
+      "where": "do_GET, do_PUT, do_DELETE",
+      "detail": "The task requires 400 for 'an id in the path that is not an integer', but these endpoints return 404 (or crash) when the path ID is not an integer."
+    },
+    {
+      "priority": "medium",
+      "title": "PUT /books/{id} and DELETE /books/{id} do not wrap int() conversion in try/except",
+      "where": "do_PUT, do_DELETE",
+      "detail": "Without try/except, a non-integer path ID triggers an unhandled ValueError instead of returning 400."
+    }
+  ],
+  "refusals": 0,
+  "at": "2026-09-25T10:43:27.229Z"
+}

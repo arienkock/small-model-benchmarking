@@ -1,0 +1,76 @@
+{
+  "tool": "submit_task_plan",
+  "accepted": true,
+  "args": {
+    "scenarios": [
+      {
+        "kind": "happy",
+        "title": "DELETE removes existing book and returns 204",
+        "given": "Book store has a book with id 1 in memory.",
+        "when": "DELETE /books/1",
+        "then": "Response is 204 with no body and GET /books/1 then returns 404."
+      },
+      {
+        "kind": "unhappy",
+        "title": "DELETE returns 404 for nonexistent book",
+        "given": "Book store has books but not id 999.",
+        "when": "DELETE /books/999",
+        "then": "Response is 404 with JSON {'error': '<message>'}."
+      },
+      {
+        "kind": "unhappy",
+        "title": "DELETE rejects non-integer path id",
+        "given": "Book store has books.",
+        "when": "DELETE /books/abc",
+        "then": "Response is 400 with JSON {'error': '<message>'}."
+      }
+    ],
+    "logic": [
+      "BookStore must expose a thread-safe delete(id) method that removes the book with the integer id from the in-memory store; it returns the removed book (or None) and ensures ids never reused after deletion.",
+      "DELETE request handler must first validate the path id is an integer (exactly one digit sequence; reject non-integer strings like 'abc' via ValueError catch on int() conversion) and return 400 with JSON {'error': '<message>'} if invalid.",
+      "DELETE handler must look up the book by id in the BookStore; if not found, return 404 with JSON {'error': '<message>'} (covers S10 nonexistent book case).",
+      "Once a valid, existing book id is found, the handler calls BookStore.delete(id) to remove it and then sends a 204 response with no body and no content (no JSON body, Content-Length 0).",
+      "No disk writes occur; all deletion state is in-memory only.",
+      "The handler must not accept any body on DELETE; any malformed body is still handled by the generic 400 error path."
+    ]
+  },
+  "refusals": 0,
+  "at": "2026-09-24T10:28:42.859Z",
+  "value": {
+    "scenarios": [
+      {
+        "id": "T5.S1",
+        "kind": "happy",
+        "title": "DELETE removes existing book and returns 204",
+        "given": "Book store has a book with id 1 in memory.",
+        "when": "DELETE /books/1",
+        "then": "Response is 204 with no body and GET /books/1 then returns 404."
+      },
+      {
+        "id": "T5.S2",
+        "kind": "unhappy",
+        "title": "DELETE returns 404 for nonexistent book",
+        "given": "Book store has books but not id 999.",
+        "when": "DELETE /books/999",
+        "then": "Response is 404 with JSON {'error': '<message>'}."
+      },
+      {
+        "id": "T5.S3",
+        "kind": "unhappy",
+        "title": "DELETE rejects non-integer path id",
+        "given": "Book store has books.",
+        "when": "DELETE /books/abc",
+        "then": "Response is 400 with JSON {'error': '<message>'}."
+      }
+    ],
+    "logic": [
+      "BookStore must expose a thread-safe delete(id) method that removes the book with the integer id from the in-memory store; it returns the removed book (or None) and ensures ids never reused after deletion.",
+      "DELETE request handler must first validate the path id is an integer (exactly one digit sequence; reject non-integer strings like 'abc' via ValueError catch on int() conversion) and return 400 with JSON {'error': '<message>'} if invalid.",
+      "DELETE handler must look up the book by id in the BookStore; if not found, return 404 with JSON {'error': '<message>'} (covers S10 nonexistent book case).",
+      "Once a valid, existing book id is found, the handler calls BookStore.delete(id) to remove it and then sends a 204 response with no body and no content (no JSON body, Content-Length 0).",
+      "No disk writes occur; all deletion state is in-memory only.",
+      "The handler must not accept any body on DELETE; any malformed body is still handled by the generic 400 error path."
+    ]
+  },
+  "check": null
+}

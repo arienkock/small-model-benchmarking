@@ -1,0 +1,307 @@
+{
+  "version": 1,
+  "status": "stopped",
+  "task": "Build a RESTful HTTP API for books in Python.\n\nConstraints:\n- Python 3 standard library only (for example http.server, json, urllib.parse, threading). No third-party packages.\n- Keep the data in memory; nothing is written to disk. Data may be lost when the server stops.\n- The entry point is `/workspace/app.py`. Running `python3 app.py` starts the server on the port given by the environment variable `PORT` (default 8000), listening on 127.0.0.1, and keeps serving until it is stopped.\n\nA book has these fields:\n- `id`: integer, assigned by the server (1, 2, 3, … in creation order, never reused after a delete); never supplied by the client\n- `title`: string, required, not empty\n- `author`: string, required, not empty\n- `isbn`: string, required, not empty\n- `synopsis`: string, optional; defaults to an empty string\n\nEndpoints (all request and response bodies are JSON, with `Content-Type: application/json`):\n- `POST /books` creates a book from a JSON object with title, author, isbn and optionally synopsis. Responds 201 with the created book, including its `id`.\n- `GET /books/{id}` responds 200 with the book.\n- `PUT /books/{id}` replaces the book's title, author, isbn and synopsis with the ones in the body (same rules as create). Responds 200 with the updated book.\n- `DELETE /books/{id}` removes the book. Responds 204 with no body.\n- `GET /books` responds 200 with a JSON list of all books, ordered by id. It supports searching and filtering by every field through query parameters:\n  - `id=<n>` keeps only the book with that id;\n  - `title=…`, `author=…`, `isbn=…`, `synopsis=…` keep books whose field contains the value, ignoring case;\n  - `q=…` keeps books where any of title, author, isbn or synopsis contains the value, ignoring case;\n  - several parameters together must all match. An unknown query parameter is an error.\n\nErrors respond with a JSON object `{\"error\": \"<message>\"}`:\n- 400 for a body that is not valid JSON or not a JSON object, a missing or empty required field, a field of the wrong type, an `id` in a create or update body, an id in the path that is not an integer, or an unknown query parameter;\n- 404 for a book id that does not exist, or any other path.",
+  "profile": {
+    "testCommand": "python3 -m unittest discover -s tests -v",
+    "testFiles": [
+      "tests/*.py"
+    ],
+    "testCountPattern": "^Ran (\\d+) tests?",
+    "conventions": "- Tests are Python unittest files in /workspace/tests/, named test_*.py; each test is a method named after its scenario.\n- Tests that need the HTTP server start it themselves on a free port and shut it down afterwards.",
+    "checks": [
+      {
+        "name": "Python standard library only",
+        "command": "python3 /opt/pi-small/workflow/checks/python_stdlib_only.py"
+      }
+    ]
+  },
+  "testCommand": "python3 -m unittest discover -s tests -v",
+  "preexistingCode": false,
+  "scenarios": [
+    {
+      "id": "S1",
+      "kind": "happy",
+      "title": "Create book",
+      "given": "empty database",
+      "when": "POST /books {\"title\": \"The Great Book\", \"author\": \"John Doe\", \"isbn\": \"123456789\"}",
+      "then": "201 with body {\"id\": 1, \"title\": \"The Great Book\", \"author\": \"John Doe\", \"isbn\": \"123456789\"}"
+    },
+    {
+      "id": "S2",
+      "kind": "happy",
+      "title": "Get book by id",
+      "given": "database contains book id 1",
+      "when": "GET /books/1",
+      "then": "200 with body {\"id\": 1, \"title\": \"The Great Book\", \"author\": \"John Doe\", \"isbn\": \"123456789\", \"synopsis\": \"\"}"
+    },
+    {
+      "id": "S3",
+      "kind": "happy",
+      "title": "List books with id filter",
+      "given": "database contains book id 1",
+      "when": "GET /books?id=1",
+      "then": "200 with body [{\"id\": 1, \"title\": \"The Great Book\", \"author\": \"John Doe\", \"isbn\": \"123456789\", \"synopsis\": \"\"}]"
+    },
+    {
+      "id": "S4",
+      "kind": "unhappy",
+      "title": "Invalid JSON body",
+      "given": "empty database",
+      "when": "POST /books \"not json\"",
+      "then": "400 with body {\"error\": \"invalid JSON\"}"
+    },
+    {
+      "id": "S5",
+      "kind": "unhappy",
+      "title": "Missing required title field (empty)",
+      "given": "empty database",
+      "when": "POST /books {\"title\": \"\", \"author\": \"John Doe\", \"isbn\": \"123456\"}",
+      "then": "400 with body {\"error\": \"title is empty\"}"
+    },
+    {
+      "id": "S6",
+      "kind": "unhappy",
+      "title": "DELETE non-existent book",
+      "given": "database contains book id 1",
+      "when": "DELETE /books/999",
+      "then": "404 with no body"
+    },
+    {
+      "id": "S7",
+      "kind": "happy",
+      "title": "Create_happy",
+      "given": "empty database",
+      "when": "POST /books {\"title\": \"The Great Book\", \"author\": \"John Doe\", \"isbn\": \"123456789\"}",
+      "then": "201 with body {\"id\": 1, \"title\": \"The Great Book\", \"author\": \"John Doe\", \"isbn\": \"123456789\"}"
+    },
+    {
+      "id": "S8",
+      "kind": "happy",
+      "title": "Get_happy",
+      "given": "database contains book id 1",
+      "when": "GET /books/1",
+      "then": "200 with body {\"id\": 1, \"title\": \"The Great Book\", \"author\": \"John Doe\", \"isbn\": \"123456789\", \"synopsis\": \"\"}"
+    },
+    {
+      "id": "S9",
+      "kind": "happy",
+      "title": "Filter_happy",
+      "given": "database contains book id 1",
+      "when": "GET /books?id=1",
+      "then": "200 with body [{\"id\": 1, \"title\": \"The Great Book\", \"author\": \"John Doe\", \"isbn\": \"123456789\", \"synopsis\": \"\"}]"
+    },
+    {
+      "id": "S10",
+      "kind": "unhappy",
+      "title": "Invalid_JSON",
+      "given": "empty database",
+      "when": "POST /books \"not json\"",
+      "then": "400 with body {\"error\": \"invalid JSON\"}"
+    },
+    {
+      "id": "S11",
+      "kind": "unhappy",
+      "title": "Missing_title",
+      "given": "empty database",
+      "when": "POST /books {\"title\": \"\", \"author\": \"John Doe\", \"isbn\": \"123456\"}",
+      "then": "400 with body {\"error\": \"title is empty\"}"
+    },
+    {
+      "id": "S12",
+      "kind": "unhappy",
+      "title": "Delete_nonexistent",
+      "given": "database contains book id 1",
+      "when": "DELETE /books/999",
+      "then": "404 with no body"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Create book endpoint (POST /books)",
+      "goal": "Implement POST /books that creates a new book, handling JSON validation and storing in memory.",
+      "files": [
+        "app.py"
+      ],
+      "covers": [
+        "S1",
+        "S4",
+        "S5",
+        "S10",
+        "S11",
+        "S7"
+      ],
+      "scenarios": [
+        {
+          "id": "T1.S1",
+          "kind": "happy",
+          "title": "Create book",
+          "given": "empty database",
+          "when": "POST /books {\"title\": \"The Great Book\", \"author\": \"John Doe\", \"isbn\": \"123456789\"}",
+          "then": "201 with body {\"id\": 1, \"title\": \"The Great Book\", \"author\": \"John Doe\", \"isbn\": \"123456789\"}"
+        },
+        {
+          "id": "T1.S2",
+          "kind": "unhappy",
+          "title": "Invalid JSON body",
+          "given": "empty database",
+          "when": "POST /books \"not json\"",
+          "then": "400 with body {\"error\": \"invalid JSON\"}"
+        },
+        {
+          "id": "T1.S3",
+          "kind": "unhappy",
+          "title": "Missing required title field (empty)",
+          "given": "empty database",
+          "when": "POST /books {\"title\": \"\", \"author\": \"John Doe\", \"isbn\": \"123456\"}",
+          "then": "400 with body {\"error\": \"title is empty\"}"
+        },
+        {
+          "id": "T1.S4",
+          "kind": "happy",
+          "title": "Create_happy",
+          "given": "empty database",
+          "when": "POST /books {\"title\": \"The Great Book\", \"author\": \"John Doe\", \"isbn\": \"123456789\"}",
+          "then": "201 with body {\"id\": 1, \"title\": \"The Great Book\", \"author\": \"John Doe\", \"isbn\": \"123456789\"}"
+        },
+        {
+          "id": "T1.S5",
+          "kind": "unhappy",
+          "title": "Invalid_JSON",
+          "given": "empty database",
+          "when": "POST /books \"not json\"",
+          "then": "400 with body {\"error\": \"invalid JSON\"}"
+        },
+        {
+          "id": "T1.S6",
+          "kind": "unhappy",
+          "title": "Missing_title",
+          "given": "empty database",
+          "when": "POST /books {\"title\": \"\", \"author\": \"John Doe\", \"isbn\": \"123456\"}",
+          "then": "400 with body {\"error\": \"title is empty\"}"
+        }
+      ],
+      "logic": [
+        "parse request body as JSON",
+        "if JSON parsing fails -> return 400 error 'invalid JSON'",
+        "validate required fields title, author, isbn exist and are non-empty strings",
+        "if validation fails -> return 400 with appropriate error",
+        "assign new id = next integer",
+        "create book dict with id, title, author, isbn, synopsis=''",
+        "store book in in-memory collection",
+        "return 201 response with created book JSON"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "T2",
+      "title": "Retrieve book by ID and list books with query filters (GET /books/{id}, GET /books)",
+      "goal": "Implement GET /books/{id} and GET /books with id, title, author, isbn, synopsis, q filters.",
+      "files": [
+        "app.py",
+        "tests/test_retrieve.py"
+      ],
+      "covers": [
+        "S2",
+        "S3",
+        "S8",
+        "S9"
+      ],
+      "scenarios": [
+        {
+          "id": "T2.S1",
+          "kind": "happy",
+          "title": "Get book by id",
+          "given": "database contains book id 1",
+          "when": "GET /books/1",
+          "then": "200 with body {\"id\": 1, \"title\": \"The Great Book\", \"author\": \"John Doe\", \"isbn\": \"123456789\", \"synopsis\": \"\"}"
+        },
+        {
+          "id": "T2.S2",
+          "kind": "happy",
+          "title": "List books with id filter",
+          "given": "database contains book id 1",
+          "when": "GET /books?id=1",
+          "then": "200 with body [{\"id\": 1, \"title\": \"The Great Book\", \"author\": \"John Doe\", \"isbn\": \"123456789\", \"synopsis\": \"\"}]"
+        },
+        {
+          "id": "T2.S3",
+          "kind": "happy",
+          "title": "Get_happy",
+          "given": "database contains book id 1",
+          "when": "GET /books/1",
+          "then": "200 with body {\"id\": 1, \"title\": \"The Great Book\", \"author\": \"John Doe\", \"isbn\": \"123456789\", \"synopsis\": \"\"}"
+        },
+        {
+          "id": "T2.S4",
+          "kind": "happy",
+          "title": "Filter_happy",
+          "given": "database contains book id 1",
+          "when": "GET /books?id=1",
+          "then": "200 with body [{\"id\": 1, \"title\": \"The Great Book\", \"author\": \"John Doe\", \"isbn\": \"123456789\", \"synopsis\": \"\"}]"
+        },
+        {
+          "id": "T2.S5",
+          "kind": "unhappy",
+          "title": "Unknown query parameter",
+          "given": "database empty",
+          "when": "GET /books?unknown=anything",
+          "then": "400 with body {\"error\": \"unknown query parameter 'unknown'\"}"
+        }
+      ],
+      "logic": [
+        "store_books_in_memory_list = [{'id':1,'title':'The Great Book','author':'John Doe','isbn':'123456789','synopsis':''}]  # simulate after POST S1",
+        "def get_book_by_id(request):  # request includes path id; returns 404 if id missing or not found; returns 200 with book if exists",
+        "def list_books_with_filters(request):  # request has query parameters; validates known params (id, title, author, isbn, synopsis, q); checks filter conditions; returns appropriate list sorted by id; returns 400 if unknown param or invalid value",
+        "handle_json_validation(payload)  # generic validation for title/author/isbn non-empty, fields required, proper types",
+        "return_response(status_code, body_or_error)"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "T3",
+      "title": "Delete book endpoint (DELETE /books/{id})",
+      "goal": "Implement DELETE /books/{id} that removes a book and returns 404 for non-existent.",
+      "files": [
+        "app.py"
+      ],
+      "covers": [
+        "S6",
+        "S12"
+      ],
+      "scenarios": [
+        {
+          "id": "T3.S1",
+          "kind": "unhappy",
+          "title": "Delete_nonexistent_S6",
+          "given": "database contains book id 1",
+          "when": "DELETE /books/999",
+          "then": "404 with no body"
+        },
+        {
+          "id": "T3.S2",
+          "kind": "unhappy",
+          "title": "Delete_nonexistent_S12",
+          "given": "database contains book id 1",
+          "when": "DELETE /books/999",
+          "then": "404 with no body"
+        },
+        {
+          "id": "T3.S3",
+          "kind": "happy",
+          "title": "Delete_happy",
+          "given": "database contains book id 1",
+          "when": "DELETE /books/1",
+          "then": "204 with no body"
+        }
+      ],
+      "logic": [
+        "store books in a dict keyed by id (e.g., books = {1: {...}})",
+        "DELETE handler: validate path id is integer; if conversion fails -> 400; if id not in books -> 404; otherwise delete entry and return 204 No Content"
+      ],
+      "status": "planned"
+    }
+  ],
+  "failure": "time budget ran out during implement-T1 attempt 2"
+}

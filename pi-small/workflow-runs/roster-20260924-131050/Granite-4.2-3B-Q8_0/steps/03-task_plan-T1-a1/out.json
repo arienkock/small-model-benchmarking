@@ -1,0 +1,51 @@
+{
+  "tool": "submit_task_plan",
+  "accepted": true,
+  "args": {
+    "scenarios": [
+      {
+        "kind": "happy",
+        "title": "Create book",
+        "given": "empty in-memory store",
+        "when": "POST /books with {\"title\":\"Python\",\"author\":\"Doe\",\"isbn\":\"123456\"}",
+        "then": "201 with {\"id\":1,\"title\":\"Python\",\"author\":\"Doe\",\"isbn\":\"123456\",\"synopsis\":\"\"}"
+      },
+      {
+        "kind": "unhappy",
+        "title": "Missing isbn",
+        "given": "empty in-memory store",
+        "when": "POST /books with {\"title\":\"Test\",\"author\":\"Author\"}",
+        "then": "400 with {\"error\":\"missing required field isbn\"}"
+      }
+    ],
+    "logic": [
+      "store = {}; next_id = 1; on POST validate required fields, assign id, store book"
+    ]
+  },
+  "refusals": 2,
+  "at": "2026-09-24T15:06:51.362Z",
+  "value": {
+    "scenarios": [
+      {
+        "id": "T1.S1",
+        "kind": "happy",
+        "title": "Create book",
+        "given": "empty in-memory store",
+        "when": "POST /books with {\"title\":\"Python\",\"author\":\"Doe\",\"isbn\":\"123456\"}",
+        "then": "201 with {\"id\":1,\"title\":\"Python\",\"author\":\"Doe\",\"isbn\":\"123456\",\"synopsis\":\"\"}"
+      },
+      {
+        "id": "T1.S2",
+        "kind": "unhappy",
+        "title": "Missing isbn",
+        "given": "empty in-memory store",
+        "when": "POST /books with {\"title\":\"Test\",\"author\":\"Author\"}",
+        "then": "400 with {\"error\":\"missing required field isbn\"}"
+      }
+    ],
+    "logic": [
+      "store = {}; next_id = 1; on POST validate required fields, assign id, store book"
+    ]
+  },
+  "check": null
+}

@@ -1,0 +1,38 @@
+{
+  "tool": "submit_findings",
+  "accepted": true,
+  "args": {
+    "findings": [
+      {
+        "priority": "high",
+        "title": "Incorrect handling of 'q' query parameter",
+        "where": "GET /books handler",
+        "detail": "The 'q' parameter is treated as a filter on the same field name 'q', causing KeyError. It should perform case‑insensitive substring matching on any of title, author, isbn, or synopsis, and all applied filters must still be conjunctions.",
+        "detail2": ""
+      },
+      {
+        "priority": "medium",
+        "title": "Id reuse after deletion",
+        "where": "Book assignment logic",
+        "detail": "The server increments next_id on each create, so if a book is later deleted and another is created, the same id may be reused. The requirement is that ids are never reused after a delete.",
+        "detail2": ""
+      }
+    ]
+  },
+  "value": [
+    {
+      "priority": "high",
+      "title": "Incorrect handling of 'q' query parameter",
+      "where": "GET /books handler",
+      "detail": "The 'q' parameter is treated as a filter on the same field name 'q', causing KeyError. It should perform case‑insensitive substring matching on any of title, author, isbn, or synopsis, and all applied filters must still be conjunctions."
+    },
+    {
+      "priority": "medium",
+      "title": "Id reuse after deletion",
+      "where": "Book assignment logic",
+      "detail": "The server increments next_id on each create, so if a book is later deleted and another is created, the same id may be reused. The requirement is that ids are never reused after a delete."
+    }
+  ],
+  "refusals": 0,
+  "at": "2026-09-25T06:23:27.740Z"
+}

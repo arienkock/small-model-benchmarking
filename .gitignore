@@ -11,7 +11,12 @@ LICENSE-LLVM-OpenMP
 **/node_modules/
 **/__pycache__/
 *.pyc
-**/.pi/
+# pi's config dirs (auth.json, settings.json, models-store.json) -- but a workflow
+# run's pi session transcripts are kept: they are the record of the run
+**/.pi/*
+!pi-small/workflow-runs/**/.pi/agent/
+pi-small/workflow-runs/**/.pi/agent/*
+!pi-small/workflow-runs/**/.pi/agent/sessions/
 **/stderr.log
 **/server_stderr.log
 **/server-*.log
@@ -41,5 +46,3 @@ pi-small/eval/supervisor/out/probe-jobs-*/
 pi-small/eval/supervisor/out/probe-results/
 pi-small/eval/supervisor/out/*.log
 
-# workflow run directories (pi-small/workflow)
-pi-small/workflow-runs/

@@ -1,0 +1,119 @@
+{
+  "tool": "submit_task_plan",
+  "accepted": true,
+  "args": {
+    "scenarios": [
+      {
+        "kind": "happy",
+        "title": "get_book",
+        "given": "empty DB with book id 1",
+        "when": "GET /books/1",
+        "then": "200 with book JSON"
+      },
+      {
+        "kind": "happy",
+        "title": "update_book",
+        "given": "book id 1 exists",
+        "when": "PUT /books/1 with title, author, isbn, synopsis",
+        "then": "200 with updated book JSON"
+      },
+      {
+        "kind": "happy",
+        "title": "get_book1",
+        "given": "book id 1 exists",
+        "when": "GET /books/1",
+        "then": "200 with book JSON"
+      },
+      {
+        "kind": "happy",
+        "title": "update_book1",
+        "given": "book id 1 exists",
+        "when": "PUT /books/1 with title, author, isbn, synopsis",
+        "then": "200 with updated book JSON"
+      },
+      {
+        "kind": "unhappy",
+        "title": "missing_field",
+        "given": "empty DB",
+        "when": "POST /books with title, author, isbn missing",
+        "then": "400 with error about missing field"
+      },
+      {
+        "kind": "unhappy",
+        "title": "invalid_json_body",
+        "given": "empty DB",
+        "when": "POST /books with invalid JSON",
+        "then": "400 with error about invalid JSON"
+      }
+    ],
+    "logic": [
+      "use list of dicts as in-memory storage",
+      "assign auto id on create",
+      "validate required fields and types",
+      "normalize query params, reject unknown",
+      "return book dict with id,title,author,isbn,synopsis"
+    ]
+  },
+  "refusals": 0,
+  "at": "2026-09-24T17:39:51.851Z",
+  "value": {
+    "scenarios": [
+      {
+        "id": "T2.S1",
+        "kind": "happy",
+        "title": "get_book",
+        "given": "empty DB with book id 1",
+        "when": "GET /books/1",
+        "then": "200 with book JSON"
+      },
+      {
+        "id": "T2.S2",
+        "kind": "happy",
+        "title": "update_book",
+        "given": "book id 1 exists",
+        "when": "PUT /books/1 with title, author, isbn, synopsis",
+        "then": "200 with updated book JSON"
+      },
+      {
+        "id": "T2.S3",
+        "kind": "happy",
+        "title": "get_book1",
+        "given": "book id 1 exists",
+        "when": "GET /books/1",
+        "then": "200 with book JSON"
+      },
+      {
+        "id": "T2.S4",
+        "kind": "happy",
+        "title": "update_book1",
+        "given": "book id 1 exists",
+        "when": "PUT /books/1 with title, author, isbn, synopsis",
+        "then": "200 with updated book JSON"
+      },
+      {
+        "id": "T2.S5",
+        "kind": "unhappy",
+        "title": "missing_field",
+        "given": "empty DB",
+        "when": "POST /books with title, author, isbn missing",
+        "then": "400 with error about missing field"
+      },
+      {
+        "id": "T2.S6",
+        "kind": "unhappy",
+        "title": "invalid_json_body",
+        "given": "empty DB",
+        "when": "POST /books with invalid JSON",
+        "then": "400 with error about invalid JSON"
+      }
+    ],
+    "logic": [
+      "use list of dicts as in-memory storage",
+      "assign auto id on create",
+      "validate required fields and types",
+      "normalize query params, reject unknown",
+      "return book dict with id,title,author,isbn,synopsis"
+    ]
+  },
+  "check": null
+}

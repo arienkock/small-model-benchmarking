@@ -1,0 +1,91 @@
+{
+  "tool": "submit_task_plan",
+  "accepted": true,
+  "args": {
+    "scenarios": [
+      {
+        "kind": "happy",
+        "title": "Create book",
+        "given": "No books in store",
+        "when": "POST /books with {'title': 'Dune', 'author': 'Sparaway', 'isbn': '1234567890'}",
+        "then": "201 with {'id': 1, 'title': 'Dune', 'author': 'Sparaway', 'isbn': '1234567890', 'synopsis': ''}"
+      },
+      {
+        "kind": "unhappy",
+        "title": "Invalid JSON body",
+        "given": "Server running",
+        "when": "POST /books with body 'not json'",
+        "then": "400 with {'error': 'Invalid JSON'}"
+      },
+      {
+        "kind": "unhappy",
+        "title": "Missing required field",
+        "given": "Server running",
+        "when": "POST /books with JSON {'author': 'Test', 'isbn': '000'}",
+        "then": "400 with {'error': 'title is required'}"
+      },
+      {
+        "kind": "unhappy",
+        "title": "Wrong type",
+        "given": "Server running",
+        "when": "POST /books with JSON {'title': 123, 'author': 'Test', 'isbn': '000'}",
+        "then": "400 with {'error': 'title must be a string'}"
+      }
+    ],
+    "logic": [
+      "In-memory list of book dicts; each dict has keys id, title, author, isbn, synopsis.",
+      "Function parse_and_validate_body(body) returns dict or raises ValidationError.",
+      "Function create_book(body) assigns id by len(books)+1, populates fields, sets synopsis default ''.",
+      "Endpoint POST /books calls parse_and_validate_body, creates book, returns 201.",
+      "Validation checks: body is dict, title/author/isbn are non-empty strings, types correct.",
+      "Unknown query params and unknown path segments raise 400/404 respectively."
+    ]
+  },
+  "refusals": 0,
+  "at": "2026-09-24T13:11:06.240Z",
+  "value": {
+    "scenarios": [
+      {
+        "id": "T1.S1",
+        "kind": "happy",
+        "title": "Create book",
+        "given": "No books in store",
+        "when": "POST /books with {'title': 'Dune', 'author': 'Sparaway', 'isbn': '1234567890'}",
+        "then": "201 with {'id': 1, 'title': 'Dune', 'author': 'Sparaway', 'isbn': '1234567890', 'synopsis': ''}"
+      },
+      {
+        "id": "T1.S2",
+        "kind": "unhappy",
+        "title": "Invalid JSON body",
+        "given": "Server running",
+        "when": "POST /books with body 'not json'",
+        "then": "400 with {'error': 'Invalid JSON'}"
+      },
+      {
+        "id": "T1.S3",
+        "kind": "unhappy",
+        "title": "Missing required field",
+        "given": "Server running",
+        "when": "POST /books with JSON {'author': 'Test', 'isbn': '000'}",
+        "then": "400 with {'error': 'title is required'}"
+      },
+      {
+        "id": "T1.S4",
+        "kind": "unhappy",
+        "title": "Wrong type",
+        "given": "Server running",
+        "when": "POST /books with JSON {'title': 123, 'author': 'Test', 'isbn': '000'}",
+        "then": "400 with {'error': 'title must be a string'}"
+      }
+    ],
+    "logic": [
+      "In-memory list of book dicts; each dict has keys id, title, author, isbn, synopsis.",
+      "Function parse_and_validate_body(body) returns dict or raises ValidationError.",
+      "Function create_book(body) assigns id by len(books)+1, populates fields, sets synopsis default ''.",
+      "Endpoint POST /books calls parse_and_validate_body, creates book, returns 201.",
+      "Validation checks: body is dict, title/author/isbn are non-empty strings, types correct.",
+      "Unknown query params and unknown path segments raise 400/404 respectively."
+    ]
+  },
+  "check": null
+}

@@ -1,0 +1,86 @@
+[
+  {
+    "kind": "happy",
+    "title": "Create book",
+    "given": "empty database",
+    "when": "POST /books {\"title\": \"The Great Book\", \"author\": \"John Doe\", \"isbn\": \"123456789\"}",
+    "then": "201 with body {\"id\": 1, \"title\": \"The Great Book\", \"author\": \"John Doe\", \"isbn\": \"123456789\"}"
+  },
+  {
+    "kind": "happy",
+    "title": "Get book by id",
+    "given": "database contains book id 1",
+    "when": "GET /books/1",
+    "then": "200 with body {\"id\": 1, \"title\": \"The Great Book\", \"author\": \"John Doe\", \"isbn\": \"123456789\", \"synopsis\": \"\"}"
+  },
+  {
+    "kind": "happy",
+    "title": "List books with id filter",
+    "given": "database contains book id 1",
+    "when": "GET /books?id=1",
+    "then": "200 with body [{\"id\": 1, \"title\": \"The Great Book\", \"author\": \"John Doe\", \"isbn\": \"123456789\", \"synopsis\": \"\"}]"
+  },
+  {
+    "kind": "unhappy",
+    "title": "Invalid JSON body",
+    "given": "empty database",
+    "when": "POST /books \"not json\"",
+    "then": "400 with body {\"error\": \"invalid JSON\"}"
+  },
+  {
+    "kind": "unhappy",
+    "title": "Missing required title field (empty)",
+    "given": "empty database",
+    "when": "POST /books {\"title\": \"\", \"author\": \"John Doe\", \"isbn\": \"123456\"}",
+    "then": "400 with body {\"error\": \"title is empty\"}"
+  },
+  {
+    "kind": "unhappy",
+    "title": "DELETE non-existent book",
+    "given": "database contains book id 1",
+    "when": "DELETE /books/999",
+    "then": "404 with no body"
+  },
+  {
+    "kind": "happy",
+    "title": "Create_happy",
+    "given": "empty database",
+    "when": "POST /books {\"title\": \"The Great Book\", \"author\": \"John Doe\", \"isbn\": \"123456789\"}",
+    "then": "201 with body {\"id\": 1, \"title\": \"The Great Book\", \"author\": \"John Doe\", \"isbn\": \"123456789\"}"
+  },
+  {
+    "kind": "happy",
+    "title": "Get_happy",
+    "given": "database contains book id 1",
+    "when": "GET /books/1",
+    "then": "200 with body {\"id\": 1, \"title\": \"The Great Book\", \"author\": \"John Doe\", \"isbn\": \"123456789\", \"synopsis\": \"\"}"
+  },
+  {
+    "kind": "happy",
+    "title": "Filter_happy",
+    "given": "database contains book id 1",
+    "when": "GET /books?id=1",
+    "then": "200 with body [{\"id\": 1, \"title\": \"The Great Book\", \"author\": \"John Doe\", \"isbn\": \"123456789\", \"synopsis\": \"\"}]"
+  },
+  {
+    "kind": "unhappy",
+    "title": "Invalid_JSON",
+    "given": "empty database",
+    "when": "POST /books \"not json\"",
+    "then": "400 with body {\"error\": \"invalid JSON\"}"
+  },
+  {
+    "kind": "unhappy",
+    "title": "Missing_title",
+    "given": "empty database",
+    "when": "POST /books {\"title\": \"\", \"author\": \"John Doe\", \"isbn\": \"123456\"}",
+    "then": "400 with body {\"error\": \"title is empty\"}"
+  },
+  {
+    "kind": "unhappy",
+    "title": "Delete_nonexistent",
+    "given": "database contains book id 1",
+    "when": "DELETE /books/999",
+    "then": "404 with no body"
+  }
+]

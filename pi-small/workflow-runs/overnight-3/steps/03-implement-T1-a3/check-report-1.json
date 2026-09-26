@@ -1,0 +1,49 @@
+{
+  "ok": false,
+  "problems": [
+    "the test suite failed (`python3 -m unittest discover -s tests -v` exited 1)."
+  ],
+  "checks": [
+    {
+      "name": "Python standard library only",
+      "ok": true,
+      "tail": "only standard-library and local imports"
+    }
+  ],
+  "tests": {
+    "rc": 1,
+    "timedOut": false,
+    "count": 7,
+    "tail": "S4: Unhappy - missing required field (empty isbn)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tests/test_app.py\", line 93, in test_missing_required_field\n    status, body = self.make_request('POST', '/books',\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: TestBookAPI.make_request() got an unexpected keyword argument 'json'\n\n======================================================================\nERROR: test_update_book (test_app.TestBookAPI.test_update_book)\nS3: Happy - update a book\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tests/test_app.py\", line 75, in test_update_book\n    status, body = self.make_request('POST', '/books',\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: TestBookAPI.make_request() got an unexpected keyword argument 'json'\n\n======================================================================\nFAIL: test_id_not_integer (test_app.TestBookAPI.test_id_not_integer)\nS7: Unhappy - non-integer book id in path\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tests/test_app.py\", line 116, in test_id_not_integer\n    self.assertEqual(status, 404)\nAssertionError: None != 404\n\n======================================================================\nFAIL: test_unknown_query_param (test_app.TestBookAPI.test_unknown_query_param)\nS6: Unhappy - unknown query parameter\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tests/test_app.py\", line 110, in test_unknown_query_param\n    self.assertEqual(status, 400)\nAssertionError: None != 400\n\n----------------------------------------------------------------------\nRan 7 tests in 0.549s\n\nFAILED (failures=2, errors=5)",
+    "failures": [
+      {
+        "test": "test_create_book",
+        "error": "S1: Happy - create a book"
+      },
+      {
+        "test": "test_get_book",
+        "error": "S2: Happy - get a book by id"
+      },
+      {
+        "test": "test_invalid_json_body",
+        "error": "S5: Unhappy - invalid JSON body"
+      },
+      {
+        "test": "test_missing_required_field",
+        "error": "S4: Unhappy - missing required field (empty isbn)"
+      },
+      {
+        "test": "test_update_book",
+        "error": "S3: Happy - update a book"
+      },
+      {
+        "test": "test_id_not_integer",
+        "error": "S7: Unhappy - non-integer book id in path"
+      },
+      {
+        "test": "test_unknown_query_param",
+        "error": "S6: Unhappy - unknown query parameter"
+      }
+    ]
+  }
+}

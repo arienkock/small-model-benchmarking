@@ -1,0 +1,181 @@
+{
+  "version": 1,
+  "status": "running",
+  "task": "Build a RESTful HTTP API for books in Python.\n\nConstraints:\n- Python 3 standard library only (for example http.server, json, urllib.parse, threading). No third-party packages.\n- Keep the data in memory; nothing is written to disk. Data may be lost when the server stops.\n- The entry point is `/workspace/app.py`. Running `python3 app.py` starts the server on the port given by the environment variable `PORT` (default 8000), listening on 127.0.0.1, and keeps serving until it is stopped.\n\nA book has these fields:\n- `id`: integer, assigned by the server (1, 2, 3, … in creation order, never reused after a delete); never supplied by the client\n- `title`: string, required, not empty\n- `author`: string, required, not empty\n- `isbn`: string, required, not empty\n- `synopsis`: string, optional; defaults to an empty string\n\nEndpoints (all request and response bodies are JSON, with `Content-Type: application/json`):\n- `POST /books` creates a book from a JSON object with title, author, isbn and optionally synopsis. Responds 201 with the created book, including its `id`.\n- `GET /books/{id}` responds 200 with the book.\n- `PUT /books/{id}` replaces the book's title, author, isbn and synopsis with the ones in the body (same rules as create). Responds 200 with the updated book.\n- `DELETE /books/{id}` removes the book. Responds 204 with no body.\n- `GET /books` responds 200 with a JSON list of all books, ordered by id. It supports searching and filtering by every field through query parameters:\n  - `id=<n>` keeps only the book with that id;\n  - `title=…`, `author=…`, `isbn=…`, `synopsis=…` keep books whose field contains the value, ignoring case;\n  - `q=…` keeps books where any of title, author, isbn or synopsis contains the value, ignoring case;\n  - several parameters together must all match. An unknown query parameter is an error.\n\nErrors respond with a JSON object `{\"error\": \"<message>\"}`:\n- 400 for a body that is not valid JSON or not a JSON object, a missing or empty required field, a field of the wrong type, an `id` in a create or update body, an id in the path that is not an integer, or an unknown query parameter;\n- 404 for a book id that does not exist, or any other path.",
+  "profile": {
+    "testCommand": "python3 -m unittest discover -s tests -v",
+    "testFiles": [
+      "tests/*.py"
+    ],
+    "testCountPattern": "^Ran (\\d+) tests?",
+    "failurePattern": "^(?:FAIL|ERROR): (\\S+)",
+    "conventions": "- Tests are Python unittest files in /workspace/tests/, named test_*.py.\n- Tests that need the HTTP server start it themselves on a free port and shut it down afterwards.",
+    "checks": [
+      {
+        "name": "Python standard library only",
+        "command": "python3 /opt/pi-small/workflow/checks/python_stdlib_only.py"
+      }
+    ]
+  },
+  "testCommand": "python3 -m unittest discover -s tests -v",
+  "preexistingCode": false,
+  "scenarios": [
+    {
+      "id": "S1",
+      "kind": "happy",
+      "title": "create_book",
+      "given": "empty in-memory store",
+      "when": "POST /books with JSON {\"title\": \"1984\", \"author\": \"Orwell\", \"isbn\": \"123456\"}",
+      "then": "201 with {\"id\": 1, \"title\": \"1984\", \"author\": \"Orwell\", \"isbn\": \"123456\", \"synopsis\": \"\"}"
+    },
+    {
+      "id": "S2",
+      "kind": "happy",
+      "title": "get_book",
+      "given": "book id 1 exists",
+      "when": "GET /books/1",
+      "then": "200 with the book object"
+    },
+    {
+      "id": "S3",
+      "kind": "happy",
+      "title": "update_book",
+      "given": "book id 1 exists",
+      "when": "PUT /books/1 with JSON {\"title\": \"Nineteen Eighty-Four\", \"author\": \"George Orwell\", \"isbn\": \"123456\", \"synopsis\": \"A dystopian novel\"}",
+      "then": "200 with updated book"
+    },
+    {
+      "id": "S4",
+      "kind": "unhappy",
+      "title": "missing_required_field",
+      "given": "POST /books with JSON {\"title\": \"Test\", \"author\": \"Author\", \"isbn\": \"\"}",
+      "when": "send request",
+      "then": "400 with error \"isbn\" is empty"
+    },
+    {
+      "id": "S5",
+      "kind": "unhappy",
+      "title": "invalid_json_body",
+      "given": "POST /books with non-JSON body",
+      "when": "send request with raw text",
+      "then": "400 with error \"error\" (invalid JSON)"
+    },
+    {
+      "id": "S6",
+      "kind": "unhappy",
+      "title": "unknown_query_param",
+      "given": "GET /books with query ?id=1&unknown=foo",
+      "when": "make request",
+      "then": "400 with error \"unknown query parameter\""
+    },
+    {
+      "id": "S7",
+      "kind": "unhappy",
+      "title": "id_not_integer",
+      "given": "GET /books/abc",
+      "when": "request",
+      "then": "404"
+    },
+    {
+      "id": "S8",
+      "kind": "happy",
+      "title": "delete_book",
+      "given": "book id 1 exists",
+      "when": "DELETE /books/1",
+      "then": "204 with no body"
+    },
+    {
+      "id": "S9",
+      "kind": "happy",
+      "title": "search_by_title",
+      "given": "books exist with id 1 title \"1984\"",
+      "when": "GET /books?title=1984",
+      "then": "200 with list containing book id 1"
+    },
+    {
+      "id": "S10",
+      "kind": "unhappy",
+      "title": "duplicate_id_in_create",
+      "given": "book id 1 already exists",
+      "when": "POST /books with same fields as book 1",
+      "then": "400 with error \"id\" already used?"
+    },
+    {
+      "id": "S11",
+      "kind": "unhappy",
+      "title": "empty_query_param",
+      "given": "GET /books?foo=",
+      "when": "make request",
+      "then": "400 with error \"unknown query parameter\""
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Create basic server and routing",
+      "goal": "Server starts and handles simple routes; basic request/response structure",
+      "files": [
+        "app.py"
+      ],
+      "covers": [
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5",
+        "S6",
+        "S7"
+      ],
+      "scenarios": [
+        {
+          "id": "T1.S1",
+          "kind": "happy",
+          "title": "create_book",
+          "given": "empty in-memory store",
+          "when": "POST /books with JSON {\"title\": \"1984\", \"author\": \"Orwell\", \"isbn\": \"123456\"}",
+          "then": "201 with {\"id\": 1, \"title\": \"1984\", \"author\": \"Orwell\", \"isbn\": \"123456\", \"synopsis\": \"\"}"
+        },
+        {
+          "id": "T1.S2",
+          "kind": "happy",
+          "title": "get_book",
+          "given": "book id 1 exists",
+          "when": "GET /books/1",
+          "then": "200 with the book object"
+        },
+        {
+          "id": "T1.S3",
+          "kind": "happy",
+          "title": "update_book",
+          "given": "book id 1 exists",
+          "when": "PUT /books/1 with JSON {\"title\": \"Nineteen Eighty-Four\", \"author\": \"George Orwell\", \"isbn\": \"123456\", \"synopsis\": \"A dystopian novel\"}",
+          "then": "200 with updated book"
+        },
+        {
+          "id": "T1.S4",
+          "kind": "unhappy",
+          "title": "missing_required_field",
+          "given": "POST /books with JSON {\"title\": \"Test\", \"author\": \"Author\", \"isbn\": \"\"}",
+          "when": "send request",
+          "then": "400 with error \"isbn\" is empty"
+        },
+        {
+          "id": "T1.S5",
+          "kind": "unhappy",
+          "title": "invalid_json_body",
+          "given": "POST /books with non-JSON body",
+          "when": "send request with raw text",
+          "then": "400 with error \"error\" (invalid JSON)"
+        }
+      ],
+      "logic": [
+        "use http.server or simple http.server module to start basic HTTP server on given PORT; parse request line and JSON; handle POST /books, GET /books/{id} simple routes; store books in list dict with id auto-increment; validate minimal required fields for create; return appropriate status codes and JSON responses"
+      ],
+      "status": "planned"
+    }
+  ],
+  "retry": {
+    "step": "implement-T1",
+    "feedback": "The harness checks did NOT pass:\n- the test suite failed (`python3 -m unittest discover -s tests -v` exited 1).\n- 7 tests ran, but there are 12 scenarios so far: write a test for each one.\n\nFailing tests:\n- test_T1_S1_create_book, test_T1_S2_get_book and 5 more: urllib.error.URLError: <urlopen error [Errno 111] Connection refused>\n\nThe files from that attempt are still in /workspace; continue from them or replace them."
+  }
+}

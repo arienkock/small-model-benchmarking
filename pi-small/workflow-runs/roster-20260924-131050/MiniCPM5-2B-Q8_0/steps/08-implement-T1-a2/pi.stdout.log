@@ -1,0 +1,156 @@
+Looking at this, I realize the scenario S8 expects `id=5` on `GET /books` to be an error. But the spec says `id=<n>` is a valid filter. This is contradictory.
+
+Let me reconsider. Maybe I'm overthinking. Let me look at the actual test structure and just implement what the spec says, and let the test for S8 (in T3) handle it. But T1's test files are test_s1.py, test_s5.py, test_s6.py, test_s7.py — none of them test S8. So I just need S1, S5, S6, S7 to pass.
+
+But wait, the test for S1 also needs to work. Let me think about how the tests are structured.
+
+For S1 (happy create): POST /books with {'title': 'Dune', 'author': 'Sparaway', 'isbn': '1234567890'} → 201 with {'id': 1, 'title': 'Dune', 'author': 'Sparaway', 'isbn': '1234567890', 'synopsis': ''}
+
+For S5: POST /books with body 'not json' → 400 {'error': 'Invalid JSON'}
+
+For S6: POST /books with JSON {'author': 'Test', 'isbn': '000'} → 400 {'error': 'title is required'}
+
+For S7: POST /books with JSON {'title': 123, 'author': 'Test', 'isbn': '000'} → 400 {'error': 'title must be a string'}
+
+Now, the test files need to start the server. Since T1 needs to start the server, the tests must start the server on a free port.
+
+Let me think about the architecture. The server is in app.py. The tests start the server, make HTTP requests, and shut it down.
+
+For each test, I need to:
+1. Start the server on a free port
+2. Make the HTTP request
+3. Assert the response
+4. Shutdown the server
+
+Since running server and testing in the same process is tricky, I'll use threading.
+
+Let me think about how to structure this.
+
+Actually, let me first check what files exist currently in /workspace.
+
+Let me look at the current state of the workspace.
+
+Let me also reconsider the contradiction with S8. Actually, I think I need to re-examine. The scenario S8 says "Unknown query param — Given GET /books; when GET /books?id=5". Maybe the intent is that `id` is NOT a valid query param, and only title, author, isbn, synopsis, q are. But the spec says id is valid...
+
+Hmm, actually, wait. Let me reconsider. Maybe the test for S8 is wrong/misleading, and the real behavior should be: id=5 is a valid filter (matches no books, returns empty list, 200). But the scenario says 400.
+
+Actually, you know what? Let me just implement according to the spec, and the S8 scenario might fail in T3. But actually, the harness checks might run all tests including T3's later. But for now, I should focus on T1.
+
+Actually, let me reconsider. The harness says "It runs the whole test suite from /workspace with: python3 -m unittest discover -s tests -v". So ALL tests in tests/ are run. But T1 is being done, and T2, T3, T4 are future. Wait, but the task says "Earlier tasks are already done and verified; keep their tests passing." So T2, T3, T4 have already been implemented with tests. But they're not relevant to T1.
+
+Hmm, but actually, the test files for T1 are test_s1.py, test_s5.py, test_s6.py, test_s7.py. These are separate test files. The whole test suite runs all of them.
+
+Wait, but if T2, T3, T4 are already done, they have test_s2.py, test_s3.py, etc. But S2 is in T2 (happy retrieve), S3 is in T3 (update), S9 is in T2 (non-existent). And S4 is in T3 (list by query).
+
+Actually, the scenario IDs might overlap with task IDs. Let me check:
+- S1: happy create → T1
+- S2: happy retrieve → T2
+- S3: happy update → T2 (per implementation plan) — wait, the plan says T3? Let me re-read.
+
+Implementation plan:
+- T1: POST /books — S1, S5, S6, S7
+- T2: Get and update by id — S2, S3, S9
+- T3: List with query filtering — S4, S8
+- T4: Delete book — none
+
+So:
+- test_s1.py: T1.S1 (happy create)
+- test_s2.py: T2.S2 (happy retrieve) — but wait, this file is for T2, not T1. But the test scenario is S2 which is "happy retrieve book".
+
+Hmm wait, but the scenario names in test files: the task says "named test_*.py; each test is a method named after its scenario." and "Put the scenario id in the test's name, e.g. test_S1_<what>".
+
+So test_s1.py should have a test named test_T1_S1_happy_create (or similar).
+
+OK here's my plan:
+1. Check current state of /workspace
+2. Create app.py with the POST /books implementation
+3. Create tests directory and test files
+
+Let me first look at what's there.
+
+Let me think about the validation logic more carefully.
+
+parse_and_validate_body(body):
+- body must be a dict (JSON object)
+- title: required, non-empty string
+- author: required, non-empty string
+- isbn: required, non-empty string
+- synopsis: optional, can be empty string or omitted
+- No 'id' key allowed
+
+create_book(body):
+- id = len(books) + 1
+- create dict with id, title, author, isbn, synopsis (default '')
+- append to books
+
+Now for the error handling:
+- Invalid JSON → 400 {'error': 'Invalid JSON'} (parse fails)
+- Not a JSON object → 400 (body is not a dict)
+- Missing required field → 400 {'error': 'title is required'} etc.
+- Wrong type → 400 {'error': 'title must be a string'} etc.
+- id in body → 400
+- id in path not integer → 400
+- unknown query param → 400
+- book id not exist → 404
+- other path → 404
+
+Wait, for S5, the body is 'not json'. So when we try to parse JSON, it fails. We need to catch JSONDecodeError and return 400.
+
+For S6, body {'author': 'Test', 'isbn': '000'}. Missing 'title'. So validation fails, return 400 {'error': 'title is required'}.
+
+For S7, body {'title': 123, 'author': 'Test', 'isbn': '000'}. title is not a string. Return 400 {'error': 'title must be a string'}.
+
+Now let me think about the structure of app.py.
+
+I'll use http.server.BaseHTTPRequestHandler and ThreadingHTTPServer.
+
+Let me think about how to make the tests start the server. I'll write a helper that starts the server in a thread, waits for it to be ready, then shuts it down after each test.
+
+Actually, a simpler approach: since each test needs its own server instance, I'll have each test start its own server on a free port.
+
+Let me design app.py:
+
+```python
+import json
+import os
+import threading
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+books = []
+
+PORT = os.environ.get('PORT', '8000')
+HOST = '127.0.0.1'
+
+def parse_and_validate_body(body):
+    if not isinstance(body, dict):
+        raise ValidationError("must be a JSON object")
+    # check required fields
+    # title
+    if 'title' not in body or body['title'] == '':
+        raise ValidationError("title is required")
+    # etc.
+```
+
+Actually, let me use a ValidationError exception class.
+
+Let me think about the response format. For errors, return 400 with JSON body {"error": "message"}. For 201, return {"id": ..., "title": ..., "author": ..., "isbn": ..., "synopsis": ...} with Content-Type application/json.
+
+For 204, return empty body with Content-Type application/json (or whatever).
+
+Let me write the code.
+
+Actually, let me think about the threading and server start. The tests will import app, then start the server, make requests, shutdown.
+
+Let me write a function `run_server(port)` that starts the server in a thread and returns the server object.
+
+Actually, for simplicity, let me have each test do:
+1. Start server on a random port in a thread
+2. Wait until server is ready
+3. Make request
+4. Shutdown
+
+Let me write a helper to get a free port.
+
+Actually, let me keep it simple and just use a port from the environment or increment.
+
+

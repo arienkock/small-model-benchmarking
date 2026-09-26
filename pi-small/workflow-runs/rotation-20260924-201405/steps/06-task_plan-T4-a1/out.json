@@ -1,0 +1,66 @@
+{
+  "tool": "submit_task_plan",
+  "accepted": true,
+  "args": {
+    "scenarios": [
+      {
+        "kind": "happy",
+        "title": "create_book",
+        "given": "empty store",
+        "when": "POST /books with JSON {\"title\": \"1984\", \"author\": \"Orwell\", \"isbn\": \"123456\"}",
+        "then": "201 with {\"id\": 1, \"title\": \"1984\", \"author\": \"Orwell\", \"isbn\": \"123456\", \"synopsis\": \"\"}"
+      },
+      {
+        "kind": "unhappy",
+        "title": "missing_required_field",
+        "given": "book id 1 exists",
+        "when": "POST /books with JSON {\"title\": \"Test\", \"author\": \"Author\", \"isbn\": \"\"}",
+        "then": "400 with error \"isbn\" is empty"
+      },
+      {
+        "kind": "unhappy",
+        "title": "invalid_json_body",
+        "given": "empty store",
+        "when": "POST /books with non-JSON body",
+        "then": "400 with error containing \"error\""
+      }
+    ],
+    "logic": [
+      "parse JSON body; if parsing fails -> 400 error; validate required fields non-empty and types; check for duplicate id; if any validation fails -> 400 with specific error; otherwise create book with auto id; handle normal CRUD; validate query params; reject unknown params -> 400 unknown query parameter; reject non-integer path id -> 404"
+    ]
+  },
+  "refusals": 1,
+  "at": "2026-09-24T18:20:25.665Z",
+  "value": {
+    "scenarios": [
+      {
+        "id": "T4.S1",
+        "kind": "happy",
+        "title": "create_book",
+        "given": "empty store",
+        "when": "POST /books with JSON {\"title\": \"1984\", \"author\": \"Orwell\", \"isbn\": \"123456\"}",
+        "then": "201 with {\"id\": 1, \"title\": \"1984\", \"author\": \"Orwell\", \"isbn\": \"123456\", \"synopsis\": \"\"}"
+      },
+      {
+        "id": "T4.S2",
+        "kind": "unhappy",
+        "title": "missing_required_field",
+        "given": "book id 1 exists",
+        "when": "POST /books with JSON {\"title\": \"Test\", \"author\": \"Author\", \"isbn\": \"\"}",
+        "then": "400 with error \"isbn\" is empty"
+      },
+      {
+        "id": "T4.S3",
+        "kind": "unhappy",
+        "title": "invalid_json_body",
+        "given": "empty store",
+        "when": "POST /books with non-JSON body",
+        "then": "400 with error containing \"error\""
+      }
+    ],
+    "logic": [
+      "parse JSON body; if parsing fails -> 400 error; validate required fields non-empty and types; check for duplicate id; if any validation fails -> 400 with specific error; otherwise create book with auto id; handle normal CRUD; validate query params; reject unknown params -> 400 unknown query parameter; reject non-integer path id -> 404"
+    ]
+  },
+  "check": null
+}

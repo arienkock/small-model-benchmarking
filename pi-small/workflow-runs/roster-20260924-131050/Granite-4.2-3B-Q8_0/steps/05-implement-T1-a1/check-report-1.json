@@ -1,0 +1,20 @@
+{
+  "ok": false,
+  "problems": [
+    "the test suite failed (`python3 -m unittest discover -s tests -v` exited 1)."
+  ],
+  "missingTokens": [],
+  "checks": [
+    {
+      "name": "Python standard library only",
+      "ok": true,
+      "tail": "only standard-library and local imports"
+    }
+  ],
+  "tests": {
+    "rc": 1,
+    "timedOut": false,
+    "count": 2,
+    "tail": "test_T1_S1 (test_T1.T1Test.test_T1_S1) ... FAIL\ntest_T1_S2 (test_T1.T1Test.test_T1_S2) ... FAIL\n\n======================================================================\nFAIL: test_T1_S1 (test_T1.T1Test.test_T1_S1)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tests/test_T1.py\", line 73, in test_T1_S1\n    self.fail(\"S1 test failed\")\nAssertionError: S1 test failed\n\n======================================================================\nFAIL: test_T1_S2 (test_T1.T1Test.test_T1_S2)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tests/test_T1.py\", line 110, in test_T1_S2\n    self.fail(\"S2 test failed\")\nAssertionError: S2 test failed\n\n----------------------------------------------------------------------\nRan 2 tests in 72.086s\n\nFAILED (failures=2)"
+  }
+}

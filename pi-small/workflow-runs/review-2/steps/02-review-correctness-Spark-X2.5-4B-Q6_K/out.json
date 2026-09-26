@@ -1,0 +1,48 @@
+{
+  "tool": "submit_findings",
+  "accepted": true,
+  "args": {
+    "findings": [
+      {
+        "priority": "high",
+        "title": "POST /books crashes with AttributeError on missing required fields",
+        "where": "app.py do_POST method",
+        "detail": "In do_POST, validation logic calls .strip() on title, author, isbn without first checking if they are None. When a required field is missing from the JSON body, data.get('field') returns None, and None.strip() raises AttributeError, resulting in a 500 error / RemoteDisconnected instead of the required 400 response for missing/empty required fields. This breaks the core validation of required fields."
+      },
+      {
+        "priority": "medium",
+        "title": "Content-Length header not properly validated in do_POST",
+        "where": "app.py do_POST method (base HTTP handler)",
+        "detail": "If the Content-Length header contains a non-numeric value (e.g., 'abc'), the server does not handle it gracefully, which can lead to unexpected parsing errors or connection issues. The code does not validate Content-Length before attempting to read the request body."
+      },
+      {
+        "priority": "medium",
+        "title": "PUT /books validation may have inconsistent error handling",
+        "where": "app.py do_PUT method",
+        "detail": "While do_PUT may follow similar validation patterns, it was not verified to have the same None-handling for required fields as do_POST. If missing fields are not handled consistently, PUT requests with missing required fields may also crash or return incorrect status codes instead of proper 400 responses."
+      }
+    ]
+  },
+  "value": [
+    {
+      "priority": "high",
+      "title": "POST /books crashes with AttributeError on missing required fields",
+      "where": "app.py do_POST method",
+      "detail": "In do_POST, validation logic calls .strip() on title, author, isbn without first checking if they are None. When a required field is missing from the JSON body, data.get('field') returns None, and None.strip() raises AttributeError, resulting in a 500 error / RemoteDisconnected instead of the required 400 response for missing/empty required fields. This breaks the core validation of required fields."
+    },
+    {
+      "priority": "medium",
+      "title": "Content-Length header not properly validated in do_POST",
+      "where": "app.py do_POST method (base HTTP handler)",
+      "detail": "If the Content-Length header contains a non-numeric value (e.g., 'abc'), the server does not handle it gracefully, which can lead to unexpected parsing errors or connection issues. The code does not validate Content-Length before attempting to read the request body."
+    },
+    {
+      "priority": "medium",
+      "title": "PUT /books validation may have inconsistent error handling",
+      "where": "app.py do_PUT method",
+      "detail": "While do_PUT may follow similar validation patterns, it was not verified to have the same None-handling for required fields as do_POST. If missing fields are not handled consistently, PUT requests with missing required fields may also crash or return incorrect status codes instead of proper 400 responses."
+    }
+  ],
+  "refusals": 0,
+  "at": "2026-09-25T09:20:57.988Z"
+}

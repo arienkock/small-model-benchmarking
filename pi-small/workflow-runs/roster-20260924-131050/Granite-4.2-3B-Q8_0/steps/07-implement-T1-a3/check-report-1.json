@@ -1,0 +1,18 @@
+{
+  "ok": true,
+  "problems": [],
+  "missingTokens": [],
+  "checks": [
+    {
+      "name": "Python standard library only",
+      "ok": true,
+      "tail": "only standard-library and local imports"
+    }
+  ],
+  "tests": {
+    "rc": 0,
+    "timedOut": false,
+    "count": 2,
+    "tail": "test_T1_S1 (test_T1.T1Test.test_T1_S1) ... ok\ntest_T1_S2 (test_T1.T1Test.test_T1_S2) ... ok\n\n----------------------------------------------------------------------\nRan 2 tests in 2.012s\n\nOK"
+  }
+}

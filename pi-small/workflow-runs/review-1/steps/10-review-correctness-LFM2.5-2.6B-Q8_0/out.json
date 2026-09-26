@@ -1,0 +1,36 @@
+{
+  "tool": "submit_findings",
+  "accepted": true,
+  "args": {
+    "findings": [
+      {
+        "priority": "medium",
+        "title": "PUT/DELETE path parsing: empty ID segment causes ValueError",
+        "where": "do_PUT and do_DELETE methods",
+        "detail": "When path is \\'/books/\\' (no ID), int(path.split(\\\"/\\\")[-1]) raises ValueError. Unlike GET which catches this, PUT/DELETE would crash instead of returning 404."
+      },
+      {
+        "priority": "low",
+        "title": "Error response lacks distinction between error types",
+        "where": "Error handling throughout",
+        "detail": "All errors return generic JSON with 'error' field; no differentiation between validation errors (400) and not-found (404)."
+      }
+    ]
+  },
+  "value": [
+    {
+      "priority": "medium",
+      "title": "PUT/DELETE path parsing: empty ID segment causes ValueError",
+      "where": "do_PUT and do_DELETE methods",
+      "detail": "When path is \\'/books/\\' (no ID), int(path.split(\\\"/\\\")[-1]) raises ValueError. Unlike GET which catches this, PUT/DELETE would crash instead of returning 404."
+    },
+    {
+      "priority": "low",
+      "title": "Error response lacks distinction between error types",
+      "where": "Error handling throughout",
+      "detail": "All errors return generic JSON with 'error' field; no differentiation between validation errors (400) and not-found (404)."
+    }
+  ],
+  "refusals": 0,
+  "at": "2026-09-25T07:38:48.745Z"
+}

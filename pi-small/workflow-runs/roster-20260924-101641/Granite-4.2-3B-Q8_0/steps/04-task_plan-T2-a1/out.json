@@ -1,0 +1,104 @@
+{
+  "tool": "submit_task_plan",
+  "accepted": true,
+  "args": {
+    "scenarios": [
+      {
+        "kind": "happy",
+        "title": "Get book by id",
+        "given": "database contains book id 1",
+        "when": "GET /books/1",
+        "then": "200 with body {\"id\": 1, \"title\": \"The Great Book\", \"author\": \"John Doe\", \"isbn\": \"123456789\", \"synopsis\": \"\"}"
+      },
+      {
+        "kind": "happy",
+        "title": "List books with id filter",
+        "given": "database contains book id 1",
+        "when": "GET /books?id=1",
+        "then": "200 with body [{\"id\": 1, \"title\": \"The Great Book\", \"author\": \"John Doe\", \"isbn\": \"123456789\", \"synopsis\": \"\"}]"
+      },
+      {
+        "kind": "happy",
+        "title": "Get_happy",
+        "given": "database contains book id 1",
+        "when": "GET /books/1",
+        "then": "200 with body {\"id\": 1, \"title\": \"The Great Book\", \"author\": \"John Doe\", \"isbn\": \"123456789\", \"synopsis\": \"\"}"
+      },
+      {
+        "kind": "happy",
+        "title": "Filter_happy",
+        "given": "database contains book id 1",
+        "when": "GET /books?id=1",
+        "then": "200 with body [{\"id\": 1, \"title\": \"The Great Book\", \"author\": \"John Doe\", \"isbn\": \"123456789\", \"synopsis\": \"\"}]"
+      },
+      {
+        "kind": "unhappy",
+        "title": "Unknown query parameter",
+        "given": "database empty",
+        "when": "GET /books?unknown=anything",
+        "then": "400 with body {\"error\": \"unknown query parameter 'unknown'\"}"
+      }
+    ],
+    "logic": [
+      "store_books_in_memory_list = [{'id':1,'title':'The Great Book','author':'John Doe','isbn':'123456789','synopsis':''}]  # simulate after POST S1",
+      "def get_book_by_id(request):  # request includes path id; returns 404 if id missing or not found; returns 200 with book if exists",
+      "def list_books_with_filters(request):  # request has query parameters; validates known params (id, title, author, isbn, synopsis, q); checks filter conditions; returns appropriate list sorted by id; returns 400 if unknown param or invalid value",
+      "handle_json_validation(payload)  # generic validation for title/author/isbn non-empty, fields required, proper types",
+      "return_response(status_code, body_or_error)"
+    ]
+  },
+  "refusals": 0,
+  "at": "2026-09-24T08:36:26.998Z",
+  "value": {
+    "scenarios": [
+      {
+        "id": "T2.S1",
+        "kind": "happy",
+        "title": "Get book by id",
+        "given": "database contains book id 1",
+        "when": "GET /books/1",
+        "then": "200 with body {\"id\": 1, \"title\": \"The Great Book\", \"author\": \"John Doe\", \"isbn\": \"123456789\", \"synopsis\": \"\"}"
+      },
+      {
+        "id": "T2.S2",
+        "kind": "happy",
+        "title": "List books with id filter",
+        "given": "database contains book id 1",
+        "when": "GET /books?id=1",
+        "then": "200 with body [{\"id\": 1, \"title\": \"The Great Book\", \"author\": \"John Doe\", \"isbn\": \"123456789\", \"synopsis\": \"\"}]"
+      },
+      {
+        "id": "T2.S3",
+        "kind": "happy",
+        "title": "Get_happy",
+        "given": "database contains book id 1",
+        "when": "GET /books/1",
+        "then": "200 with body {\"id\": 1, \"title\": \"The Great Book\", \"author\": \"John Doe\", \"isbn\": \"123456789\", \"synopsis\": \"\"}"
+      },
+      {
+        "id": "T2.S4",
+        "kind": "happy",
+        "title": "Filter_happy",
+        "given": "database contains book id 1",
+        "when": "GET /books?id=1",
+        "then": "200 with body [{\"id\": 1, \"title\": \"The Great Book\", \"author\": \"John Doe\", \"isbn\": \"123456789\", \"synopsis\": \"\"}]"
+      },
+      {
+        "id": "T2.S5",
+        "kind": "unhappy",
+        "title": "Unknown query parameter",
+        "given": "database empty",
+        "when": "GET /books?unknown=anything",
+        "then": "400 with body {\"error\": \"unknown query parameter 'unknown'\"}"
+      }
+    ],
+    "logic": [
+      "store_books_in_memory_list = [{'id':1,'title':'The Great Book','author':'John Doe','isbn':'123456789','synopsis':''}]  # simulate after POST S1",
+      "def get_book_by_id(request):  # request includes path id; returns 404 if id missing or not found; returns 200 with book if exists",
+      "def list_books_with_filters(request):  # request has query parameters; validates known params (id, title, author, isbn, synopsis, q); checks filter conditions; returns appropriate list sorted by id; returns 400 if unknown param or invalid value",
+      "handle_json_validation(payload)  # generic validation for title/author/isbn non-empty, fields required, proper types",
+      "return_response(status_code, body_or_error)"
+    ]
+  },
+  "check": null
+}

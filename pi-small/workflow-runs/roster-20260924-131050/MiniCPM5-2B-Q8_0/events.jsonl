@@ -1,0 +1,30 @@
+{"ts":"2026-09-24T13:03:09.889Z","type":"workflow_start","model":"MiniCPM5-2B-Q8_0","runDir":"D:\\llama.cpp\\pi-small\\workflow-runs\\roster-20260924-131050\\MiniCPM5-2B-Q8_0","resume":false}
+{"ts":"2026-09-24T13:03:09.894Z","type":"step_start","step":"01-scenarios-a1","kind":"scenarios","attempt":1,"promptChars":3628}
+{"ts":"2026-09-24T13:05:39.944Z","type":"step_run","step":"01-scenarios-a1","nudge":0,"exitCode":0,"timedOut":false,"durationMs":150041,"ok":true}
+{"ts":"2026-09-24T13:05:39.944Z","type":"step_accepted","step":"scenarios"}
+{"ts":"2026-09-24T13:05:39.946Z","type":"step_start","step":"02-breakdown-a1","kind":"breakdown","attempt":1,"promptChars":4991}
+{"ts":"2026-09-24T13:08:39.607Z","type":"step_run","step":"02-breakdown-a1","nudge":0,"exitCode":0,"timedOut":false,"durationMs":179656,"ok":false,"detail":"The session ended without a successful call to `submit_breakdown`."}
+{"ts":"2026-09-24T13:10:21.792Z","type":"step_run","step":"02-breakdown-a1","nudge":1,"exitCode":0,"timedOut":false,"durationMs":102134,"ok":true}
+{"ts":"2026-09-24T13:10:21.793Z","type":"step_accepted","step":"breakdown"}
+{"ts":"2026-09-24T13:10:21.795Z","type":"step_start","step":"03-task_plan-T1-a1","kind":"task_plan","taskId":"T1","attempt":1,"promptChars":6967}
+{"ts":"2026-09-24T13:11:07.712Z","type":"step_run","step":"03-task_plan-T1-a1","nudge":0,"exitCode":0,"timedOut":false,"durationMs":45912,"ok":true}
+{"ts":"2026-09-24T13:11:07.713Z","type":"step_accepted","step":"task_plan-T1"}
+{"ts":"2026-09-24T13:11:07.715Z","type":"step_start","step":"04-task_plan-T2-a1","kind":"task_plan","taskId":"T2","attempt":1,"promptChars":6800}
+{"ts":"2026-09-24T13:13:04.753Z","type":"step_run","step":"04-task_plan-T2-a1","nudge":0,"exitCode":0,"timedOut":false,"durationMs":117032,"ok":true}
+{"ts":"2026-09-24T13:13:04.753Z","type":"step_accepted","step":"task_plan-T2"}
+{"ts":"2026-09-24T13:13:04.755Z","type":"step_start","step":"05-task_plan-T3-a1","kind":"task_plan","taskId":"T3","attempt":1,"promptChars":6519}
+{"ts":"2026-09-24T13:16:05.790Z","type":"step_run","step":"05-task_plan-T3-a1","nudge":0,"exitCode":0,"timedOut":false,"durationMs":181029,"ok":false,"detail":"The session ended without a successful call to `submit_task_plan`."}
+{"ts":"2026-09-24T13:18:15.948Z","type":"step_run","step":"05-task_plan-T3-a1","nudge":1,"exitCode":0,"timedOut":false,"durationMs":130153,"ok":true}
+{"ts":"2026-09-24T13:18:15.948Z","type":"step_accepted","step":"task_plan-T3"}
+{"ts":"2026-09-24T13:18:15.950Z","type":"step_start","step":"06-task_plan-T4-a1","kind":"task_plan","taskId":"T4","attempt":1,"promptChars":6074}
+{"ts":"2026-09-24T13:20:31.933Z","type":"step_run","step":"06-task_plan-T4-a1","nudge":0,"exitCode":0,"timedOut":false,"durationMs":135977,"ok":true}
+{"ts":"2026-09-24T13:20:31.933Z","type":"step_accepted","step":"task_plan-T4"}
+{"ts":"2026-09-24T13:20:31.936Z","type":"step_start","step":"07-implement-T1-a1","kind":"implement","taskId":"T1","attempt":1,"promptChars":8147}
+{"ts":"2026-09-24T14:05:39.970Z","type":"step_run","step":"07-implement-T1-a1","nudge":0,"exitCode":137,"timedOut":true,"durationMs":2402447,"ok":false,"detail":"The harness checks did NOT pass:\n- no test is named for scenario(s) S1, S5, S6, S7 — put the id in the test's name, e.g. test_S1_<what>.\n- the test suite did not finish within 300 seconds (a server left running, or a test waiting forever?).\n\nLast lines of the test run:\n```\ntest_T1_S1_happy_create (test_s1.TestS1.test_T1_S1_happy_create) ...\n``` The session was stopped at the time limit."}
+{"ts":"2026-09-24T14:05:39.972Z","type":"step_start","step":"08-implement-T1-a2","kind":"implement","taskId":"T1","attempt":2,"promptChars":8671}
+{"ts":"2026-09-24T14:13:52.660Z","type":"step_run","step":"08-implement-T1-a2","nudge":0,"exitCode":0,"timedOut":false,"durationMs":186198,"ok":false,"detail":"The harness checks did NOT pass:\n- no test is named for scenario(s) S1, S5, S6, S7 — put the id in the test's name, e.g. test_S1_<what>.\n- the test suite did not finish within 300 seconds (a server left running, or a test waiting forever?).\n\nLast lines of the test run:\n```\ntest_T1_S1_happy_create (test_s1.TestS1.test_T1_S1_happy_create) ...\n```"}
+{"ts":"2026-09-24T14:25:58.359Z","type":"step_run","step":"08-implement-T1-a2","nudge":1,"exitCode":0,"timedOut":false,"durationMs":419286,"ok":false,"detail":"The harness checks did NOT pass:\n- no test is named for scenario(s) S1, S5, S6, S7 — put the id in the test's name, e.g. test_S1_<what>.\n- the test suite did not finish within 300 seconds (a server left running, or a test waiting forever?).\n\nLast lines of the test run:\n```\ntest_T1_S1_happy_create (test_s1.TestS1.test_T1_S1_happy_create) ...\n```"}
+{"ts":"2026-09-24T14:58:52.190Z","type":"step_run","step":"08-implement-T1-a2","nudge":2,"exitCode":137,"timedOut":true,"durationMs":1667271,"ok":false,"detail":"The harness checks did NOT pass:\n- no test is named for scenario(s) T1_S1, T1_S2, T1_S3, T1_S4 — put the id in the test's name, e.g. test_T1_S1_<what>.\n- the test suite did not finish within 300 seconds (a server left running, or a test waiting forever?).\n\nLast lines of the test run:\n```\ntest_S1_happy_create (test_s1.TestS1.test_S1_happy_create) ...\n``` The session was stopped at the time limit."}
+{"ts":"2026-09-24T14:58:52.190Z","type":"workflow_stopped","where":"during implement-T1 attempt 2"}
+{"ts":"2026-09-24T14:58:52.192Z","type":"workflow_end","status":"stopped","failure":"time budget ran out during implement-T1 attempt 2","minutes":115.7}
+{"ts":"2026-09-24T14:58:57.821Z","type":"grade","summary":"9/28 checks passed","exitCode":1}

@@ -1,0 +1,3 @@
+The test file has been fixed and verified. The `os.environ['PORT'] = "8000"` line (with proper double quotes) is now correct, and all other code appears syntactically valid.
+
+**Summary:** Fixed the unterminated string literal in `/workspace/tests/test_app.py` by ensuring `os.environ['PORT'] = "8000"` uses proper double quotes. The file compiles without errors and contains all required test cases (S1-S9) for the book API.

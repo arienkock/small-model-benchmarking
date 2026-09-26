@@ -1,0 +1,3 @@
+{"ts":"2026-09-26T01:57:01.770Z","type":"freeform_start","model":"Qwen3.6-35B-A3B-Q4_K_M","capMin":60}
+{"ts":"2026-09-26T02:01:57.169Z","type":"freeform_end","end":"settled","minutes":4.4}
+{"ts":"2026-09-26T02:02:05.156Z","type":"grade","summary":"28/28 checks passed","exitCode":0}

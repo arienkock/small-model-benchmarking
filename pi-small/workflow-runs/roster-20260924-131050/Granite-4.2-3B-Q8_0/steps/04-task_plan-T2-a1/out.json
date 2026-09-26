@@ -1,0 +1,81 @@
+{
+  "tool": "submit_task_plan",
+  "accepted": true,
+  "args": {
+    "scenarios": [
+      {
+        "kind": "happy",
+        "title": "Get created book",
+        "given": "book id 1 exists",
+        "when": "GET /books/1",
+        "then": "200 with the created book JSON"
+      },
+      {
+        "kind": "happy",
+        "title": "Update book",
+        "given": "book id 1 exists",
+        "when": "PUT /books/1 with {\"title\":\"Python Programming\",\"author\":\"Smith\",\"isbn\":\"123456\",\"synopsis\":\"A guide\"}",
+        "then": "200 with updated book JSON"
+      },
+      {
+        "kind": "happy",
+        "title": "Delete book",
+        "given": "book id 1 exists",
+        "when": "DELETE /books/1",
+        "then": "204 no body"
+      },
+      {
+        "kind": "unhappy",
+        "title": "Missing required field",
+        "given": "POST /books with {\"title\":\"Test\",\"author\":\"Author\"}",
+        "when": "send request",
+        "then": "400 with {\"error\":\"missing required field isbn\""
+      }
+    ],
+    "logic": [
+      "use dict for books keyed by id, store list; handle POST validation; GET id; PUT update; DELETE remove; parse query params; validate id integer; check path id; filter matching all params; reject duplicate id param; return 404 for missing book or conflicting filters"
+    ]
+  },
+  "refusals": 0,
+  "at": "2026-09-24T15:07:38.875Z",
+  "value": {
+    "scenarios": [
+      {
+        "id": "T2.S1",
+        "kind": "happy",
+        "title": "Get created book",
+        "given": "book id 1 exists",
+        "when": "GET /books/1",
+        "then": "200 with the created book JSON"
+      },
+      {
+        "id": "T2.S2",
+        "kind": "happy",
+        "title": "Update book",
+        "given": "book id 1 exists",
+        "when": "PUT /books/1 with {\"title\":\"Python Programming\",\"author\":\"Smith\",\"isbn\":\"123456\",\"synopsis\":\"A guide\"}",
+        "then": "200 with updated book JSON"
+      },
+      {
+        "id": "T2.S3",
+        "kind": "happy",
+        "title": "Delete book",
+        "given": "book id 1 exists",
+        "when": "DELETE /books/1",
+        "then": "204 no body"
+      },
+      {
+        "id": "T2.S4",
+        "kind": "unhappy",
+        "title": "Missing required field",
+        "given": "POST /books with {\"title\":\"Test\",\"author\":\"Author\"}",
+        "when": "send request",
+        "then": "400 with {\"error\":\"missing required field isbn\""
+      }
+    ],
+    "logic": [
+      "use dict for books keyed by id, store list; handle POST validation; GET id; PUT update; DELETE remove; parse query params; validate id integer; check path id; filter matching all params; reject duplicate id param; return 404 for missing book or conflicting filters"
+    ]
+  },
+  "check": null
+}

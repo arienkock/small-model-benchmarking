@@ -1,0 +1,5 @@
+{
+	"_about": "2026-09-24 T1 replay: one attempt per model at the rotation run's limits.",
+	"maxTurns": 10,
+	"attempts": { "planning": 1, "implement": 1, "integrate": 1 }
+}

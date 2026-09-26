@@ -1,0 +1,37 @@
+[workflow 09:41:44] serving Spark-X2.5-4B-Q6_K on the host …
+switching from Granite-4.2-3B-Q8_0 to Spark-X2.5-4B-Q6_K ...
+model:   Spark-X2.5-4B-Q6_K
+weights: D:\llama-cache\models--sizzlebop--Spark-X2.5-4B-GGUF\snapshots\bdb8637b34348fcad38bdcb9ed1a2e4f3739383e\Spark-X2.5-4B-Q6_K.gguf
+cache:   D:\llama-cache
+bind:    0.0.0.0:8123
+thinking: n/a (no thinking mode)
+sampler: temp=1 top_p=0.95 top_k=0 min_p=0 repeat_penalty=1 presence_penalty=0
+log:     D:\llama.cpp\pi-small\.logs\llama-Spark-X2.5-4B-Q6_K-c16384-2026-09-24T09-41-46-875Z.log
+waiting for the model to load at ctx 16384 .........................
+ready: Spark-X2.5-4B-Q6_K on port 8123, ctx 16384
+verified: live sampler matches the roster
+[workflow 09:42:37] deadline 2026-09-24T11:06:23.000Z (84 min from now)
+[workflow 09:42:37] step 01-scenarios-a1
+[workflow 09:48:09]   agent run exited 0 after 332 s
+[workflow 09:48:09] step 02-breakdown-a1
+[workflow 09:52:32]   agent run exited 0 after 263 s
+[workflow 09:52:32] step 03-task_plan-T1-a1
+[workflow 10:00:30]   agent run exited 0 after 477 s
+[workflow 10:00:30] step 04-task_plan-T2-a1
+[workflow 10:04:45]   agent run exited 0 after 255 s
+[workflow 10:04:45] step 05-task_plan-T3-a1
+[workflow 10:09:16]   agent run exited 0 after 271 s
+[workflow 10:11:12]   agent run (nudge) exited 0 after 116 s
+[workflow 10:13:06]   agent run (nudge) exited 0 after 114 s
+[workflow 10:13:06] step 06-task_plan-T3-a2
+[workflow 10:19:58]   agent run exited 0 after 411 s
+[workflow 10:19:58] step 07-task_plan-T4-a1
+[workflow 10:24:33]   agent run exited 0 after 275 s
+[workflow 10:24:33] step 08-task_plan-T5-a1
+[workflow 10:28:45]   agent run exited 0 after 252 s
+[workflow 10:28:45] step 09-implement-T1-a1
+[workflow 11:06:25]   agent run exited 137 (TIMED OUT) after 2260 s
+[workflow 11:06:30]   check: FAIL (suite exit 0, 0 tests) — no test files found (looked for tests/*.py).
+[workflow 11:06:30] workflow STOPPED after 83.9 min — time budget ran out during implement-T1 attempt 1
+[workflow 11:06:35] grader: 0/0 checks passed
+[workflow 11:06:35] run directory: D:\llama.cpp\pi-small\workflow-runs\roster-20260924-101641\Spark-X2.5-4B-Q6_K

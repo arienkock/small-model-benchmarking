@@ -1,0 +1,19 @@
+{
+  "ok": false,
+  "problems": [
+    "the test suite did not finish within 60 seconds (a server left running, or a test waiting forever?)."
+  ],
+  "checks": [
+    {
+      "name": "Python standard library only",
+      "ok": true,
+      "tail": "only standard-library and local imports"
+    }
+  ],
+  "tests": {
+    "rc": null,
+    "timedOut": true,
+    "count": 7,
+    "tail": "======================================================================\nERROR: test_S5_unhappy_invalid_json_body (test_T1.TestBasicServer.test_S5_unhappy_invalid_json_body)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tests/test_T1.py\", line 81, in test_S5_unhappy_invalid_json_body\n    resp, code = self.make_request('POST', '/books', data=\"not json\")\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/tests/test_T1.py\", line 35, in make_request\n    req = urllib.request.Request(url, data=json.dumps(data).encode(),\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: Request.__init__() got an unexpected keyword argument 'data_type'\n\n======================================================================\nERROR: test_S6_unhappy_unknown_query_param (test_T1.TestBasicServer.test_S6_unhappy_unknown_query_param)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tests/test_T1.py\", line 87, in test_S6_unhappy_unknown_query_param\n    resp, code = self.make_request('GET', '/books?id=1&unknown=foo')\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/tests/test_T1.py\", line 35, in make_request\n    req = urllib.request.Request(url, data=json.dumps(data).encode(),\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: Request.__init__() got an unexpected keyword argument 'data_type'\n\n======================================================================\nERROR: test_S7_unhappy_id_not_integer (test_T1.TestBasicServer.test_S7_unhappy_id_not_integer)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tests/test_T1.py\", line 93, in test_S7_unhappy_id_not_integer\n    resp, code = self.make_request('GET', '/books/abc')\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/tests/test_T1.py\", line 35, in make_request\n    req = urllib.request.Request(url, data=json.dumps(data).encode(),\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: Request.__init__() got an unexpected keyword argument 'data_type'\n\n----------------------------------------------------------------------\nRan 7 tests in 2.136s\n\nFAILED (errors=7)"
+  }
+}

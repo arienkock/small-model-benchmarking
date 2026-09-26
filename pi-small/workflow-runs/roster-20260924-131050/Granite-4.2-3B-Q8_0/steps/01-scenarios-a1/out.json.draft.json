@@ -1,0 +1,86 @@
+[
+  {
+    "kind": "happy",
+    "title": "Create book",
+    "given": "empty in-memory store",
+    "when": "POST /books with {\"title\":\"Python\",\"author\":\"Doe\",\"isbn\":\"123456\"}",
+    "then": "201 with {\"id\":1,\"title\":\"Python\",\"author\":\"Doe\",\"isbn\":\"123456\",\"synopsis\":\"\"}"
+  },
+  {
+    "kind": "happy",
+    "title": "Get created book",
+    "given": "book id 1 exists",
+    "when": "GET /books/1",
+    "then": "200 with the created book JSON"
+  },
+  {
+    "kind": "happy",
+    "title": "Update book",
+    "given": "book id 1 exists",
+    "when": "PUT /books/1 with {\"title\":\"Python Programming\",\"author\":\"Smith\",\"isbn\":\"123456\",\"synopsis\":\"A guide\"}",
+    "then": "200 with updated book JSON"
+  },
+  {
+    "kind": "happy",
+    "title": "Delete book",
+    "given": "book id 1 exists",
+    "when": "DELETE /books/1",
+    "then": "204 no body"
+  },
+  {
+    "kind": "unhappy",
+    "title": "Missing required field",
+    "given": "POST /books with {\"title\":\"Test\",\"author\":\"Author\"}",
+    "when": "send request",
+    "then": "400 with {\"error\":\"missing required field isbn\"}"
+  },
+  {
+    "kind": "unhappy",
+    "title": "Empty title",
+    "given": "POST /books with {\"title\":\"\",\"author\":\"Author\",\"isbn\":\"123\"}",
+    "when": "send request",
+    "then": "400 with {\"error\":\"title is required and not empty\"}"
+  },
+  {
+    "kind": "unhappy",
+    "title": "Non-integer id in path",
+    "given": "empty store",
+    "when": "GET /books/abc",
+    "then": "404"
+  },
+  {
+    "kind": "unhappy",
+    "title": "Unknown query parameter",
+    "given": "GET /books with params {\"id\":1,\"invalid\":\"foo\"}",
+    "when": "request",
+    "then": "400 with {\"error\":\"unknown query parameter invalid\"}"
+  },
+  {
+    "kind": "happy",
+    "title": "Search by id",
+    "given": "book id 1 exists",
+    "when": "GET /books?id=1",
+    "then": "200 with [{\"id\":1,\"title\":\"Python\",\"author\":\"Doe\",\"isbn\":\"123456\",\"synopsis\":\"\"}]"
+  },
+  {
+    "kind": "happy",
+    "title": "Filter by title contains",
+    "given": "book id 1 exists and title contains 'Python'",
+    "when": "GET /books?title=python",
+    "then": "200 with [{\"id\":1,...}]"
+  },
+  {
+    "kind": "unhappy",
+    "title": "Invalid query param repeated",
+    "given": "empty store",
+    "when": "GET /books?id=1&id=2",
+    "then": "400 with {\"error\":\"unknown query parameter id\"}"
+  },
+  {
+    "kind": "unhappy",
+    "title": "Multiple conflicting filters return 404",
+    "given": "book id 1 exists",
+    "when": "GET /books?id=1&title=nonexistent",
+    "then": "404"
+  }
+]

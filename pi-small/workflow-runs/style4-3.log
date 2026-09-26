@@ -1,0 +1,6 @@
+[run 02:29:23] proxy already on port 8123, serving Qwen3.6-35B-A3B-Q4_K_M (ready)
+[run 02:29:23] agent: pi-small in RPC mode (container); free-form session on Qwen3.6-35B-A3B-Q4_K_M, cap 45 min
+[run 02:42:39] free-form session ended (settled) after 12.7 min
+[run 02:42:42] free-form: settled after 12.7 min; 10 turn(s), 9 tool call(s), 0 compaction(s); tokens in 2018 (+60047 cached), out 7292
+[run 02:42:48] grader: 27/28 checks passed
+[run 02:42:48] run directory: D:\llama.cpp\pi-small\workflow-runs\style4-3

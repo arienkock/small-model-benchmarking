@@ -1,0 +1,93 @@
+[
+  {
+    "kind": "happy",
+    "title": "POST creates book with all fields",
+    "given": "Book store starts empty in memory.",
+    "when": "POST /books with JSON {'title': 'Dune', 'author': 'Frank Herbert', 'isbn': '978-0441172719', 'synopsis': 'A vast empire and its conflict'}",
+    "then": "Response is 201 with JSON containing id 1, title 'Dune', author 'Frank Herbert', isbn '978-0441172719', synopsis 'A vast empire and its conflict'"
+  },
+  {
+    "kind": "happy",
+    "title": "GET returns created book by id",
+    "given": "Book with id 1 exists in memory.",
+    "when": "GET /books/1",
+    "then": "Response is 200 with JSON matching the stored book with id 1."
+  },
+  {
+    "kind": "happy",
+    "title": "PUT replaces book fields",
+    "given": "Book id 1 exists with title 'Dune'.",
+    "when": "PUT /books/1 with JSON {'title': 'Dune 2', 'author': 'Frank Herbert Jr', 'isbn': '978-0441172720', 'synopsis': 'Updated synopsis'}",
+    "then": "Response is 200 with JSON containing title 'Dune 2', author 'Frank Herbert Jr', isbn '978-0441172720', synopsis 'Updated synopsis'"
+  },
+  {
+    "kind": "happy",
+    "title": "GET /books lists books ordered by id",
+    "given": "Books with id 1, 2 and 3 exist in memory.",
+    "when": "GET /books",
+    "then": "Response is 200 with JSON array of three books ordered by id 1, 2, 3."
+  },
+  {
+    "kind": "unhappy",
+    "title": "POST rejects invalid JSON body",
+    "given": "Book store starts empty in memory.",
+    "when": "POST /books with body 'not-json' and Content-Type application/json",
+    "then": "Response is 400 with JSON {'error': '<message>'}."
+  },
+  {
+    "kind": "unhappy",
+    "title": "POST rejects missing required field",
+    "given": "Book store starts empty in memory.",
+    "when": "POST /books with JSON {'title': 'Dune', 'isbn': '978-123'} (no author)",
+    "then": "Response is 400 with JSON {'error': '<message>'}."
+  },
+  {
+    "kind": "unhappy",
+    "title": "POST rejects id in body",
+    "given": "Book store starts empty in memory.",
+    "when": "POST /books with JSON {'id': 1, 'title': 'Dune'}",
+    "then": "Response is 400 with JSON {'error': '<message>'}."
+  },
+  {
+    "kind": "unhappy",
+    "title": "PUT rejects non-integer path id",
+    "given": "Book store starts empty in memory.",
+    "when": "PUT /books/abc with JSON object",
+    "then": "Response is 400 with JSON {'error': '<message>'}."
+  },
+  {
+    "kind": "unhappy",
+    "title": "GET returns 404 for nonexistent book",
+    "given": "Book store has books but not id 999.",
+    "when": "GET /books/999",
+    "then": "Response is 404 with JSON {'error': '<message>'}."
+  },
+  {
+    "kind": "unhappy",
+    "title": "DELETE returns 404 for nonexistent book",
+    "given": "Book store has books but not id 999.",
+    "when": "DELETE /books/999",
+    "then": "Response is 404 with JSON {'error': '<message>'}."
+  },
+  {
+    "kind": "unhappy",
+    "title": "GET rejects unknown query parameter",
+    "given": "Book store has books.",
+    "when": "GET /books?unknownParam=value",
+    "then": "Response is 400 with JSON {'error': '<message>'}."
+  },
+  {
+    "kind": "unhappy",
+    "title": "POST rejects wrong type field",
+    "given": "Book store starts empty in memory.",
+    "when": "POST /books with JSON {'title': 123, 'author': 'X', 'isbn': 'Y'}",
+    "then": "Response is 400 with JSON {'error': '<message>'}."
+  },
+  {
+    "kind": "unhappy",
+    "title": "GET rejects non-integer path id",
+    "given": "Book store has books.",
+    "when": "GET /books/notanumber",
+    "then": "Response is 400 with JSON {'error': '<message>'}."
+  }
+]

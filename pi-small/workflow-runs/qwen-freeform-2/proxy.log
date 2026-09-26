@@ -1,0 +1,13 @@
+[proxy 15:49:35] listening on 0.0.0.0:8123, llama-server on 127.0.0.1:8125
+[proxy 15:49:35] switching to Qwen3.6-35B-A3B-Q4_K_M …
+model:   Qwen3.6-35B-A3B-Q4_K_M
+weights: D:/models/qwen3.6-35b-a3b/Qwen3.6-35B-A3B-Q4_K_M.gguf
+cache:   D:\llama-cache
+bind:    127.0.0.1:8125
+thinking: on
+sampler: temp=1 top_p=0.95 top_k=20 min_p=0 repeat_penalty=1 presence_penalty=1.5
+log:     D:\llama.cpp\pi-small\.logs\llama-Qwen3.6-35B-A3B-Q4_K_M-c16384-2026-09-25T15-49-35-998Z.log
+waiting for the model to load at ctx 16384 .................................................................................................................................
+ready: Qwen3.6-35B-A3B-Q4_K_M on port 8125, ctx 16384
+verified: live sampler matches the roster
+[proxy 15:53:55] serving Qwen3.6-35B-A3B-Q4_K_M (ctx 16384)

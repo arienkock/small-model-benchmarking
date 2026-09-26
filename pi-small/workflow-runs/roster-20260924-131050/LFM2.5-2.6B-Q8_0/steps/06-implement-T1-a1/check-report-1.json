@@ -1,0 +1,20 @@
+{
+  "ok": false,
+  "problems": [
+    "the test suite failed (`python3 -m unittest discover -s tests -v` exited 1)."
+  ],
+  "missingTokens": [],
+  "checks": [
+    {
+      "name": "Python standard library only",
+      "ok": true,
+      "tail": "only standard-library and local imports"
+    }
+  ],
+  "tests": {
+    "rc": 1,
+    "timedOut": false,
+    "count": 1,
+    "tail": "test_app (unittest.loader._FailedTest.test_app) ... ERROR\n\n======================================================================\nERROR: test_app (unittest.loader._FailedTest.test_app)\n----------------------------------------------------------------------\nImportError: Failed to import test module: test_app\nTraceback (most recent call last):\n  File \"/usr/lib/python3.11/unittest/loader.py\", line 407, in _find_test_path\n    module = self._get_module_from_name(name)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.11/unittest/loader.py\", line 350, in _get_module_from_name\n    __import__(name)\n  File \"/workspace/tests/test_app.py\", line 10, in <module>\n    from app import BookHandler, HTTPServer\n  File \"/workspace/app.py\", line 43\n    global next_id\n    ^^^^^^^^^^^^^^\nSyntaxError: name 'next_id' is used prior to global declaration\n\n\n----------------------------------------------------------------------\nRan 1 test in 0.000s\n\nFAILED (errors=1)"
+  }
+}

@@ -1,0 +1,146 @@
+# Workflow step: implement T1
+
+Implement task T1 (described at the end), together with a test for every scenario listed for it. Earlier tasks are already done and verified; keep their tests passing.
+
+Rules:
+- Work in /workspace.
+- Every scenario needs an automated test that proves it. Tests go in files matching `tests/*.py`.
+- Put the scenario id in the test's name, with the dot written as an underscore: scenario T2.S1 needs a test named like `test_T2_S1_<what>` (or "T2_S1: <what>" where tests are named with strings); whole-task scenario S4 needs one named like `test_S4_<what>`.
+- The harness runs the whole test suite from /workspace with: `python3 -m unittest discover -s tests -v`. It must pass and finish within 60 seconds; run it yourself before you finish.
+- Tests must clean up whatever they start (servers, background processes, temporary files).
+
+## The task
+
+Build a RESTful HTTP API for books in Python.
+
+Constraints:
+- Python 3 standard library only (for example http.server, json, urllib.parse, threading). No third-party packages.
+- Keep the data in memory; nothing is written to disk. Data may be lost when the server stops.
+- The entry point is `/workspace/app.py`. Running `python3 app.py` starts the server on the port given by the environment variable `PORT` (default 8000), listening on 127.0.0.1, and keeps serving until it is stopped.
+
+A book has these fields:
+- `id`: integer, assigned by the server (1, 2, 3, … in creation order, never reused after a delete); never supplied by the client
+- `title`: string, required, not empty
+- `author`: string, required, not empty
+- `isbn`: string, required, not empty
+- `synopsis`: string, optional; defaults to an empty string
+
+Endpoints (all request and response bodies are JSON, with `Content-Type: application/json`):
+- `POST /books` creates a book from a JSON object with title, author, isbn and optionally synopsis. Responds 201 with the created book, including its `id`.
+- `GET /books/{id}` responds 200 with the book.
+- `PUT /books/{id}` replaces the book's title, author, isbn and synopsis with the ones in the body (same rules as create). Responds 200 with the updated book.
+- `DELETE /books/{id}` removes the book. Responds 204 with no body.
+- `GET /books` responds 200 with a JSON list of all books, ordered by id. It supports searching and filtering by every field through query parameters:
+  - `id=<n>` keeps only the book with that id;
+  - `title=…`, `author=…`, `isbn=…`, `synopsis=…` keep books whose field contains the value, ignoring case;
+  - `q=…` keeps books where any of title, author, isbn or synopsis contains the value, ignoring case;
+  - several parameters together must all match. An unknown query parameter is an error.
+
+Errors respond with a JSON object `{"error": "<message>"}`:
+- 400 for a body that is not valid JSON or not a JSON object, a missing or empty required field, a field of the wrong type, an `id` in a create or update body, an id in the path that is not an integer, or an unknown query parameter;
+- 404 for a book id that does not exist, or any other path.
+
+## Verification scenarios for the whole task
+
+- **S1** [happy] create_book — Given empty in-memory DB; when POST /books with {"title":"Test","author":"Author","isbn":"12345"}; then 201 with book id 1 and full book JSON
+- **S2** [happy] get_book — Given book id 1 exists; when GET /books/1; then 200 with book JSON
+- **S3** [happy] update_book — Given book id 1 exists; when PUT /books/1 with {"title":"New","author":"Author2","isbn":"99999","synopsis":"desc"}; then 200 with updated book JSON
+- **S4** [unhappy] missing_required_field — Given empty DB; when POST /books with {"title":"Test","author":"Author","isbn":"12345"}; then 400 with error about missing field
+- **S5** [happy] create_book1 — Given empty in-memory DB; when POST /books with {"title":"Test","author":"Author","isbn":"12345"}; then 201 with book id 1 and full book JSON
+- **S6** [happy] get_book1 — Given book id 1 exists; when GET /books/1; then 200 with book JSON
+- **S7** [happy] update_book1 — Given book id 1 exists; when PUT /books/1 with {"title":"New","author":"Author2","isbn":"99999","synopsis":"desc"}; then 200 with updated book JSON
+- **S8** [unhappy] missing_field — Given empty DB; when POST /books with {"title":"Test","author":"Author","isbn":"12345"}; then 400 with error about missing field
+- **S9** [unhappy] invalid_json_body — Given empty DB; when POST /books with "{invalid}"; then 400 with error about invalid JSON
+- **S10** [unhappy] unknown_query_param — Given book id 1 exists; when GET /books?unknown=foo; then 400 with error about unknown query parameter
+- **S11** [unhappy] not_found_id — Given book id 1 exists; when GET /books/999; then 404 with error about book not found
+
+## Implementation plan (tasks run in this order)
+
+T1. **Create server skeleton and basic routing** (not started) — Server starts, defines /books route, runs on PORT Files: app.py. Covers: S1, S2, S3, S4, S5.
+T2. **Implement book storage and CRUD** (not started) — In-memory book list, POST, GET, PUT, DELETE work Files: app.py. Covers: S2, S3, S6, S7, S8, S9.
+T3. **Add query filtering and error handling** (not started) — GET /books supports id, title, author, isbn, synopsis, q params; validates unknown params; returns 400/404 as required Files: app.py. Covers: S10, S11.
+
+## Current task: T1 — Create server skeleton and basic routing
+
+Server starts, defines /books route, runs on PORT
+
+Files: app.py
+
+Whole-task scenarios this task must provide tests for:
+- **S1** [happy] create_book — Given empty in-memory DB; when POST /books with {"title":"Test","author":"Author","isbn":"12345"}; then 201 with book id 1 and full book JSON
+- **S2** [happy] get_book — Given book id 1 exists; when GET /books/1; then 200 with book JSON
+- **S3** [happy] update_book — Given book id 1 exists; when PUT /books/1 with {"title":"New","author":"Author2","isbn":"99999","synopsis":"desc"}; then 200 with updated book JSON
+- **S4** [unhappy] missing_required_field — Given empty DB; when POST /books with {"title":"Test","author":"Author","isbn":"12345"}; then 400 with error about missing field
+- **S5** [happy] create_book1 — Given empty in-memory DB; when POST /books with {"title":"Test","author":"Author","isbn":"12345"}; then 201 with book id 1 and full book JSON
+
+This task's own scenarios:
+- **T1.S1** [happy] create_book — Given empty in-memory DB; when POST /books with {"title":"Test","author":"Author","isbn":"12345"}); then 201 with book id 1 and full book JSON
+- **T1.S2** [happy] get_book — Given book id 1 exists; when GET /books/1; then 200 with book JSON
+- **T1.S3** [happy] update_book — Given book id 1 exists; when PUT /books/1 with {"title":"New","author":"Author2","isbn":"99999","synopsis":"desc"}); then 200 with updated book JSON
+- **T1.S4** [unhappy] missing_required_field — Given empty DB; when POST /books with {"title":"Test","author":"Author","isbn":"12345"}); then 400 with error about missing field
+
+Implementation logic:
+- Initialize empty list for books
+- Handle POST /books: parse JSON, validate required fields, assign id, append book
+- Handle GET /books/{id}: return matching book or 404
+- Handle PUT /books/{id}: replace fields
+- Run HTTP server on 127.0.0.1:PORT
+
+## Rules for this task
+
+- Tests are Python unittest files in /workspace/tests/, named test_*.py; each test is a method named after its scenario.
+- Tests that need the HTTP server start it themselves on a free port and shut it down afterwards.
+
+When all tests pass, call the tool `report_done` with a one-sentence summary. It runs the harness's own checks and tells you if anything is still wrong.
+
+## A previous attempt at this step failed
+
+The harness checks did NOT pass:
+- no test is named for scenario(s) S1, S2, S3, S4, S5 — put the id in the test's name, e.g. test_S1_<what>.
+- the test suite failed (`python3 -m unittest discover -s tests -v` exited 1).
+
+Last lines of the test run:
+```
+======================================================================
+FAIL: test_T1_S1_happy_create_book (test_T1.TestT1.test_T1_S1_happy_create_book)
+POST /books with required fields -> 201, book id 1
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tests/test_T1.py", line 56, in test_T1_S1_happy_create_book
+    self.assertEqual(status, 201)
+AssertionError: None != 201
+
+======================================================================
+FAIL: test_T1_S2_happy_get_book (test_T1.TestT1.test_T1_S2_happy_get_book)
+GET /books/1 -> 200 with book
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tests/test_T1.py", line 67, in test_T1_S2_happy_get_book
+    self.assertEqual(status, 200)
+AssertionError: 404 != 200
+
+======================================================================
+FAIL: test_T1_S3_happy_update_book (test_T1.TestT1.test_T1_S3_happy_update_book)
+PUT /books/1 with new fields -> 200 updated book
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tests/test_T1.py", line 82, in test_T1_S3_happy_update_book
+    self.assertEqual(status, 200)
+AssertionError: None != 200
+
+======================================================================
+FAIL: test_T1_S4_unhappy_missing_required_field (test_T1.TestT1.test_T1_S4_unhappy_missing_required_field)
+POST missing required field -> 400 with missing field error
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tests/test_T1.py", line 97, in test_T1_S4_unhappy_missing_required_field
+    self.assertEqual(status, 400)
+AssertionError: None != 400
+
+----------------------------------------------------------------------
+Ran 4 tests in 1.221s
+
+FAILED (failures=4)
+``` The session was stopped at the time limit.
+
+The files from that attempt are still in /workspace; continue from them or replace them.

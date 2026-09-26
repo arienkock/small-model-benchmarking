@@ -1,0 +1,8 @@
+proxy ready after 290 s (21:08:05)
+workflow-runs/edit3-1: end=settled min=25.4 turns=36 tools=35 compactions=0 out=13103 grade=28/28
+warm-up failed before run 2: restarting (21:35:52)
+proxy ready after 405 s (21:42:54)
+workflow-runs/edit3-2: end=settled min=6.8 turns=6 tools=5 compactions=0 out=3215 grade=28/28
+workflow-runs/edit3-3: end=settled min=5.2 turns=4 tools=3 compactions=0 out=2980 grade=28/28
+workflow-runs/edit3-4: end=settled min=11.5 turns=12 tools=11 compactions=0 out=6895 grade=27/28
+batch done 22:08:40

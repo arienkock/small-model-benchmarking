@@ -1,0 +1,4 @@
+model	status	minutes	grade	failure
+LFM2.5-2.6B-Q8_0	stopped	110.8	no server	time budget ran out during implement-T1 attempt 3
+MiniCPM5-2B-Q8_0	stopped	115.7	9/28	time budget ran out during implement-T1 attempt 2
+Granite-4.2-3B-Q8_0	stopped	105.4	13/28	time budget ran out during implement-T2 attempt 1

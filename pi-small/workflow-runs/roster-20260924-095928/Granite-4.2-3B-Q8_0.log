@@ -1,0 +1,15 @@
+[workflow 07:59:28] serving Granite-4.2-3B-Q8_0 on the host …
+model:   Granite-4.2-3B-Q8_0
+weights: D:\llama-cache\models--ibm-granite--granite-4.2-3b-GGUF\snapshots\c40945d71cd90f249a56985e8155551a9188dc30\granite-4.2-3b-Q8_0.gguf
+cache:   D:\llama-cache
+bind:    0.0.0.0:8123
+thinking: n/a (no thinking mode)
+sampler: temp=1 top_p=0.95 top_k=50 min_p=0 repeat_penalty=1 presence_penalty=0
+log:     D:\llama.cpp\pi-small\.logs\llama-Granite-4.2-3B-Q8_0-c16384-2026-09-24T07-59-29-186Z.log
+waiting for the model to load at ctx 16384 ......................
+ready: Granite-4.2-3B-Q8_0 on port 8123, ctx 16384
+verified: live sampler matches the roster
+[workflow 08:00:13] deadline 2026-09-24T09:27:03.000Z (87 min from now)
+[workflow 08:00:13] step 01-scenarios-a1
+[workflow 08:04:50]   agent run exited 0 after 277 s
+[workflow 08:10:15]   agent run (nudge) exited 0 after 325 s

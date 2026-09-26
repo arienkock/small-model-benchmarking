@@ -1,0 +1,26 @@
+[proxy 08:52:42] listening on 0.0.0.0:8123, llama-server on 127.0.0.1:8125
+[proxy 08:52:42] switching to Spark-X2.5-4B-Q6_K …
+model:   Spark-X2.5-4B-Q6_K
+weights: D:\llama-cache\models--sizzlebop--Spark-X2.5-4B-GGUF\snapshots\bdb8637b34348fcad38bdcb9ed1a2e4f3739383e\Spark-X2.5-4B-Q6_K.gguf
+cache:   D:\llama-cache
+bind:    127.0.0.1:8125
+thinking: n/a (no thinking mode)
+sampler: temp=1 top_p=0.95 top_k=0 min_p=0 repeat_penalty=1 presence_penalty=0
+log:     D:\llama.cpp\pi-small\.logs\llama-Spark-X2.5-4B-Q6_K-c16384-2026-09-25T08-52-42-985Z.log
+waiting for the model to load at ctx 16384 ..................
+ready: Spark-X2.5-4B-Q6_K on port 8125, ctx 16384
+verified: live sampler matches the roster
+[proxy 08:53:19] serving Spark-X2.5-4B-Q6_K (ctx 16384)
+[proxy 10:11:16] switching to MiniCPM5-2B-Q8_0 …
+switching from Spark-X2.5-4B-Q6_K to MiniCPM5-2B-Q8_0 ...
+model:   MiniCPM5-2B-Q8_0
+weights: D:\llama-cache\models--openbmb--MiniCPM5-2B-GGUF\snapshots\c451f4d674096e6e6f1cc5d0abb6794bda638304\MiniCPM5-2B-Q8_0.gguf
+cache:   D:\llama-cache
+bind:    127.0.0.1:8125
+thinking: n/a (no thinking mode)
+sampler: temp=1 top_p=0.95 top_k=50 min_p=0 repeat_penalty=1 presence_penalty=0
+log:     D:\llama.cpp\pi-small\.logs\llama-MiniCPM5-2B-Q8_0-c16384-2026-09-25T10-11-18-988Z.log
+waiting for the model to load at ctx 16384 ...................
+ready: MiniCPM5-2B-Q8_0 on port 8125, ctx 16384
+verified: live sampler matches the roster
+[proxy 10:11:57] serving MiniCPM5-2B-Q8_0 (ctx 16384)

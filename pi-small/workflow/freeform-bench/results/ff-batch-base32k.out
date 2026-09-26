@@ -1,0 +1,18 @@
+proxy ready after 1200 s (19:41:46)
+  File "<stdin>", line 5
+    print(f"{rd}: end={f.get(\"end\")} min={f.get(\"minutes\")} turns={f.get(\"turns\")} tools={f.get(\"toolCalls\")} compactions={f.get(\"compactions\")} out={f.get(\"outputTokens\")} grade={g.get(\"passed\")}/{g.get(\"total\")} wall={wall}s")
+                              ^
+SyntaxError: unexpected character after line continuation character
+  File "<stdin>", line 5
+    print(f"{rd}: end={f.get(\"end\")} min={f.get(\"minutes\")} turns={f.get(\"turns\")} tools={f.get(\"toolCalls\")} compactions={f.get(\"compactions\")} out={f.get(\"outputTokens\")} grade={g.get(\"passed\")}/{g.get(\"total\")} wall={wall}s")
+                              ^
+SyntaxError: unexpected character after line continuation character
+  File "<stdin>", line 5
+    print(f"{rd}: end={f.get(\"end\")} min={f.get(\"minutes\")} turns={f.get(\"turns\")} tools={f.get(\"toolCalls\")} compactions={f.get(\"compactions\")} out={f.get(\"outputTokens\")} grade={g.get(\"passed\")}/{g.get(\"total\")} wall={wall}s")
+                              ^
+SyntaxError: unexpected character after line continuation character
+  File "<stdin>", line 5
+    print(f"{rd}: end={f.get(\"end\")} min={f.get(\"minutes\")} turns={f.get(\"turns\")} tools={f.get(\"toolCalls\")} compactions={f.get(\"compactions\")} out={f.get(\"outputTokens\")} grade={g.get(\"passed\")}/{g.get(\"total\")} wall={wall}s")
+                              ^
+SyntaxError: unexpected character after line continuation character
+batch done 20:23:14

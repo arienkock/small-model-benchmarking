@@ -1,0 +1,19 @@
+{
+  "ok": false,
+  "problems": [
+    "the test suite ran no tests (`python3 -m unittest discover -s tests -v`)."
+  ],
+  "checks": [
+    {
+      "name": "Python standard library only",
+      "ok": true,
+      "tail": "only standard-library and local imports"
+    }
+  ],
+  "tests": {
+    "rc": 0,
+    "timedOut": false,
+    "count": 0,
+    "tail": "----------------------------------------------------------------------\nRan 0 tests in 0.000s\n\nOK"
+  }
+}

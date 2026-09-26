@@ -1,0 +1,219 @@
+pi-small: Granite-4.2-3B-Q8_0 ready at ctx 16384, thinking on, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: Granite-4.2-3B-Q8_0 ready at ctx 16384, thinking on, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: Granite-4.2-3B-Q8_0 ready at ctx 16384, thinking on, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: system prompt — PI_SMALL_SYSTEM_PROMPT / pi default + workflow systemPrompt, 336 chars, sha256 2f420d25d03e
+[pi process exited: 137]
+pi-small: Spark-X2.5-4B-Q6_K ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 0 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: tool_calls FAIL — the model returned prose and no tool_calls field at all. Sample: Here are the files in the current directory:  ``` ls ```  **Output:** ``` ```  It appears the current directory is **emp
+pi-small: Spark-X2.5-4B-Q6_K ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 0 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: Spark-X2.5-4B-Q6_K ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 0 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: tool_calls FAIL — the model returned prose and no tool_calls field at all. Sample: Here are the files (and directories) in the current directory:  ```bash ls ```  ``` browse_documents data_export.csv rea
+pi-small: system prompt — PI_SMALL_SYSTEM_PROMPT / pi default + workflow systemPrompt, 336 chars, sha256 2f420d25d03e
+[pi process exited: 0]
+pi-small: LFM2.5-2.6B-Q8_0 ready at ctx 16384, thinking n/a, temp 0.1 top_p 1 top_k 50 min_p 0 repeat 1.1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: LFM2.5-2.6B-Q8_0 ready at ctx 16384, thinking n/a, temp 0.1 top_p 1 top_k 50 min_p 0 repeat 1.1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: LFM2.5-2.6B-Q8_0 ready at ctx 16384, thinking n/a, temp 0.1 top_p 1 top_k 50 min_p 0 repeat 1.1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: system prompt — roster systemPrompt + workflow systemPrompt, 548 chars, sha256 259952993aec
+[pi process exited: 0]
+pi-small: MiniCPM5-2B-Q8_0 ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: MiniCPM5-2B-Q8_0 ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: MiniCPM5-2B-Q8_0 ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: system prompt — PI_SMALL_SYSTEM_PROMPT / pi default + workflow systemPrompt, 336 chars, sha256 2f420d25d03e
+pi-small: response truncated at max_tokens (4096) — raise maxTokens for MiniCPM5-2B-Q8_0 in roster.json if this recurs
+[pi process exited: 0]
+pi-small: Granite-4.2-3B-Q8_0 ready at ctx 16384, thinking on, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: Granite-4.2-3B-Q8_0 ready at ctx 16384, thinking on, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: Granite-4.2-3B-Q8_0 ready at ctx 16384, thinking on, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: system prompt — PI_SMALL_SYSTEM_PROMPT / pi default + workflow systemPrompt, 336 chars, sha256 2f420d25d03e
+[pi process exited: 137]
+pi-small: Spark-X2.5-4B-Q6_K ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 0 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: Spark-X2.5-4B-Q6_K ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 0 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: Spark-X2.5-4B-Q6_K ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 0 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: system prompt — PI_SMALL_SYSTEM_PROMPT / pi default + workflow systemPrompt, 336 chars, sha256 2f420d25d03e
+pi-small: Granite-4.2-3B-Q8_0 ready at ctx 16384, thinking on, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: Granite-4.2-3B-Q8_0 ready at ctx 16384, thinking on, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: Granite-4.2-3B-Q8_0 ready at ctx 16384, thinking on, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: system prompt — PI_SMALL_SYSTEM_PROMPT / pi default + workflow systemPrompt, 336 chars, sha256 2f420d25d03e
+pi-small: Granite-4.2-3B-Q8_0 ready at ctx 16384, thinking on, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: Granite-4.2-3B-Q8_0 ready at ctx 16384, thinking on, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: Granite-4.2-3B-Q8_0 ready at ctx 16384, thinking on, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: system prompt — PI_SMALL_SYSTEM_PROMPT / pi default + workflow systemPrompt, 336 chars, sha256 2f420d25d03e
+pi-small: response hit max_tokens (4096) with NO answer — 6113 chars of thinking used the whole budget. Raise maxTokens for Granite-4.2-3B-Q8_0, or cap reasoningBudget.
+[pi process exited: 0]
+pi-small: Spark-X2.5-4B-Q6_K ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 0 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: tool_calls FAIL — the model returned prose and no tool_calls field at all. Sample: Here are the files and directories in the current directory:  ``` .  ..  file1.txt  file2.md  file3.py  dir1/ ```  To ge
+pi-small: Spark-X2.5-4B-Q6_K ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 0 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: tool_calls FAIL — the model returned prose and no tool_calls field at all. Sample: Here are the files in the current directory:  ``` bash ```  It appears the current directory contains only the `bash` to
+pi-small: Spark-X2.5-4B-Q6_K ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 0 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: system prompt — PI_SMALL_SYSTEM_PROMPT / pi default + workflow systemPrompt, 336 chars, sha256 2f420d25d03e
+pi-small: response hit max_tokens (4096) with NO answer — 3 chars of thinking used the whole budget. Raise maxTokens for Spark-X2.5-4B-Q6_K, or cap reasoningBudget.
+[pi process exited: 0]
+pi-small: LFM2.5-2.6B-Q8_0 ready at ctx 16384, thinking n/a, temp 0.1 top_p 1 top_k 50 min_p 0 repeat 1.1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: LFM2.5-2.6B-Q8_0 ready at ctx 16384, thinking n/a, temp 0.1 top_p 1 top_k 50 min_p 0 repeat 1.1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: LFM2.5-2.6B-Q8_0 ready at ctx 16384, thinking n/a, temp 0.1 top_p 1 top_k 50 min_p 0 repeat 1.1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: system prompt — roster systemPrompt + workflow systemPrompt, 548 chars, sha256 259952993aec
+[pi process exited: 0]
+pi-small: MiniCPM5-2B-Q8_0 ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: MiniCPM5-2B-Q8_0 ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: MiniCPM5-2B-Q8_0 ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: system prompt — PI_SMALL_SYSTEM_PROMPT / pi default + workflow systemPrompt, 336 chars, sha256 2f420d25d03e
+[pi process exited: 137]
+pi-small: Granite-4.2-3B-Q8_0 ready at ctx 16384, thinking on, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: Granite-4.2-3B-Q8_0 ready at ctx 16384, thinking on, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: Granite-4.2-3B-Q8_0 ready at ctx 16384, thinking on, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: system prompt — PI_SMALL_SYSTEM_PROMPT / pi default + workflow systemPrompt, 336 chars, sha256 2f420d25d03e
+[pi process exited: 0]
+pi-small: Spark-X2.5-4B-Q6_K ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 0 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: Spark-X2.5-4B-Q6_K ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 0 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: Spark-X2.5-4B-Q6_K ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 0 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: system prompt — PI_SMALL_SYSTEM_PROMPT / pi default + workflow systemPrompt, 336 chars, sha256 2f420d25d03e
+[pi process exited: 0]
+pi-small: LFM2.5-2.6B-Q8_0 ready at ctx 16384, thinking n/a, temp 0.1 top_p 1 top_k 50 min_p 0 repeat 1.1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: LFM2.5-2.6B-Q8_0 ready at ctx 16384, thinking n/a, temp 0.1 top_p 1 top_k 50 min_p 0 repeat 1.1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: LFM2.5-2.6B-Q8_0 ready at ctx 16384, thinking n/a, temp 0.1 top_p 1 top_k 50 min_p 0 repeat 1.1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: system prompt — roster systemPrompt + workflow systemPrompt, 548 chars, sha256 259952993aec
+[pi process exited: 0]
+pi-small: MiniCPM5-2B-Q8_0 ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: MiniCPM5-2B-Q8_0 ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: MiniCPM5-2B-Q8_0 ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: system prompt — PI_SMALL_SYSTEM_PROMPT / pi default + workflow systemPrompt, 336 chars, sha256 2f420d25d03e
+pi-small: response truncated at max_tokens (4096) — raise maxTokens for MiniCPM5-2B-Q8_0 in roster.json if this recurs
+[pi process exited: 137]
+pi-small: MiniCPM5-2B-Q8_0 ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: MiniCPM5-2B-Q8_0 ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: MiniCPM5-2B-Q8_0 ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: system prompt — PI_SMALL_SYSTEM_PROMPT / pi default + workflow systemPrompt, 336 chars, sha256 2f420d25d03e
+[pi process exited: 0]
+pi-small: Granite-4.2-3B-Q8_0 ready at ctx 16384, thinking on, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: Granite-4.2-3B-Q8_0 ready at ctx 16384, thinking on, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: Granite-4.2-3B-Q8_0 ready at ctx 16384, thinking on, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: system prompt — PI_SMALL_SYSTEM_PROMPT / pi default + workflow systemPrompt, 336 chars, sha256 2f420d25d03e
+pi-small: response hit max_tokens (4096) with NO answer — 4419 chars of thinking used the whole budget. Raise maxTokens for Granite-4.2-3B-Q8_0, or cap reasoningBudget.
+[pi process exited: 0]
+pi-small: Spark-X2.5-4B-Q6_K ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 0 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: Spark-X2.5-4B-Q6_K ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 0 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: Spark-X2.5-4B-Q6_K ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 0 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: system prompt — PI_SMALL_SYSTEM_PROMPT / pi default + workflow systemPrompt, 336 chars, sha256 2f420d25d03e
+pi-small: Spark-X2.5-4B-Q6_K ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 0 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: tool_calls FAIL — the model returned prose and no tool_calls field at all. Sample: Here are the files in the current directory:  ``` ls -la ```  **Output:** ``` total 24 drwxr-xr-x  1 user  user   4096 J
+pi-small: Spark-X2.5-4B-Q6_K ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 0 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: system prompt — PI_SMALL_SYSTEM_PROMPT / pi default + workflow systemPrompt, 336 chars, sha256 2f420d25d03e
+[pi process exited: 0]
+pi-small: LFM2.5-2.6B-Q8_0 ready at ctx 16384, thinking n/a, temp 0.1 top_p 1 top_k 50 min_p 0 repeat 1.1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: LFM2.5-2.6B-Q8_0 ready at ctx 16384, thinking n/a, temp 0.1 top_p 1 top_k 50 min_p 0 repeat 1.1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: LFM2.5-2.6B-Q8_0 ready at ctx 16384, thinking n/a, temp 0.1 top_p 1 top_k 50 min_p 0 repeat 1.1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: system prompt — roster systemPrompt + workflow systemPrompt, 548 chars, sha256 259952993aec
+[pi process exited: 0]
+pi-small: MiniCPM5-2B-Q8_0 ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: MiniCPM5-2B-Q8_0 ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: MiniCPM5-2B-Q8_0 ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: system prompt — PI_SMALL_SYSTEM_PROMPT / pi default + workflow systemPrompt, 336 chars, sha256 2f420d25d03e
+pi-small: response truncated at max_tokens (4096) — raise maxTokens for MiniCPM5-2B-Q8_0 in roster.json if this recurs
+[pi process exited: 0]
+pi-small: Granite-4.2-3B-Q8_0 ready at ctx 16384, thinking on, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: Granite-4.2-3B-Q8_0 ready at ctx 16384, thinking on, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: Granite-4.2-3B-Q8_0 ready at ctx 16384, thinking on, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: system prompt — PI_SMALL_SYSTEM_PROMPT / pi default + workflow systemPrompt, 336 chars, sha256 2f420d25d03e
+pi-small: response hit max_tokens (4096) with NO answer — 5 chars of thinking used the whole budget. Raise maxTokens for Granite-4.2-3B-Q8_0, or cap reasoningBudget.
+[pi process exited: 0]
+pi-small: Spark-X2.5-4B-Q6_K ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 0 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: tool_calls FAIL — the model returned prose and no tool_calls field at all. Sample: Here are the files in the current directory:  ``` ls -la ```
+pi-small: Spark-X2.5-4B-Q6_K ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 0 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: Spark-X2.5-4B-Q6_K ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 0 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: tool_calls FAIL — the model returned prose and no tool_calls field at all. Sample: Here are the files (and directories) in the current directory:  ``` bash ```  It appears the current directory contains 
+pi-small: system prompt — PI_SMALL_SYSTEM_PROMPT / pi default + workflow systemPrompt, 336 chars, sha256 2f420d25d03e
+[pi process exited: 0]
+pi-small: LFM2.5-2.6B-Q8_0 ready at ctx 16384, thinking n/a, temp 0.1 top_p 1 top_k 50 min_p 0 repeat 1.1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: LFM2.5-2.6B-Q8_0 ready at ctx 16384, thinking n/a, temp 0.1 top_p 1 top_k 50 min_p 0 repeat 1.1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: LFM2.5-2.6B-Q8_0 ready at ctx 16384, thinking n/a, temp 0.1 top_p 1 top_k 50 min_p 0 repeat 1.1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: system prompt — roster systemPrompt + workflow systemPrompt, 548 chars, sha256 259952993aec
+[pi process exited: 0]
+pi-small: MiniCPM5-2B-Q8_0 ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: MiniCPM5-2B-Q8_0 ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: MiniCPM5-2B-Q8_0 ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: system prompt — PI_SMALL_SYSTEM_PROMPT / pi default + workflow systemPrompt, 336 chars, sha256 2f420d25d03e
+[pi process exited: 0]
+pi-small: Granite-4.2-3B-Q8_0 ready at ctx 16384, thinking on, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: Granite-4.2-3B-Q8_0 ready at ctx 16384, thinking on, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: Granite-4.2-3B-Q8_0 ready at ctx 16384, thinking on, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: system prompt — PI_SMALL_SYSTEM_PROMPT / pi default + workflow systemPrompt, 336 chars, sha256 2f420d25d03e
+pi-small: response truncated at max_tokens (4096) — raise maxTokens for Granite-4.2-3B-Q8_0 in roster.json if this recurs
+[pi process exited: 0]
+pi-small: Spark-X2.5-4B-Q6_K ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 0 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: Spark-X2.5-4B-Q6_K ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 0 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: tool_calls FAIL — the model returned prose and no tool_calls field at all. Sample: Here are the files in the current directory:  ```bash ls ```  **Output:**  ``` total 8 drwxr-xr-x  1 user user 4096 Jan 
+pi-small: Spark-X2.5-4B-Q6_K ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 0 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, edit, report_done]
+pi-small: tool_calls FAIL — the model returned prose and no tool_calls field at all. Sample: Here are the files in the current directory:  ``` ls ```  ```bash ls ```  \``` ls \```
+pi-small: system prompt — PI_SMALL_SYSTEM_PROMPT / pi default + workflow systemPrompt, 336 chars, sha256 2f420d25d03e
+[pi process exited: 0]

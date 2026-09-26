@@ -1,0 +1,4 @@
+{"ts":"2026-09-24T08:00:13.515Z","type":"workflow_start","model":"Granite-4.2-3B-Q8_0","runDir":"D:\\llama.cpp\\pi-small\\workflow-runs\\roster-20260924-095928\\Granite-4.2-3B-Q8_0","resume":false}
+{"ts":"2026-09-24T08:00:13.519Z","type":"step_start","step":"01-scenarios-a1","kind":"scenarios","attempt":1,"promptChars":3276}
+{"ts":"2026-09-24T08:04:50.060Z","type":"step_run","step":"01-scenarios-a1","nudge":0,"exitCode":0,"timedOut":false,"durationMs":276533,"ok":false,"detail":"The session ended without a successful call to `submit_scenarios`."}
+{"ts":"2026-09-24T08:10:15.562Z","type":"step_run","step":"01-scenarios-a1","nudge":1,"exitCode":0,"timedOut":false,"durationMs":325496,"ok":false,"detail":"The session ended without a successful call to `submit_scenarios`."}

@@ -1,0 +1,4 @@
+pi-small: Qwen3.6-35B-A3B-Q4_K_M ready at ctx 16384, thinking on, temp 1 top_p 0.95 top_k 20 min_p 0 repeat 1 presence 1.5, max_tokens 4096, tools [bash]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: system prompt — PI_SMALL_SYSTEM_PROMPT / pi default, 40 chars, sha256 4d5ea7d40ab4
+[pi process exited: 143]

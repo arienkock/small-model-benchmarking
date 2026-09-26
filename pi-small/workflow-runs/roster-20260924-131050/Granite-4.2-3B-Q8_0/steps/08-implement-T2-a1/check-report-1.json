@@ -1,0 +1,32 @@
+{
+  "ok": false,
+  "problems": [
+    "no test is named for scenario(s) S3, S4, S5, S6, S7, S8, S9, S10, S11, S12 — put the id in the test's name, e.g. test_S3_<what>.",
+    "the test suite failed (`python3 -m unittest discover -s tests -v` exited 1)."
+  ],
+  "missingTokens": [
+    "S3",
+    "S4",
+    "S5",
+    "S6",
+    "S7",
+    "S8",
+    "S9",
+    "S10",
+    "S11",
+    "S12"
+  ],
+  "checks": [
+    {
+      "name": "Python standard library only",
+      "ok": true,
+      "tail": "only standard-library and local imports"
+    }
+  ],
+  "tests": {
+    "rc": 1,
+    "timedOut": false,
+    "count": 12,
+    "tail": "----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tests/test_T2.py\", line 13, in setUp\n    self.server = HTTPServer(('127.0.0.1', self.port), BookHandler)\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.11/socketserver.py\", line 456, in __init__\n    self.server_bind()\n  File \"/usr/lib/python3.11/http/server.py\", line 136, in server_bind\n    socketserver.TCPServer.server_bind(self)\n  File \"/usr/lib/python3.11/socketserver.py\", line 472, in server_bind\n    self.socket.bind(self.server_address)\nOSError: [Errno 98] Address already in use\n\n======================================================================\nERROR: test_T2_S9 (test_T2.TestT2.test_T2_S9)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tests/test_T2.py\", line 13, in setUp\n    self.server = HTTPServer(('127.0.0.1', self.port), BookHandler)\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.11/socketserver.py\", line 456, in __init__\n    self.server_bind()\n  File \"/usr/lib/python3.11/http/server.py\", line 136, in server_bind\n    socketserver.TCPServer.server_bind(self)\n  File \"/usr/lib/python3.11/socketserver.py\", line 472, in server_bind\n    self.socket.bind(self.server_address)\nOSError: [Errno 98] Address already in use\n\n======================================================================\nFAIL: test_T2_S10 (test_T2.TestT2.test_T2_S10)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tests/test_T2.py\", line 138, in test_T2_S10\n    self.assertEqual(code, 200)\nAssertionError: 404 != 200\n\n----------------------------------------------------------------------\nRan 12 tests in 3.302s\n\nFAILED (failures=1, errors=8)"
+  }
+}

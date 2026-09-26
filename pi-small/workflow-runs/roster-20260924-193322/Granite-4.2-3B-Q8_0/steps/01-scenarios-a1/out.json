@@ -1,0 +1,177 @@
+{
+  "tool": "submit_scenarios",
+  "accepted": true,
+  "args": {
+    "scenarios": [
+      {
+        "kind": "happy",
+        "title": "create_book",
+        "given": "empty in-memory DB",
+        "when": "POST /books with {\"title\":\"Test\",\"author\":\"Author\",\"isbn\":\"12345\"}",
+        "then": "201 with book id 1 and full book JSON"
+      },
+      {
+        "kind": "happy",
+        "title": "get_book",
+        "given": "book id 1 exists",
+        "when": "GET /books/1",
+        "then": "200 with book JSON"
+      },
+      {
+        "kind": "happy",
+        "title": "update_book",
+        "given": "book id 1 exists",
+        "when": "PUT /books/1 with {\"title\":\"New\",\"author\":\"Author2\",\"isbn\":\"99999\",\"synopsis\":\"desc\"}",
+        "then": "200 with updated book JSON"
+      },
+      {
+        "kind": "unhappy",
+        "title": "missing_required_field",
+        "given": "empty DB",
+        "when": "POST /books with {\"title\":\"Test\",\"author\":\"Author\",\"isbn\":\"12345\"}",
+        "then": "400 with error about missing field"
+      },
+      {
+        "kind": "happy",
+        "title": "create_book1",
+        "given": "empty in-memory DB",
+        "when": "POST /books with {\"title\":\"Test\",\"author\":\"Author\",\"isbn\":\"12345\"}",
+        "then": "201 with book id 1 and full book JSON"
+      },
+      {
+        "kind": "happy",
+        "title": "get_book1",
+        "given": "book id 1 exists",
+        "when": "GET /books/1",
+        "then": "200 with book JSON"
+      },
+      {
+        "kind": "happy",
+        "title": "update_book1",
+        "given": "book id 1 exists",
+        "when": "PUT /books/1 with {\"title\":\"New\",\"author\":\"Author2\",\"isbn\":\"99999\",\"synopsis\":\"desc\"}",
+        "then": "200 with updated book JSON"
+      },
+      {
+        "kind": "unhappy",
+        "title": "missing_field",
+        "given": "empty DB",
+        "when": "POST /books with {\"title\":\"Test\",\"author\":\"Author\",\"isbn\":\"12345\"}",
+        "then": "400 with error about missing field"
+      },
+      {
+        "kind": "unhappy",
+        "title": "invalid_json_body",
+        "given": "empty DB",
+        "when": "POST /books with \"{invalid}\"",
+        "then": "400 with error about invalid JSON"
+      },
+      {
+        "kind": "unhappy",
+        "title": "unknown_query_param",
+        "given": "book id 1 exists",
+        "when": "GET /books?unknown=foo",
+        "then": "400 with error about unknown query parameter"
+      },
+      {
+        "kind": "unhappy",
+        "title": "not_found_id",
+        "given": "book id 1 exists",
+        "when": "GET /books/999",
+        "then": "404 with error about book not found"
+      }
+    ]
+  },
+  "value": [
+    {
+      "id": "S1",
+      "kind": "happy",
+      "title": "create_book",
+      "given": "empty in-memory DB",
+      "when": "POST /books with {\"title\":\"Test\",\"author\":\"Author\",\"isbn\":\"12345\"}",
+      "then": "201 with book id 1 and full book JSON"
+    },
+    {
+      "id": "S2",
+      "kind": "happy",
+      "title": "get_book",
+      "given": "book id 1 exists",
+      "when": "GET /books/1",
+      "then": "200 with book JSON"
+    },
+    {
+      "id": "S3",
+      "kind": "happy",
+      "title": "update_book",
+      "given": "book id 1 exists",
+      "when": "PUT /books/1 with {\"title\":\"New\",\"author\":\"Author2\",\"isbn\":\"99999\",\"synopsis\":\"desc\"}",
+      "then": "200 with updated book JSON"
+    },
+    {
+      "id": "S4",
+      "kind": "unhappy",
+      "title": "missing_required_field",
+      "given": "empty DB",
+      "when": "POST /books with {\"title\":\"Test\",\"author\":\"Author\",\"isbn\":\"12345\"}",
+      "then": "400 with error about missing field"
+    },
+    {
+      "id": "S5",
+      "kind": "happy",
+      "title": "create_book1",
+      "given": "empty in-memory DB",
+      "when": "POST /books with {\"title\":\"Test\",\"author\":\"Author\",\"isbn\":\"12345\"}",
+      "then": "201 with book id 1 and full book JSON"
+    },
+    {
+      "id": "S6",
+      "kind": "happy",
+      "title": "get_book1",
+      "given": "book id 1 exists",
+      "when": "GET /books/1",
+      "then": "200 with book JSON"
+    },
+    {
+      "id": "S7",
+      "kind": "happy",
+      "title": "update_book1",
+      "given": "book id 1 exists",
+      "when": "PUT /books/1 with {\"title\":\"New\",\"author\":\"Author2\",\"isbn\":\"99999\",\"synopsis\":\"desc\"}",
+      "then": "200 with updated book JSON"
+    },
+    {
+      "id": "S8",
+      "kind": "unhappy",
+      "title": "missing_field",
+      "given": "empty DB",
+      "when": "POST /books with {\"title\":\"Test\",\"author\":\"Author\",\"isbn\":\"12345\"}",
+      "then": "400 with error about missing field"
+    },
+    {
+      "id": "S9",
+      "kind": "unhappy",
+      "title": "invalid_json_body",
+      "given": "empty DB",
+      "when": "POST /books with \"{invalid}\"",
+      "then": "400 with error about invalid JSON"
+    },
+    {
+      "id": "S10",
+      "kind": "unhappy",
+      "title": "unknown_query_param",
+      "given": "book id 1 exists",
+      "when": "GET /books?unknown=foo",
+      "then": "400 with error about unknown query parameter"
+    },
+    {
+      "id": "S11",
+      "kind": "unhappy",
+      "title": "not_found_id",
+      "given": "book id 1 exists",
+      "when": "GET /books/999",
+      "then": "404 with error about book not found"
+    }
+  ],
+  "refusals": 2,
+  "at": "2026-09-24T17:37:16.159Z"
+}

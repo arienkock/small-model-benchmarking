@@ -1,0 +1,53 @@
+[proxy 04:44:51] listening on 0.0.0.0:8123, llama-server on 127.0.0.1:8125
+[proxy 04:44:52] switching to Granite-4.2-3B-Q8_0 …
+model:   Granite-4.2-3B-Q8_0
+weights: D:\llama-cache\models--ibm-granite--granite-4.2-3b-GGUF\snapshots\c40945d71cd90f249a56985e8155551a9188dc30\granite-4.2-3b-Q8_0.gguf
+cache:   D:\llama-cache
+bind:    127.0.0.1:8125
+thinking: on
+sampler: temp=1 top_p=0.95 top_k=50 min_p=0 repeat_penalty=1 presence_penalty=0
+log:     D:\llama.cpp\pi-small\.logs\llama-Granite-4.2-3B-Q8_0-c16384-2026-09-25T04-44-52-158Z.log
+waiting for the model to load at ctx 16384 ...
+ready: Granite-4.2-3B-Q8_0 on port 8125, ctx 16384
+verified: live sampler matches the roster
+[proxy 04:44:58] serving Granite-4.2-3B-Q8_0 (ctx 16384)
+[proxy 05:00:20] switching to Spark-X2.5-4B-Q6_K …
+switching from Granite-4.2-3B-Q8_0 to Spark-X2.5-4B-Q6_K ...
+model:   Spark-X2.5-4B-Q6_K
+weights: D:\llama-cache\models--sizzlebop--Spark-X2.5-4B-GGUF\snapshots\bdb8637b34348fcad38bdcb9ed1a2e4f3739383e\Spark-X2.5-4B-Q6_K.gguf
+cache:   D:\llama-cache
+bind:    127.0.0.1:8125
+thinking: n/a (no thinking mode)
+sampler: temp=1 top_p=0.95 top_k=0 min_p=0 repeat_penalty=1 presence_penalty=0
+log:     D:\llama.cpp\pi-small\.logs\llama-Spark-X2.5-4B-Q6_K-c16384-2026-09-25T05-00-22-529Z.log
+waiting for the model to load at ctx 16384 ...
+ready: Spark-X2.5-4B-Q6_K on port 8125, ctx 16384
+verified: live sampler matches the roster
+[proxy 05:00:28] serving Spark-X2.5-4B-Q6_K (ctx 16384)
+[proxy 05:01:44] listening on 0.0.0.0:8123, llama-server on 127.0.0.1:8125
+[proxy 05:01:44] switching to Granite-4.2-3B-Q8_0 …
+switching from Spark-X2.5-4B-Q6_K to Granite-4.2-3B-Q8_0 ...
+model:   Granite-4.2-3B-Q8_0
+weights: D:\llama-cache\models--ibm-granite--granite-4.2-3b-GGUF\snapshots\c40945d71cd90f249a56985e8155551a9188dc30\granite-4.2-3b-Q8_0.gguf
+cache:   D:\llama-cache
+bind:    127.0.0.1:8125
+thinking: on
+sampler: temp=1 top_p=0.95 top_k=50 min_p=0 repeat_penalty=1 presence_penalty=0
+log:     D:\llama.cpp\pi-small\.logs\llama-Granite-4.2-3B-Q8_0-c16384-2026-09-25T05-01-46-939Z.log
+waiting for the model to load at ctx 16384 ...
+ready: Granite-4.2-3B-Q8_0 on port 8125, ctx 16384
+verified: live sampler matches the roster
+[proxy 05:01:53] serving Granite-4.2-3B-Q8_0 (ctx 16384)
+[proxy 05:17:12] switching to Spark-X2.5-4B-Q6_K …
+switching from Granite-4.2-3B-Q8_0 to Spark-X2.5-4B-Q6_K ...
+model:   Spark-X2.5-4B-Q6_K
+weights: D:\llama-cache\models--sizzlebop--Spark-X2.5-4B-GGUF\snapshots\bdb8637b34348fcad38bdcb9ed1a2e4f3739383e\Spark-X2.5-4B-Q6_K.gguf
+cache:   D:\llama-cache
+bind:    127.0.0.1:8125
+thinking: n/a (no thinking mode)
+sampler: temp=1 top_p=0.95 top_k=0 min_p=0 repeat_penalty=1 presence_penalty=0
+log:     D:\llama.cpp\pi-small\.logs\llama-Spark-X2.5-4B-Q6_K-c16384-2026-09-25T05-17-14-775Z.log
+waiting for the model to load at ctx 16384 ...
+ready: Spark-X2.5-4B-Q6_K on port 8125, ctx 16384
+verified: live sampler matches the roster
+[proxy 05:17:20] serving Spark-X2.5-4B-Q6_K (ctx 16384)

@@ -1,0 +1,45 @@
+{
+  "ok": false,
+  "problems": [
+    "the test suite failed (`python3 -m unittest discover -s tests -v` exited 1)."
+  ],
+  "checks": [
+    {
+      "name": "Python standard library only",
+      "ok": true,
+      "tail": "only standard-library and local imports"
+    }
+  ],
+  "tests": {
+    "rc": 1,
+    "timedOut": false,
+    "count": 15,
+    "tail": "\n======================================================================\nFAIL: test_S1_create_book (test_t2.TestT2.test_S1_create_book)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tests/test_t2.py\", line 48, in test_S1_create_book\n    self.assertEqual(data['id'], 1)\nAssertionError: 2 != 1\n\n======================================================================\nFAIL: test_S2_get_book (test_t2.TestT2.test_S2_get_book)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tests/test_t2.py\", line 58, in test_S2_get_book\n    self.assertEqual(data['title'], \"1984\")\nAssertionError: 'Nineteen Eighty-Four' != '1984'\n- Nineteen Eighty-Four\n+ 1984\n\n\n======================================================================\nFAIL: test_S5_multiple_filters (test_t2.TestT2.test_S5_multiple_filters)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tests/test_t2.py\", line 104, in test_S5_multiple_filters\n    self.assertEqual(len(data), 1)\nAssertionError: 0 != 1\n\n======================================================================\nFAIL: test_S6_filter_title_and_author (test_t2.TestT2.test_S6_filter_title_and_author)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tests/test_t2.py\", line 120, in test_S6_filter_title_and_author\n    self.assertEqual(len(data), 1)\nAssertionError: 4 != 1\n\n----------------------------------------------------------------------\nRan 15 tests in 0.656s\n\nFAILED (failures=4, errors=2)",
+    "failures": [
+      {
+        "test": "test_S4_search_q",
+        "error": "http.client.RemoteDisconnected: Remote end closed connection without response"
+      },
+      {
+        "test": "test_S8_delete_book",
+        "error": "json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)"
+      },
+      {
+        "test": "test_S1_create_book",
+        "error": "AssertionError: 2 != 1"
+      },
+      {
+        "test": "test_S2_get_book",
+        "error": "+ 1984"
+      },
+      {
+        "test": "test_S5_multiple_filters",
+        "error": "AssertionError: 0 != 1"
+      },
+      {
+        "test": "test_S6_filter_title_and_author",
+        "error": "AssertionError: 4 != 1"
+      }
+    ]
+  }
+}

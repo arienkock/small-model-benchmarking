@@ -1,0 +1,72 @@
+{
+  "tool": "submit_findings",
+  "accepted": true,
+  "args": {
+    "findings": [
+      {
+        "priority": "high",
+        "title": "Missing field type validation in POST and PUT",
+        "where": "do_POST, do_PUT",
+        "detail": "The task requires 400 for a field of the wrong type, but the code never checks that title/author/isbn are strings and synopsis is string/optional. PUT also doesn't validate empty required fields or field types (same rules as create)."
+      },
+      {
+        "priority": "high",
+        "title": "PUT endpoint does not validate required fields or field types",
+        "where": "do_PUT",
+        "detail": "PUT /books/{id} replaces fields but does not reject empty required fields or non-string types, despite the spec saying 'same rules as create'."
+      },
+      {
+        "priority": "medium",
+        "title": "Empty-body POST sends 400 before JSON parsing",
+        "where": "do_POST",
+        "detail": "The explicit empty-content_length check sends 400 'empty body' before json.loads. The spec doesn't explicitly call out empty bodies as a 400, but this is redundant with JSONDecodeError handling. Not a correctness bug but inconsistent."
+      },
+      {
+        "priority": "medium",
+        "title": "GET /books query parameter q filter interacts with id filter",
+        "where": "do_GET_all",
+        "detail": "When both id and q are specified, the code applies id filter first then q filter to the narrowed result set. This is likely correct behavior but should be verified against spec: 'several parameters together must all match'."
+      },
+      {
+        "priority": "low",
+        "title": "Redundant/duplicate error messages in POST",
+        "where": "do_POST",
+        "detail": "The code checks isbn=='' separately from the broader empty check, producing two different error messages. Also missing type checks means the empty check alone would be the only validation."
+      }
+    ]
+  },
+  "value": [
+    {
+      "priority": "high",
+      "title": "Missing field type validation in POST and PUT",
+      "where": "do_POST, do_PUT",
+      "detail": "The task requires 400 for a field of the wrong type, but the code never checks that title/author/isbn are strings and synopsis is string/optional. PUT also doesn't validate empty required fields or field types (same rules as create)."
+    },
+    {
+      "priority": "high",
+      "title": "PUT endpoint does not validate required fields or field types",
+      "where": "do_PUT",
+      "detail": "PUT /books/{id} replaces fields but does not reject empty required fields or non-string types, despite the spec saying 'same rules as create'."
+    },
+    {
+      "priority": "medium",
+      "title": "Empty-body POST sends 400 before JSON parsing",
+      "where": "do_POST",
+      "detail": "The explicit empty-content_length check sends 400 'empty body' before json.loads. The spec doesn't explicitly call out empty bodies as a 400, but this is redundant with JSONDecodeError handling. Not a correctness bug but inconsistent."
+    },
+    {
+      "priority": "medium",
+      "title": "GET /books query parameter q filter interacts with id filter",
+      "where": "do_GET_all",
+      "detail": "When both id and q are specified, the code applies id filter first then q filter to the narrowed result set. This is likely correct behavior but should be verified against spec: 'several parameters together must all match'."
+    },
+    {
+      "priority": "low",
+      "title": "Redundant/duplicate error messages in POST",
+      "where": "do_POST",
+      "detail": "The code checks isbn=='' separately from the broader empty check, producing two different error messages. Also missing type checks means the empty check alone would be the only validation."
+    }
+  ],
+  "refusals": 0,
+  "at": "2026-09-25T10:52:41.727Z"
+}

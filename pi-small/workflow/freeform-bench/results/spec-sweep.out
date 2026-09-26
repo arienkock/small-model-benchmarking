@@ -1,0 +1,25 @@
+=== none:   (22:09:11)
+  loaded after 260 s; 5404 MiB GPU; 2,436 MB RAM free
+  A-rewrite #0: gen 700 @ 11.73 t/s, wall 92s
+  B-novel #0: gen 700 @ 11.59 t/s, wall 64s
+  A-rewrite #1: gen 700 @ 11.77 t/s, wall 60s
+  B-novel #1: gen 700 @ 11.63 t/s, wall 63s
+=== ngsimple: --spec-type ngram-simple  (22:18:43)
+  loaded after 270 s; 5404 MiB GPU; 2,535 MB RAM free
+  A-rewrite #0: gen 700 @ 11.47 t/s, draft 661/709, wall 90s
+  B-novel #0: gen 700 @ 7.36 t/s, draft 54/345, wall 104s
+  A-rewrite #1: gen 700 @ 13.07 t/s, draft 661/709, wall 55s
+  B-novel #1: gen 700 @ 7.23 t/s, draft 64/537, wall 102s
+=== ngmod: --spec-type ngram-mod  (22:29:35)
+  loaded after 265 s; 5412 MiB GPU; 2,292 MB RAM free
+  A-rewrite #0: gen 700 @ 9.34 t/s, draft 639/755, wall 97s
+  B-novel #0: gen 700 @ 8.33 t/s, draft 9/9, wall 94s
+  A-rewrite #1: gen 700 @ 12.40 t/s, draft 684/755, wall 58s
+  B-novel #1: gen 700 @ 9.03 t/s, draft 27/249, wall 81s
+=== ngcache: --spec-type ngram-cache  (22:39:50)
+  loaded after 260 s; 5412 MiB GPU; 2,109 MB RAM free
+  A-rewrite #0: gen 700 @ 7.16 t/s, draft 543/795, wall 138s
+  B-novel #0: gen 700 @ 4.43 t/s, draft 105/1042, wall 164s
+  A-rewrite #1: gen 700 @ 7.28 t/s, draft 549/796, wall 97s
+  B-novel #1: gen 700 @ 4.92 t/s, draft 66/881, wall 146s
+=== done 22:53:34

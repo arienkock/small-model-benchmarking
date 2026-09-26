@@ -1,0 +1,61 @@
+{
+  "tool": "submit_task_plan",
+  "accepted": true,
+  "args": {
+    "scenarios": [
+      {
+        "kind": "happy",
+        "title": "List books by query",
+        "given": "Two books exist (id 1 with isbn '1234567890', id 2 with different isbn)",
+        "when": "GET /books?q=1234567890",
+        "then": "200 with a JSON list containing the book id 1"
+      },
+      {
+        "kind": "unhappy",
+        "title": "Unknown query param",
+        "given": "Server running",
+        "when": "GET /books?id=5",
+        "then": "400 with {'error': 'id is not a valid query parameter'}"
+      }
+    ],
+    "logic": [
+      "> In-memory storage: books: dict[int, dict] and books_list: list[dict] ordered by id",
+      " GET /books handler: parse query params with urllib.parse.parse_qs; validate all params against allowed set {title, author, isbn, synopsis, q}; id param is rejected as unknown per S8",
+      " Filter: id param keeps only that id; field params keep books whose field contains value case-insensitively; q keeps books where any of the four fields contains value case-insensitively; all params must match simultaneously",
+      " Unknown param → 400 {'error': '<message>'}",
+      " Return 200 JSON list ordered by id; 404 for missing book or invalid path",
+      " Tests in tests/test_s4.py and tests/test_s8.py start the server on a free port via threading, run the request, and shut it down"
+    ]
+  },
+  "refusals": 0,
+  "at": "2026-09-24T13:18:14.469Z",
+  "value": {
+    "scenarios": [
+      {
+        "id": "T3.S1",
+        "kind": "happy",
+        "title": "List books by query",
+        "given": "Two books exist (id 1 with isbn '1234567890', id 2 with different isbn)",
+        "when": "GET /books?q=1234567890",
+        "then": "200 with a JSON list containing the book id 1"
+      },
+      {
+        "id": "T3.S2",
+        "kind": "unhappy",
+        "title": "Unknown query param",
+        "given": "Server running",
+        "when": "GET /books?id=5",
+        "then": "400 with {'error': 'id is not a valid query parameter'}"
+      }
+    ],
+    "logic": [
+      "> In-memory storage: books: dict[int, dict] and books_list: list[dict] ordered by id",
+      "GET /books handler: parse query params with urllib.parse.parse_qs; validate all params against allowed set {title, author, isbn, synopsis, q}; id param is rejected as unknown per S8",
+      "Filter: id param keeps only that id; field params keep books whose field contains value case-insensitively; q keeps books where any of the four fields contains value case-insensitively; all params must match simultaneously",
+      "Unknown param → 400 {'error': '<message>'}",
+      "Return 200 JSON list ordered by id; 404 for missing book or invalid path",
+      "Tests in tests/test_s4.py and tests/test_s8.py start the server on a free port via threading, run the request, and shut it down"
+    ]
+  },
+  "check": null
+}

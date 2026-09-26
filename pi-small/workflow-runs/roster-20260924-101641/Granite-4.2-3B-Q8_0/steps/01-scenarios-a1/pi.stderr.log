@@ -1,0 +1,3 @@
+pi-small: Granite-4.2-3B-Q8_0 ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [submit_scenarios]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: system prompt — PI_SMALL_SYSTEM_PROMPT / pi default, 40 chars, sha256 4d5ea7d40ab4

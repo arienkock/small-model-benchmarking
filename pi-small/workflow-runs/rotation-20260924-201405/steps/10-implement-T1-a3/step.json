@@ -1,0 +1,69 @@
+{
+  "kind": "implement",
+  "taskId": "T1",
+  "tool": "report_done",
+  "toolset": "coding",
+  "out": "/harness/out.json",
+  "config": {
+    "scenarios": {
+      "minHappy": 3,
+      "minUnhappy": 3,
+      "max": 16
+    },
+    "tasks": {
+      "min": 2,
+      "max": 6
+    },
+    "taskScenarios": {
+      "minHappy": 1,
+      "minUnhappy": 1,
+      "max": 10
+    },
+    "logic": {
+      "min": 1,
+      "max": 12
+    },
+    "attempts": {
+      "planning": 1000,
+      "implement": 1000,
+      "integrate": 1000
+    },
+    "maxTurns": 10,
+    "doneRefusals": 4,
+    "stepTimeoutMin": 15,
+    "testTimeoutSec": 60,
+    "systemPrompt": "Response style: terse. Use as few words as possible — in your reasoning, in your messages, and in the fields you submit. No preamble, no restating the task, no summary of what you did or are about to do. Code, commands and tool arguments are as long as they need to be; everything else is short.",
+    "_about": "2026-09-24 experiment: every session is cut at 10 turns (on top of the time limits), and every failed session hands the step to the next model in the --models rotation. Attempts are effectively unlimited; the run's --deadline ends it."
+  },
+  "systemPrompt": "Response style: terse. Use as few words as possible — in your reasoning, in your messages, and in the fields you submit. No preamble, no restating the task, no summary of what you did or are about to do. Code, commands and tool arguments are as long as they need to be; everything else is short.",
+  "check": {
+    "testCommand": "python3 -m unittest discover -s tests -v",
+    "testTimeoutSec": 60,
+    "testFiles": [
+      "tests/*.py"
+    ],
+    "testCountPattern": "^Ran (\\d+) tests?",
+    "requiredTokens": [
+      "S1",
+      "S2",
+      "S3",
+      "S4",
+      "S5",
+      "S6",
+      "S7",
+      "T1_S1",
+      "T1_S2",
+      "T1_S3",
+      "T1_S4",
+      "T1_S5"
+    ],
+    "checks": [
+      {
+        "name": "Python standard library only",
+        "command": "python3 /opt/pi-small/workflow/checks/python_stdlib_only.py"
+      }
+    ]
+  },
+  "checkScript": "/opt/pi-small/workflow/check.py",
+  "checkSpecPath": "/harness/check.json"
+}

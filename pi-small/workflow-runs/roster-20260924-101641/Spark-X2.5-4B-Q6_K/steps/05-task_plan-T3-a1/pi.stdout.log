@@ -1,0 +1,147 @@
+```json
+{
+  "scenarios": [
+    {
+      "kind": "happy",
+      "title": "S3",
+      "given": "Book store has one book with id 1, title 'Dune', author 'Frank Herbert', isbn '978-0441172719', synopsis 'A vast empire and its conflict'",
+      "when": "PUT /books/1 with JSON {'title': 'Dune 2', 'author': 'Frank Herbert Jr', 'isbn': '978-0441172720', 'synopsis': 'Updated synopsis'}",
+      "then": "Response is 200 with JSON containing title 'Dune 2', author 'Frank Herbert Jr', isbn '978-0441172720', synopsis 'Updated synopsis'"
+    },
+    {
+      "kind": "unhappy",
+      "title": "S8",
+      "given": "Book store starts empty in memory",
+      "when": "PUT /books/abc with JSON {'title': 'Dune', 'author': 'Frank Herbert', 'isbn': '978-0123'}",
+      "then": "Response is 400 with JSON {'error': '<message>'}"
+    },
+    {
+      "kind": "unhappy",
+      "title": "S9",
+      "given": "Book store has books with ids 1 and 2, but not id 999",
+      "when": "GET /books/999",
+      "then": "Response is 404 with JSON {'error': '<message>'}"
+    },
+    {
+      "kind": "unhappy",
+      "title": "S10",
+      "given": "Book store has books with ids 1 and 2, but not id 999",
+      "when": "DELETE /books/999",
+      "then": "Response is 404 with JSON {'error': '<message>'}"
+    },
+    {
+      "kind": "unhappy",
+      "title": "S13",
+      "given": "Book store has books with ids 1, 2 and 3",
+      "when": "GET /books/notanumber",
+      "then": "Response is 400 with JSON {'error': '<message>'}"
+    }
+  ],
+  "logic": [
+    "Book object holds id (int), title (str), author (str), isbn (str), synopsis (str, default '') and serializes to/from JSON.",
+    "BookStore (thread-safe) stores books in a dict keyed by id, maintains an auto-incrementing id counter starting at 1, and provides get_book(id), delete_book(id), and list_books() returning all books in ascending id order.",
+    "Path validation: both GET and PUT parse request.path with a regex ^/books/(\\d+)$ ; a non-integer path id returns 400 with {'error': 'Book id must be an integer'}.",
+    "GET /books/{id}: parse integer id; look up book in store; return 200 with the book JSON if found, else 404 with {'error': 'Book not found'}.",
+    "PUT /books/{id}: parse integer id from path (400 if not an integer); parse and validate the JSON body via the shared validation logic from T2 (title/author/isbn required non-empty strings, synopsis optional string, id must not be present in the body); if validation fails return 400 with {'error': '<message>'}; look up the book; if not found return 404 with {'error': 'Book not found'}; else update the book's title, author, isbn, and synopsis fields and return 200 with the updated book JSON.",
+    "All error responses use the JSON format {'error': '<message>'} with the appropriate HTTP status code."
+  ]
+}
+```
+```json
+{
+  "scenarios": [
+    {
+      "kind": "happy",
+      "title": "S3",
+      "given": "Book store has one book with id 1, title 'Dune', author 'Frank Herbert', isbn '978-0441172719', synopsis 'A vast empire and its conflict'",
+      "when": "PUT /books/1 with JSON {'title': 'Dune 2', 'author': 'Frank Herbert Jr', 'isbn': '978-0441172720', 'synopsis': 'Updated synopsis'}",
+      "then": "Response is 200 with JSON containing title 'Dune 2', author 'Frank Herbert Jr', isbn '978-0441172720', synopsis 'Updated synopsis'"
+    },
+    {
+      "kind": "unhappy",
+      "title": "S8",
+      "given": "Book store starts empty in memory",
+      "when": "PUT /books/abc with JSON {'title': 'Dune', 'author': 'Frank Herbert', 'isbn': '978-0123'}",
+      "then": "Response is 400 with JSON {'error': '<message>'}"
+    },
+    {
+      "kind": "unhappy",
+      "title": "S9",
+      "given": "Book store has books with ids 1 and 2, but not id 999",
+      "when": "GET /books/999",
+      "then": "Response is 404 with JSON {'error': '<message>'}"
+    },
+    {
+      "kind": "unhappy",
+      "title": "S10",
+      "given": "Book store has books with ids 1 and 2, but not id 999",
+      "when": "DELETE /books/999",
+      "then": "Response is 404 with JSON {'error': '<message>'}"
+    },
+    {
+      "kind": "unhappy",
+      "title": "S13",
+      "given": "Book store has books with ids 1, 2 and 3",
+      "when": "GET /books/notanumber",
+      "then": "Response is 400 with JSON {'error': '<message>'}"
+    }
+  ],
+  "logic": [
+    "Book object holds id (int), title (str), author (str), isbn (str), synopsis (str, default '') and serializes to/from JSON.",
+    "BookStore (thread-safe) stores books in a dict keyed by id, maintains an auto-incrementing id counter starting at 1, and provides get_book(id), delete_book(id), and list_books() returning all books in ascending id order.",
+    "Path validation: both GET and PUT parse request.path with a regex ^/books/(\\d+)$ ; a non-integer path id returns 400 with {'error': 'Book id must be an integer'}.",
+    "GET /books/{id}: parse integer id; look up book in store; return 200 with the book JSON if found, else 404 with {'error': 'Book not found'}.",
+    "PUT /books/{id}: parse integer id from path (400 if not an integer); parse and validate the JSON body via the shared validation logic from T2 (title/author/isbn required non-empty strings, synopsis optional string, id must not be present in the body); if validation fails return 400 with {'error': '<message>'}; look up the book; if not found return 404 with {'error': 'Book not found'}; else update the book's title, author, isbn, and synopsis fields and return 200 with the updated book JSON.",
+    "All error responses use the JSON format {'error': '<message>'} with the appropriate HTTP status code."
+  ]
+}
+```
+```json
+{
+  "scenarios": [
+    {
+      "kind": "happy",
+      "title": "S3",
+      "given": "Book store has one book with id 1, title 'Dune', author 'Frank Herbert', isbn '978-0441172719', synopsis 'A vast empire and its conflict'",
+      "when": "PUT /books/1 with JSON {'title': 'Dune 2', 'author': 'Frank Herbert Jr', 'isbn': '978-0441172720', 'synopsis': 'Updated synopsis'}",
+      "then": "Response is 200 with JSON containing title 'Dune 2', author 'Frank Herbert Jr', isbn '978-0441172720', synopsis 'Updated synopsis'"
+    },
+    {
+      "kind": "unhappy",
+      "title": "S8",
+      "given": "Book store starts empty in memory",
+      "when": "PUT /books/abc with JSON {'title': 'Dune', 'author': 'Frank Herbert', 'isbn': '978-0123'}",
+      "then": "Response is 400 with JSON {'error': '<message>'}"
+    },
+    {
+      "kind": "unhappy",
+      "title": "S9",
+      "given": "Book store has books with ids 1 and 2, but not id 999",
+      "when": "GET /books/999",
+      "then": "Response is 404 with JSON {'error': '<message>'}"
+    },
+    {
+      "kind": "unhappy",
+      "title": "S10",
+      "given": "Book store has books with ids 1 and 2, but not id 999",
+      "when": "DELETE /books/999",
+      "then": "Response is 404 with JSON {'error': '<message>'}"
+    },
+    {
+      "kind": "unhappy",
+      "title": "S13",
+      "given": "Book store has books with ids 1, 2 and 3",
+      "when": "GET /books/notanumber",
+      "then": "Response is 400 with JSON {'error': '<message>'}"
+    }
+  ],
+  "logic": [
+    "Book object holds id (int), title (str), author (str), isbn (str), synopsis (str, default '') and serializes to/from JSON.",
+    "BookStore (thread-safe) stores books in a dict keyed by id, maintains an auto-incrementing id counter starting at 1, and provides get_book(id), delete_book(id), and list_books() returning all books in ascending id order.",
+    "Path validation: both GET and PUT parse request.path with a regex ^/books/(\\d+)$ ; a non-integer path id returns 400 with {'error': 'Book id must be an integer'}.",
+    "GET /books/{id}: parse integer id; look up book in store; return 200 with the book JSON if found, else 404 with {'error': 'Book not found'}.",
+    "PUT /books/{id}: parse integer id from path (400 if not an integer); parse and validate the JSON body via the shared validation logic from T2 (title/author/isbn required non-empty strings, synopsis optional string, id must not be present in the body); if validation fails return 400 with {'error': '<message>'}; look up the book; if not found return 404 with {'error': 'Book not found'}; else update the book's title, author, isbn, and synopsis fields and return 200 with the updated book JSON.",
+    "All error responses use the JSON format {'error': '<message>'} with the appropriate HTTP status code."
+  ]
+}
+```

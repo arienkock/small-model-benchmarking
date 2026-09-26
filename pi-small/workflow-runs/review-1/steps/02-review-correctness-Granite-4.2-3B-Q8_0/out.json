@@ -1,0 +1,60 @@
+{
+  "tool": "submit_findings",
+  "accepted": true,
+  "args": {
+    "findings": [
+      {
+        "priority": "high",
+        "title": "GET /books filtering broken (q parameter and general logic)",
+        "where": "app.py do_GET_all",
+        "detail": "q parameter searches across fields but code uses b[\"q\"].lower() which does not exist; filter logic does not correctly intersect multiple query parameters; results are not sorted by id."
+      },
+      {
+        "priority": "high",
+        "title": "GET /books query parameter validation insufficient",
+        "where": "app.py do_GET_all",
+        "detail": "Allows multiple matching filter keys but does not enforce that all supplied query parameters are known; already checks but implementation may still misapply."
+      },
+      {
+        "priority": "medium",
+        "title": "Missing id reuse after delete handling (not required per spec)",
+        "where": "app.py",
+        "detail": "Server reuses ids after delete; spec says id never reused after delete – but implementation never deletes, so fine."
+      },
+      {
+        "priority": "medium",
+        "title": "PUT /books expects id in path but does not validate it's integer",
+        "where": "app.py do_PUT",
+        "detail": "Path parsing uses int conversion; okay but could be clearer; fine."
+      }
+    ]
+  },
+  "value": [
+    {
+      "priority": "high",
+      "title": "GET /books filtering broken (q parameter and general logic)",
+      "where": "app.py do_GET_all",
+      "detail": "q parameter searches across fields but code uses b[\"q\"].lower() which does not exist; filter logic does not correctly intersect multiple query parameters; results are not sorted by id."
+    },
+    {
+      "priority": "high",
+      "title": "GET /books query parameter validation insufficient",
+      "where": "app.py do_GET_all",
+      "detail": "Allows multiple matching filter keys but does not enforce that all supplied query parameters are known; already checks but implementation may still misapply."
+    },
+    {
+      "priority": "medium",
+      "title": "Missing id reuse after delete handling (not required per spec)",
+      "where": "app.py",
+      "detail": "Server reuses ids after delete; spec says id never reused after delete – but implementation never deletes, so fine."
+    },
+    {
+      "priority": "medium",
+      "title": "PUT /books expects id in path but does not validate it's integer",
+      "where": "app.py do_PUT",
+      "detail": "Path parsing uses int conversion; okay but could be clearer; fine."
+    }
+  ],
+  "refusals": 0,
+  "at": "2026-09-25T06:21:48.119Z"
+}

@@ -1,0 +1,7 @@
+pi-small: compaction.reserveTokens 6144 -> 10240 (roster maxTokens needs it)
+pi-small: Qwen3.6-35B-A3B-Q4_K_M ready at ctx 32768, thinking on, temp 1 top_p 0.95 top_k 20 min_p 0 repeat 1 presence 1.5, max_tokens 8192, tools [bash]
+pi-small: turn_boundary FAIL — no response from the server
+pi-small: tool_calls FAIL — no response from the server
+pi-small: sampler MISMATCH — could not read /props
+pi-small: system prompt — PI_SMALL_SYSTEM_PROMPT / pi default + terse style, 336 chars, sha256 2f420d25d03e
+[pi process exited: 0]

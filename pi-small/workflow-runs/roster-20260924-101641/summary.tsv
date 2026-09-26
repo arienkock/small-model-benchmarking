@@ -1,0 +1,3 @@
+model	status	minutes	grade	failure
+Granite-4.2-3B-Q8_0	stopped	85	no server	time budget ran out during implement-T1 attempt 2
+Spark-X2.5-4B-Q6_K	stopped	83.9	no server	time budget ran out during implement-T1 attempt 1 (roster script stopped after Spark for the harness update)

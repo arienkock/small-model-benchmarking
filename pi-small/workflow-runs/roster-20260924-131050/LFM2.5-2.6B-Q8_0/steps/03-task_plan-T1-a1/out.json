@@ -1,0 +1,156 @@
+{
+  "tool": "submit_task_plan",
+  "accepted": true,
+  "args": {
+    "scenarios": [
+      {
+        "kind": "happy",
+        "title": "Create book and get ID",
+        "given": "No books exist yet; PORT=8000",
+        "when": "POST /books with {\"title\": \"Dune\", \"author\": \"Frank Herbert\", \"isbn\": \"12345\"}",
+        "then": "201 Created response containing the new book with id 1"
+      },
+      {
+        "kind": "happy",
+        "title": "Retrieve book by ID",
+        "given": "Book with id=1 exists from previous create; PORT=8000",
+        "when": "GET /books/1",
+        "then": "200 OK with the book object including id: 1"
+      },
+      {
+        "kind": "happy",
+        "title": "Fetch existing book by ID",
+        "given": "Book with id=1 exists from previous create; PORT=8000",
+        "when": "GET /books/1",
+        "then": "200 OK with the book object including id: 1"
+      },
+      {
+        "kind": "unhappy",
+        "title": "Create book missing required field",
+        "given": "No books exist yet; PORT=8000",
+        "when": "POST /books with {\"author\": \"Frank Herbert\", \"isbn\": \"12345\"}",
+        "then": "400 Bad Request with error message about missing title"
+      },
+      {
+        "kind": "unhappy",
+        "title": "Update with invalid JSON",
+        "given": "No books exist yet; PORT=8000",
+        "when": "PUT /books/1 with body \"{invalid json}\"",
+        "then": "400 Bad Request with error message about invalid JSON"
+      },
+      {
+        "kind": "unhappy",
+        "title": "Query with unknown parameter",
+        "given": "Book with id=1 exists from previous create; PORT=8000",
+        "when": "GET /books?unknown_param=value",
+        "then": "400 Bad Request with error about unknown query parameter"
+      },
+      {
+        "kind": "unhappy",
+        "title": "Missing required field in create (duplicate)",
+        "given": "No books exist yet; PORT=8000",
+        "when": "POST /books with {\"author\": \"Frank Herbert\", \"isbn\": \"12345\"}",
+        "then": "400 Bad Request with error about missing title"
+      },
+      {
+        "kind": "unhappy",
+        "title": "Invalid JSON body in PUT (duplicate)",
+        "given": "No books exist yet; PORT=8000",
+        "when": "PUT /books/1 with body \"{invalid json}\"",
+        "then": "400 Bad Request with error about invalid JSON"
+      },
+      {
+        "kind": "unhappy",
+        "title": "Unknown query parameter on list",
+        "given": "Book with id=1 exists from previous create; PORT=8000",
+        "when": "GET /books?unknown_param=value",
+        "then": "400 Bad Request with error about unknown query parameter"
+      }
+    ],
+    "logic": [
+      "Use Python 3 standard library (http.server, json, urllib.parse). Store books in a list of dicts keyed by id. Assign sequential integer IDs starting from 1. For POST /books: parse JSON body, validate required fields (title, author, isbn) are non-empty strings, create book with next ID and empty synopsis, return 201 with the full book dict. For GET /books/{id}: find book by id; if not found return 404, else return 200 with the book. For PUT /books/{id}: parse JSON body, validate required fields, update the book dict in place, return 200 with updated book. For DELETE /books/{id}: find and remove the book; if not found return 404, else return 204 with no body. All error responses are JSON objects {\"error\": \"message\"}. Unknown query parameters trigger a 400 error."
+    ]
+  },
+  "refusals": 0,
+  "at": "2026-09-24T11:17:51.497Z",
+  "value": {
+    "scenarios": [
+      {
+        "id": "T1.S1",
+        "kind": "happy",
+        "title": "Create book and get ID",
+        "given": "No books exist yet; PORT=8000",
+        "when": "POST /books with {\"title\": \"Dune\", \"author\": \"Frank Herbert\", \"isbn\": \"12345\"}",
+        "then": "201 Created response containing the new book with id 1"
+      },
+      {
+        "id": "T1.S2",
+        "kind": "happy",
+        "title": "Retrieve book by ID",
+        "given": "Book with id=1 exists from previous create; PORT=8000",
+        "when": "GET /books/1",
+        "then": "200 OK with the book object including id: 1"
+      },
+      {
+        "id": "T1.S3",
+        "kind": "happy",
+        "title": "Fetch existing book by ID",
+        "given": "Book with id=1 exists from previous create; PORT=8000",
+        "when": "GET /books/1",
+        "then": "200 OK with the book object including id: 1"
+      },
+      {
+        "id": "T1.S4",
+        "kind": "unhappy",
+        "title": "Create book missing required field",
+        "given": "No books exist yet; PORT=8000",
+        "when": "POST /books with {\"author\": \"Frank Herbert\", \"isbn\": \"12345\"}",
+        "then": "400 Bad Request with error message about missing title"
+      },
+      {
+        "id": "T1.S5",
+        "kind": "unhappy",
+        "title": "Update with invalid JSON",
+        "given": "No books exist yet; PORT=8000",
+        "when": "PUT /books/1 with body \"{invalid json}\"",
+        "then": "400 Bad Request with error message about invalid JSON"
+      },
+      {
+        "id": "T1.S6",
+        "kind": "unhappy",
+        "title": "Query with unknown parameter",
+        "given": "Book with id=1 exists from previous create; PORT=8000",
+        "when": "GET /books?unknown_param=value",
+        "then": "400 Bad Request with error about unknown query parameter"
+      },
+      {
+        "id": "T1.S7",
+        "kind": "unhappy",
+        "title": "Missing required field in create (duplicate)",
+        "given": "No books exist yet; PORT=8000",
+        "when": "POST /books with {\"author\": \"Frank Herbert\", \"isbn\": \"12345\"}",
+        "then": "400 Bad Request with error about missing title"
+      },
+      {
+        "id": "T1.S8",
+        "kind": "unhappy",
+        "title": "Invalid JSON body in PUT (duplicate)",
+        "given": "No books exist yet; PORT=8000",
+        "when": "PUT /books/1 with body \"{invalid json}\"",
+        "then": "400 Bad Request with error about invalid JSON"
+      },
+      {
+        "id": "T1.S9",
+        "kind": "unhappy",
+        "title": "Unknown query parameter on list",
+        "given": "Book with id=1 exists from previous create; PORT=8000",
+        "when": "GET /books?unknown_param=value",
+        "then": "400 Bad Request with error about unknown query parameter"
+      }
+    ],
+    "logic": [
+      "Use Python 3 standard library (http.server, json, urllib.parse). Store books in a list of dicts keyed by id. Assign sequential integer IDs starting from 1. For POST /books: parse JSON body, validate required fields (title, author, isbn) are non-empty strings, create book with next ID and empty synopsis, return 201 with the full book dict. For GET /books/{id}: find book by id; if not found return 404, else return 200 with the book. For PUT /books/{id}: parse JSON body, validate required fields, update the book dict in place, return 200 with updated book. For DELETE /books/{id}: find and remove the book; if not found return 404, else return 204 with no body. All error responses are JSON objects {\"error\": \"message\"}. Unknown query parameters trigger a 400 error."
+    ]
+  },
+  "check": null
+}

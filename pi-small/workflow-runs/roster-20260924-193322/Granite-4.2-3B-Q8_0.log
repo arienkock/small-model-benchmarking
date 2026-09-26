@@ -1,0 +1,27 @@
+[workflow 17:33:23] serving Granite-4.2-3B-Q8_0 on the host …
+model:   Granite-4.2-3B-Q8_0
+weights: D:\llama-cache\models--ibm-granite--granite-4.2-3b-GGUF\snapshots\c40945d71cd90f249a56985e8155551a9188dc30\granite-4.2-3b-Q8_0.gguf
+cache:   D:\llama-cache
+bind:    0.0.0.0:8123
+thinking: on
+sampler: temp=1 top_p=0.95 top_k=50 min_p=0 repeat_penalty=1 presence_penalty=0
+log:     D:\llama.cpp\pi-small\.logs\llama-Granite-4.2-3B-Q8_0-c16384-2026-09-24T17-33-23-456Z.log
+waiting for the model to load at ctx 16384 .....................
+ready: Granite-4.2-3B-Q8_0 on port 8123, ctx 16384
+verified: live sampler matches the roster
+[workflow 17:34:05] deadline 2026-09-24T19:20:00.000Z (106 min from now)
+[workflow 17:34:05] step 01-scenarios-a1
+[workflow 17:34:05] agent: pi-small started in RPC mode (wf-5944-agent-1)
+[workflow 17:37:16]   session ended after 190 s
+[workflow 17:37:16] step 02-breakdown-a1
+[workflow 17:37:46]   session ended after 30 s
+[workflow 17:37:46] step 03-task_plan-T1-a1
+[workflow 17:39:08]   session ended after 82 s
+[workflow 17:39:08] step 04-task_plan-T2-a1
+[workflow 17:39:51]   session ended after 44 s
+[workflow 17:39:51] step 05-task_plan-T3-a1
+[workflow 17:40:36]   session ended after 45 s
+[workflow 17:40:36] step 06-implement-T1-a1
+[workflow 17:56:37]   session ended after 961 s (TIMED OUT)
+[workflow 17:56:57]   check: FAIL (suite exit 1, 4 tests) — no test is named for scenario(s) S1, S2, S3, S4, S5 — put the id in the test's name, e.g. test_S1_<what>.
+[workflow 17:56:57] step 07-implement-T1-a2

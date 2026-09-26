@@ -257,6 +257,7 @@ the end state `clean`, graded 28/28.
 | `check.py` | the harness's verdict on a workspace (runs in the sandbox) |
 | `checks/` | reusable checks: Python stdlib-only, and `http_fuzz.py`, a spec-agnostic crash fuzzer for `http.server` apps |
 | `tasks/<name>/` | pluggable tasks: `task.json`, the prompt, the grader. See `tasks/README.md` |
+| `launchers/` | the exact command behind each run in `../workflow-runs/` (the scheduled task's target), and `workflow-overnight-stop.sh`, which stops a run and every llama-server |
 
 Tests:
 - `node test/workflow-test.ts` covers the validators, step order, runner

@@ -1,0 +1,69 @@
+... filter.
+S5: POST /books invalid JSON.
+S6: POST /books missing title.
+S7: POST /books wrong type.
+S8: GET /books unknown query param.
+S9: GET /books/999 404.
+
+So we have three endpoints with create/update/retrieve: POST /books, GET /books/{id}, PUT /books/{id}, plus list GET /books. DELETE not in scenarios? Actually S5-S9 don't include DELETE. But the API requires DELETE. We need to implement DELETE too, but no scenario tests it. We still need to build it. So tasks should cover all endpoints but not necessarily all scenarios.
+
+We can break into tasks by endpoint:
+
+Task 1: POST /books endpoint with validation and 201. Covers S1, S5, S6, S7. (Also creates book list.)
+Task 2: GET /books/{id} and PUT /books/{id}. Covers S2, S3.
+Task 3: GET /books with query filtering. Covers S4, S8.
+Task 4: DELETE /books/{id} and 404 handling. Covers S9.
+Task 5: Server setup and request parsing. Covers S5? Actually S5 invalid JSON is handled by POST endpoint. But we need JSON parsing in server. Could be part of server setup.
+
+But tests need to start server. The server is one file. The breakdown tasks are about building the server incrementally. We can have task 1 create app.py with server and books list, and a route dispatcher. Then tasks add endpoints. But the tests will run the final app.py. So we can have tasks that add functions to app.py. The breakdown doesn't require code, just planning.
+
+We need to output tasks with files. For each task, files: e.g., /workspace/app.py. Test files: e.g., /workspace/tests/test_s1.py, etc.
+
+We need to ensure every scenario id is covered by at least one task. So we need to assign each scenario to a task.
+
+Let's decide on 5 tasks:
+
+1. **Server and storage**: app.py with ThreadingHTTPServer, in-memory list, basic JSON parsing, route dispatcher. Covers S5 (invalid JSON) and S6? No, validation not yet. Actually S5 and S6 are validation errors. We can put validation in POST. So maybe not.
+
+2. **POST /books**: create with validation, 201. Covers S1, S5, S6, S7. Also S5 is invalid JSON, missing object, missing required, wrong type, id in body. So yes.
+
+3. **GET /books/{id} and PUT /books/{id}**: covers S2, S3.
+
+4. **GET /books with query filtering**: covers S4, S8.
+
+5. **DELETE /books/{id}, 404, and error handling**: covers S9.
+
+But S8 unknown query param is for GET /books, so task 4. S9 non-existent id is 404, could be in GET /books/{id} task. So task 2 or 4. We'll assign S9 to task 5 or 4. Let's assign S9 to task 5 (error handling and DELETE). But 404 for path is also "any other path" per errors. So we need a 404 handler. Could be in server routing.
+
+Maybe we should have a task for routing and 404. But we can combine.
+
+Let's look at constraints: "Tests that need the HTTP server start it themselves on a free port and shut it down afterwards." So each test file starts server. So we can have test files per scenario. We need to create test files for each task. We can group scenarios in test files.
+
+We need to submit tasks with covers. We can cover multiple scenarios per task. For example, task 1 covers S5, S6, S7? But those are validation. Actually S5, S6, S7 are all POST /books validation errors. So they could be in task 2. S1 is success. So task 2 covers S1, S5, S6, S7. Task 3 covers S2, S3. Task 4 covers S4, S8. Task 5 covers S9. But we also need to implement DELETE and 404. S9 is non-existent id 404. So task 5 covers S9. But what about DELETE? No scenario tests it, so it's fine to have a task for it but no scenario coverage? The requirement: "Every scenario id must be covered by at least one task." It doesn't say every file must be covered. So we can have tasks that don't cover scenarios, but they are part of building the API. However, we need to build the API fully. So we should include DELETE in tasks. But we can group.
+
+Maybe we can have 4 tasks:
+
+Task 1: app.py with server, storage, POST /books (S1, S5, S6, S7). 
+Task 2: GET /books/{id} and PUT /books/{id} (S2, S3).
+Task 3: GET /books with query filtering and error handling (S4, S8).
+Task 4: DELETE /books/{id}, 404, and other errors (S9).
+
+But S5, S6, S7 are validation that should be in POST. S8 unknown query param in GET /books. S9 non-existent id. So covers are fine.
+
+We also need to consider that S8 unknown query param: GET /books?id=5. The server should return 400 with error. That's in GET /books task. S9 GET /books/999 404. That's in GET /books/{id} task. So task 2 covers S2 and S3, but also S9? The non-existent id 404 is for path /books/999. That's a GET /books/{id} call. So task 2 should cover S9 as well. But S9 is "non-existent id — given Server running; when GET /books/999; then 404 with {}". So it's a path error. So task 2 covers S2, S3, S9. Then task 4 only S8? But S8 is also GET /books. So task 3 covers S4 and S8. Task 4 covers DELETE and maybe 404 for other paths. But S9 is already in task 2. So we can assign S9 to task 2.
+
+But we need to ensure that 404 is handled correctly. In task 2, GET /books/999 should return 404. So that's covered.
+
+Let's finalize tasks:
+
+Task 1: POST /books implementation. Files: /workspace/app.py (add POST handler). Test file: /workspace/tests/test_s1.py, test_s5.py, test_s6.py, test_s7.py? Or we can have one test file with multiple methods. The instructions: "Tests that need the HTTP server start it themselves on a free port and shut it down afterwards." Each test is a method named after its scenario. So we can have test_s1.py with methods test_s1, test_s5, test_s6, test_s7. But the field "files" should include test files. We can list the test file(s). So files: /workspace/app.py, /workspace/tests/test_s1.py. But each scenario test is a method named after its scenario. So the method name would be test_s1, test_s5, etc. So we can have one file covering multiple scenarios. So for task 1, files: /workspace/app.py, /workspace/tests/test_s1.py. But test_s1.py would contain test_s1, test_s5, test_s6, test_s7. That's fine.
+
+Task 2: GET /books/{id}, PUT /books/{id}, and 404. Files: /workspace/app.py, /workspace/tests/test_s2.py, test_s3.py, test_s9.py. But test_s9 is method named test_s9. We can have test_s2.py with methods test_s2, test_s3, test_s9. But the method names must be named after scenarios. So test_s2, test_s3, test_s9. That's fine.
+
+Task 3: GET /books with query filtering. Files: /workspace/app.py, /workspace/tests/test_s4.py, test_s8.py. test_s4 and test_s8.
+
+Task 4: DELETE /books/{id}. Files: /workspace/app.py, /workspace/tests/test_s5.py? No S5 is POST. DELETE not in scenarios. So we might not need a separate task for DELETE? But the API requires it. We can include DELETE in task 1 or 2? Better to have a task for DELETE, but no scenario coverage. However, we need to build the API fully. So we should have a task for DELETE. But the breakdown can have tasks that are not scenario-covered. That's okay. We need to ensure we build everything. So let's add:
+
+Task 5: DELETE /books/{id}. Files: /workspace/app.py. No test scenarios. But we can include it. However, the instruction says break into 2-6 tasks. 5 is fine.
+
+But we also need to consider S5 invalid JSON body: the server must parse JSON. That should be in the server request handling

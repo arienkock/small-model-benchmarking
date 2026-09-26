@@ -1,0 +1,437 @@
+{
+  "version": 1,
+  "status": "stopped",
+  "task": "Build a RESTful HTTP API for books in Python.\n\nConstraints:\n- Python 3 standard library only (for example http.server, json, urllib.parse, threading). No third-party packages.\n- Keep the data in memory; nothing is written to disk. Data may be lost when the server stops.\n- The entry point is `/workspace/app.py`. Running `python3 app.py` starts the server on the port given by the environment variable `PORT` (default 8000), listening on 127.0.0.1, and keeps serving until it is stopped.\n\nA book has these fields:\n- `id`: integer, assigned by the server (1, 2, 3, … in creation order, never reused after a delete); never supplied by the client\n- `title`: string, required, not empty\n- `author`: string, required, not empty\n- `isbn`: string, required, not empty\n- `synopsis`: string, optional; defaults to an empty string\n\nEndpoints (all request and response bodies are JSON, with `Content-Type: application/json`):\n- `POST /books` creates a book from a JSON object with title, author, isbn and optionally synopsis. Responds 201 with the created book, including its `id`.\n- `GET /books/{id}` responds 200 with the book.\n- `PUT /books/{id}` replaces the book's title, author, isbn and synopsis with the ones in the body (same rules as create). Responds 200 with the updated book.\n- `DELETE /books/{id}` removes the book. Responds 204 with no body.\n- `GET /books` responds 200 with a JSON list of all books, ordered by id. It supports searching and filtering by every field through query parameters:\n  - `id=<n>` keeps only the book with that id;\n  - `title=…`, `author=…`, `isbn=…`, `synopsis=…` keep books whose field contains the value, ignoring case;\n  - `q=…` keeps books where any of title, author, isbn or synopsis contains the value, ignoring case;\n  - several parameters together must all match. An unknown query parameter is an error.\n\nErrors respond with a JSON object `{\"error\": \"<message>\"}`:\n- 400 for a body that is not valid JSON or not a JSON object, a missing or empty required field, a field of the wrong type, an `id` in a create or update body, an id in the path that is not an integer, or an unknown query parameter;\n- 404 for a book id that does not exist, or any other path.",
+  "profile": {
+    "testCommand": "python3 -m unittest discover -s tests -v",
+    "testFiles": [
+      "tests/*.py"
+    ],
+    "testCountPattern": "^Ran (\\d+) tests?",
+    "conventions": "- Tests are Python unittest files in /workspace/tests/, named test_*.py; each test is a method named after its scenario.\n- Tests that need the HTTP server start it themselves on a free port and shut it down afterwards.",
+    "checks": [
+      {
+        "name": "Python standard library only",
+        "command": "python3 /opt/pi-small/workflow/checks/python_stdlib_only.py"
+      }
+    ]
+  },
+  "testCommand": "python3 -m unittest discover -s tests -v",
+  "preexistingCode": false,
+  "scenarios": [
+    {
+      "id": "S1",
+      "kind": "happy",
+      "title": "POST creates book with all fields",
+      "given": "Book store starts empty in memory.",
+      "when": "POST /books with JSON {'title': 'Dune', 'author': 'Frank Herbert', 'isbn': '978-0441172719', 'synopsis': 'A vast empire and its conflict'}",
+      "then": "Response is 201 with JSON containing id 1, title 'Dune', author 'Frank Herbert', isbn '978-0441172719', synopsis 'A vast empire and its conflict'"
+    },
+    {
+      "id": "S2",
+      "kind": "happy",
+      "title": "GET returns created book by id",
+      "given": "Book with id 1 exists in memory.",
+      "when": "GET /books/1",
+      "then": "Response is 200 with JSON matching the stored book with id 1."
+    },
+    {
+      "id": "S3",
+      "kind": "happy",
+      "title": "PUT replaces book fields",
+      "given": "Book id 1 exists with title 'Dune'.",
+      "when": "PUT /books/1 with JSON {'title': 'Dune 2', 'author': 'Frank Herbert Jr', 'isbn': '978-0441172720', 'synopsis': 'Updated synopsis'}",
+      "then": "Response is 200 with JSON containing title 'Dune 2', author 'Frank Herbert Jr', isbn '978-0441172720', synopsis 'Updated synopsis'"
+    },
+    {
+      "id": "S4",
+      "kind": "happy",
+      "title": "GET /books lists books ordered by id",
+      "given": "Books with id 1, 2 and 3 exist in memory.",
+      "when": "GET /books",
+      "then": "Response is 200 with JSON array of three books ordered by id 1, 2, 3."
+    },
+    {
+      "id": "S5",
+      "kind": "unhappy",
+      "title": "POST rejects invalid JSON body",
+      "given": "Book store starts empty in memory.",
+      "when": "POST /books with body 'not-json' and Content-Type application/json",
+      "then": "Response is 400 with JSON {'error': '<message>'}."
+    },
+    {
+      "id": "S6",
+      "kind": "unhappy",
+      "title": "POST rejects missing required field",
+      "given": "Book store starts empty in memory.",
+      "when": "POST /books with JSON {'title': 'Dune', 'isbn': '978-123'} (no author)",
+      "then": "Response is 400 with JSON {'error': '<message>'}."
+    },
+    {
+      "id": "S7",
+      "kind": "unhappy",
+      "title": "POST rejects id in body",
+      "given": "Book store starts empty in memory.",
+      "when": "POST /books with JSON {'id': 1, 'title': 'Dune'}",
+      "then": "Response is 400 with JSON {'error': '<message>'}."
+    },
+    {
+      "id": "S8",
+      "kind": "unhappy",
+      "title": "PUT rejects non-integer path id",
+      "given": "Book store starts empty in memory.",
+      "when": "PUT /books/abc with JSON object",
+      "then": "Response is 400 with JSON {'error': '<message>'}."
+    },
+    {
+      "id": "S9",
+      "kind": "unhappy",
+      "title": "GET returns 404 for nonexistent book",
+      "given": "Book store has books but not id 999.",
+      "when": "GET /books/999",
+      "then": "Response is 404 with JSON {'error': '<message>'}."
+    },
+    {
+      "id": "S10",
+      "kind": "unhappy",
+      "title": "DELETE returns 404 for nonexistent book",
+      "given": "Book store has books but not id 999.",
+      "when": "DELETE /books/999",
+      "then": "Response is 404 with JSON {'error': '<message>'}."
+    },
+    {
+      "id": "S11",
+      "kind": "unhappy",
+      "title": "GET rejects unknown query parameter",
+      "given": "Book store has books.",
+      "when": "GET /books?unknownParam=value",
+      "then": "Response is 400 with JSON {'error': '<message>'}."
+    },
+    {
+      "id": "S12",
+      "kind": "unhappy",
+      "title": "POST rejects wrong type field",
+      "given": "Book store starts empty in memory.",
+      "when": "POST /books with JSON {'title': 123, 'author': 'X', 'isbn': 'Y'}",
+      "then": "Response is 400 with JSON {'error': '<message>'}."
+    },
+    {
+      "id": "S13",
+      "kind": "unhappy",
+      "title": "GET rejects non-integer path id",
+      "given": "Book store has books.",
+      "when": "GET /books/notanumber",
+      "then": "Response is 400 with JSON {'error': '<message>'}."
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Server entry point and in-memory book store",
+      "goal": "Set up HTTP server on 127.0.0.1 with PORT env (default 8000) and a thread-safe BookStore with auto-incrementing integer ids.",
+      "files": [
+        "app.py"
+      ],
+      "covers": [
+        "S1",
+        "S2",
+        "S4"
+      ],
+      "scenarios": [
+        {
+          "id": "T1.S1",
+          "kind": "happy",
+          "title": "POST creates book with all fields",
+          "given": "Book store starts empty in memory.",
+          "when": "POST /books with JSON {'title': 'Dune', 'author': 'Frank Herbert', 'isbn': '978-0441172719', 'synopsis': 'A vast empire and its conflict'}",
+          "then": "Response is 201 with JSON containing id 1, title 'Dune', author 'Frank Herbert', isbn '978-0441172719', synopsis 'A vast empire and its conflict'"
+        },
+        {
+          "id": "T1.S2",
+          "kind": "happy",
+          "title": "GET returns created book by id",
+          "given": "Book with id 1 exists in memory.",
+          "when": "GET /books/1",
+          "then": "Response is 200 with JSON matching the stored book with id 1"
+        },
+        {
+          "id": "T1.S3",
+          "kind": "happy",
+          "title": "GET lists books ordered by id",
+          "given": "Books with id 1, 2 and 3 exist in memory.",
+          "when": "GET /books",
+          "then": "Response is 200 with JSON array of three books ordered by id 1, 2, 3"
+        },
+        {
+          "id": "T1.S4",
+          "kind": "unhappy",
+          "title": "GET nonexistent book returns 404",
+          "given": "Book store has books but not id 999.",
+          "when": "GET /books/999",
+          "then": "Response is 404 with JSON {'error': '<message>'}"
+        }
+      ],
+      "logic": [
+        "Create app.py as the server entry point. It reads the PORT environment variable (default 8000) and binds an HTTP server to 127.0.0.1.",
+        "Define a Book class (or namedtuple) with fields id (int), title (str), author (str), isbn (str), synopsis (str, defaulting to '').",
+        "Implement a thread-safe BookStore class using threading.Lock. It maintains an ordered store of books and an auto-incrementing integer id counter starting at 1, so ids are assigned in creation order and never reused after a delete.",
+        "The BookStore exposes create(title, author, isbn, synopsis) returning a Book with a fresh integer id; get(id) returning the Book or None; list() returning all books ordered by id; and delete(id) removing the book so its id is not reused.",
+        "Start the HTTP server inside the main block using HTTPServer on the configured port (default 8000), serving from app.py and running until stopped.",
+        "For T1 scope, the server must accept and route requests and respond 404 for nonexistent books via BookStore.get/delete returning None; body validation and field rules are covered by later tasks (T2-T3)."
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "T2",
+      "title": "Request parsing and body validation for POST",
+      "goal": "Parse JSON request bodies, validate required/optional fields and types, reject id in body, and reject invalid/missing fields with 400 responses.",
+      "files": [
+        "app.py"
+      ],
+      "covers": [
+        "S5",
+        "S6",
+        "S7",
+        "S12"
+      ],
+      "scenarios": [
+        {
+          "id": "T2.S1",
+          "kind": "happy",
+          "title": "POST accepts valid body and returns 201 with created book",
+          "given": "Book store starts empty in memory.",
+          "when": "POST /books with JSON {'title': 'Dune', 'author': 'Frank Herbert', 'isbn': '978-0441172719', 'synopsis': 'A vast empire and its conflict'}",
+          "then": "Response is 201 with JSON containing id 1, title 'Dune', author 'Frank Herbert', isbn '978-0441172719', synopsis 'A vast empire and its conflict'"
+        },
+        {
+          "id": "T2.S2",
+          "kind": "unhappy",
+          "title": "POST rejects invalid JSON body",
+          "given": "Book store starts empty in memory.",
+          "when": "POST /books with body 'not-json' and Content-Type application/json",
+          "then": "Response is 400 with JSON {'error': '<message>'}"
+        },
+        {
+          "id": "T2.S3",
+          "kind": "unhappy",
+          "title": "POST rejects missing required field",
+          "given": "Book store starts empty in memory.",
+          "when": "POST /books with JSON {'title': 'Dune', 'isbn': '978-123'} (no author)",
+          "then": "Response is 400 with JSON {'error': '<message>'}"
+        },
+        {
+          "id": "T2.S4",
+          "kind": "unhappy",
+          "title": "POST rejects id in body",
+          "given": "Book store starts empty in memory.",
+          "when": "POST /books with JSON {'id': 1, 'title': 'Dune'}",
+          "then": "Response is 400 with JSON {'error': '<message>'}"
+        },
+        {
+          "id": "T2.S5",
+          "kind": "unhappy",
+          "title": "POST rejects wrong type field",
+          "given": "Book store starts empty in memory.",
+          "when": "POST /books with JSON {'title': 123, 'author': 'X', 'isbn': 'Y'}",
+          "then": "Response is 400 with JSON {'error': '<message>'}"
+        }
+      ],
+      "logic": [
+        "In app.py, implement a body-validation function parse_book_body(raw_body: str, content_type: str) -> dict: it parses the raw request body as JSON using json.loads; if parsing fails or the result is not a JSON object (dict), it returns an error response tuple (400, {"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "T3",
+      "title": "GET and PUT handlers with path id validation",
+      "goal": "Implement GET /books/{id} and PUT /books/{id} endpoints, validating non-integer path ids, replacing book fields on PUT, and returning 404 for nonexistent books.",
+      "files": [
+        "app.py"
+      ],
+      "covers": [
+        "S3",
+        "S8",
+        "S9",
+        "S10",
+        "S13"
+      ],
+      "scenarios": [
+        {
+          "id": "T3.S1",
+          "kind": "happy",
+          "title": "PUT replaces book fields",
+          "given": "Book id 1 exists with title 'Dune' in memory.",
+          "when": "PUT /books/1 with JSON {'title': 'Dune 2', 'author': 'Frank Herbert Jr', 'isbn': '978-0441172720', 'synopsis': 'Updated synopsis'}",
+          "then": "Response is 200 with JSON containing title 'Dune 2', author 'Frank Herbert Jr', isbn '978-0441172720', synopsis 'Updated synopsis'"
+        },
+        {
+          "id": "T3.S2",
+          "kind": "unhappy",
+          "title": "PUT rejects non-integer path id",
+          "given": "Book store starts empty in memory.",
+          "when": "PUT /books/abc with JSON object",
+          "then": "Response is 400 with JSON {'error': '<message>'}"
+        },
+        {
+          "id": "T3.S3",
+          "kind": "unhappy",
+          "title": "GET returns 404 for nonexistent book",
+          "given": "Book store has books but not id 999.",
+          "when": "GET /books/999",
+          "then": "Response is 404 with JSON {'error': '<message>'}"
+        },
+        {
+          "id": "T3.S4",
+          "kind": "unhappy",
+          "title": "DELETE returns 404 for nonexistent book",
+          "given": "Book store has books but not id 999.",
+          "when": "DELETE /books/999",
+          "then": "Response is 404 with JSON {'error': '<message>'}"
+        },
+        {
+          "id": "T3.S5",
+          "kind": "unhappy",
+          "title": "GET rejects non-integer path id",
+          "given": "Book store has books.",
+          "when": "GET /books/notanumber",
+          "then": "Response is 400 with JSON {'error': '<message>'}"
+        }
+      ],
+      "logic": [
+        "BookHandler extends http.server.BaseHTTPRequestHandler with do_GET, do_PUT, do_DELETE methods and a reference to the BookStore from T1.",
+        "BookStore holds dict {id: Book} and integer next_id under a threading.Lock for thread safety; book fields are id, title, author, isbn, synopsis.",
+        "do_GET parses path id from /books/{id}; non-integer id returns 400 with JSON {'error': '<message>'}.",
+        "do_GET looks up id in BookStore; missing id returns 404 with JSON {'error': '<message>'}; found returns 200 with the book as JSON.",
+        "do_PUT parses path id; non-integer id returns 400 with JSON {'error': '<message>'}.",
+        "do_PUT validates request body per T2 rules (reject id in body, missing/empty/wrong-type fields) returning 400 with JSON {'error': '<message>'}.",
+        "do_PUT looks up id; missing id returns 404 with JSON {'error': '<message>'}; found replaces title, author, isbn, synopsis, keeps id, stores, returns 200 with updated book as JSON.",
+        "do_DELETE parses path id; non-integer id returns 400; missing id returns 404 with JSON {'error': '<message>'}; otherwise removes the book and responds 204 with no body.",
+        "All JSON responses set Content-Type: application/json; DELETE 204 sets no body."
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "T4",
+      "title": "GET list with filtering and unknown query param handling",
+      "goal": "Implement GET /books listing all books ordered by id, supporting field-level and q= search filters, rejecting unknown query parameters with 400.",
+      "files": [
+        "app.py"
+      ],
+      "covers": [
+        "S11"
+      ],
+      "scenarios": [
+        {
+          "id": "T4.S1",
+          "kind": "happy",
+          "title": "T4-H1 GET lists books ordered by id",
+          "given": "Books with ids 1, 2, 3 exist in memory with distinct titles.",
+          "when": "GET /books",
+          "then": "Response is 200 with JSON array of 3 books ordered by id 1, 2, 3."
+        },
+        {
+          "id": "T4.S2",
+          "kind": "happy",
+          "title": "T4-H2 GET filters by title case-insensitively",
+          "given": "Books with id 1 (title 'Dune'), id 2 (title 'Brave New World'), id 3 (title '1984') exist.",
+          "when": "GET /books?title=dune",
+          "then": "Response is 200 with JSON array containing only the book with title 'Dune'."
+        },
+        {
+          "id": "T4.S3",
+          "kind": "happy",
+          "title": "T4-H3 GET uses q= search case-insensitively",
+          "given": "Books with id 1 (title 'Dune', author 'Frank Herbert'), id 2 (title 'Brave New World', author 'Asimov') exist.",
+          "when": "GET /books?q=herbert",
+          "then": "Response is 200 with JSON array containing only the book with author 'Frank Herbert'."
+        },
+        {
+          "id": "T4.S4",
+          "kind": "happy",
+          "title": "T4-H4 GET combines multiple filters all must match",
+          "given": "Books with id 1 (title 'Dune', author 'Frank Herbert'), id 2 (title 'Dune 2', author 'Other'), id 3 (author 'Frank Herbert', title 'Other') exist.",
+          "when": "GET /books?title=dune&author=herbert",
+          "then": "Response is 200 with JSON array containing only the book with id 1."
+        },
+        {
+          "id": "T4.S5",
+          "kind": "happy",
+          "title": "T4-H5 GET filters by synopsis",
+          "given": "Books with id 1 (synopsis 'A vast empire'), id 2 (synopsis 'Dune rules') exist.",
+          "when": "GET /books?synopsis=dune",
+          "then": "Response is 200 with JSON array containing only the book with id 2."
+        },
+        {
+          "id": "T4.S6",
+          "kind": "unhappy",
+          "title": "T4-U1 GET rejects unknown query parameter (S11)",
+          "given": "Book store has books.",
+          "when": "GET /books?unknownParam=value",
+          "then": "Response is 400 with JSON {'error': '<message>'}."
+        }
+      ],
+      "logic": [
+        "Extract all query parameters from the request URL using urllib.parse.urlparse and parse_qs.",
+        "Define the known query parameter set as {'id', 'title', 'author', 'isbn', 'synopsis', 'q'}.",
+        "Check every query parameter name against the known set; if any name is unknown, return HTTP 400 with JSON {'error': 'unknown query parameter'}.",
+        "Start with a copy of all books in the BookStore.",
+        "Apply field-level filters: for each known query parameter present in the request:",
+        "- 'q': keep books where the query value is a case-insensitive substring of title, author, isbn, or synopsis (OR across those fields).",
+        "- 'id': keep only books whose id exactly equals the given integer value.",
+        "- 'title', 'author', 'isbn', 'synopsis': keep books whose field value is a case-insensitive substring of the query value.",
+        "- If multiple parameters are provided, they must all match (in filter); no AND/OR confusion across different field params is ambiguous.",
+        "Sort the filtered books by id in ascending order.",
+        "Return HTTP 200 with the JSON list of filtered and sorted books.",
+        "On any missing or malformed input to the filtering logic, return appropriate errors (400 for invalid id type, etc.)."
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "T5",
+      "title": "DELETE endpoint integration",
+      "goal": "Implement DELETE /books/{id} endpoint to remove a book and respond 204, returning 404 for nonexistent books.",
+      "files": [
+        "app.py"
+      ],
+      "covers": [
+        "S10"
+      ],
+      "scenarios": [
+        {
+          "id": "T5.S1",
+          "kind": "happy",
+          "title": "DELETE removes existing book and returns 204",
+          "given": "Book store has a book with id 1 in memory.",
+          "when": "DELETE /books/1",
+          "then": "Response is 204 with no body and GET /books/1 then returns 404."
+        },
+        {
+          "id": "T5.S2",
+          "kind": "unhappy",
+          "title": "DELETE returns 404 for nonexistent book",
+          "given": "Book store has books but not id 999.",
+          "when": "DELETE /books/999",
+          "then": "Response is 404 with JSON {'error': '<message>'}."
+        },
+        {
+          "id": "T5.S3",
+          "kind": "unhappy",
+          "title": "DELETE rejects non-integer path id",
+          "given": "Book store has books.",
+          "when": "DELETE /books/abc",
+          "then": "Response is 400 with JSON {'error': '<message>'}."
+        }
+      ],
+      "logic": [
+        "BookStore must expose a thread-safe delete(id) method that removes the book with the integer id from the in-memory store; it returns the removed book (or None) and ensures ids never reused after deletion.",
+        "DELETE request handler must first validate the path id is an integer (exactly one digit sequence; reject non-integer strings like 'abc' via ValueError catch on int() conversion) and return 400 with JSON {'error': '<message>'} if invalid.",
+        "DELETE handler must look up the book by id in the BookStore; if not found, return 404 with JSON {'error': '<message>'} (covers S10 nonexistent book case).",
+        "Once a valid, existing book id is found, the handler calls BookStore.delete(id) to remove it and then sends a 204 response with no body and no content (no JSON body, Content-Length 0).",
+        "No disk writes occur; all deletion state is in-memory only.",
+        "The handler must not accept any body on DELETE; any malformed body is still handled by the generic 400 error path."
+      ],
+      "status": "planned"
+    }
+  ],
+  "failure": "time budget ran out during implement-T1 attempt 1"
+}

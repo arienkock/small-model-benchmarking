@@ -1,0 +1,281 @@
+[
+  {
+    "model": "Spark-X2.5-4B-Q6_K",
+    "variant": "completeness",
+    "repeat": 1,
+    "step": "01-review-completeness-Spark-X2.5-4B-Q6_K",
+    "ok": false,
+    "findings": [],
+    "detail": "The session ended without a successful call to `submit_findings`. The session was stopped at the time limit.",
+    "run": {
+      "exitCode": 0,
+      "timedOut": true,
+      "turnLimited": false,
+      "turns": 8,
+      "durationMs": 911549,
+      "wrappedUp": true
+    }
+  },
+  {
+    "model": "Spark-X2.5-4B-Q6_K",
+    "variant": "correctness",
+    "repeat": 1,
+    "step": "03-review-correctness-Spark-X2.5-4B-Q6_K-continue1",
+    "ok": true,
+    "findings": [
+      {
+        "priority": "high",
+        "title": "POST /books crashes with AttributeError on missing required fields",
+        "where": "app.py, do_POST method",
+        "detail": "In do_POST, required fields title, author, isbn are retrieved via data.get() which returns None when the field is missing from the JSON body. The code immediately calls .strip() on these None values (e.g., 'if not title.strip() or not author.strip() or not isbn.strip()'), raising AttributeError (500 error) instead of returning a proper 400. This is confirmed: missing title/author/isbn, empty strings, and wrong-type fields all crash with AttributeError. The validation logic does not handle None before calling .strip()."
+      },
+      {
+        "priority": "medium",
+        "title": "Content-Length header parsing crashes on non-numeric values in do_POST and do_PUT",
+        "where": "app.py, do_POST and do_PUT methods",
+        "detail": "Both methods parse Content-Length via int(self.headers.get('Content-Length', 0)). If Content-Length is a non-numeric string (e.g., 'abc') or empty string, int() raises ValueError, causing a 500 error instead of a proper 400 validation error. This is not gracefully handled, exposing the endpoint to unexpected crashes due to malformed headers."
+      },
+      {
+        "priority": "low",
+        "title": "PUT /books requires non-whitespace-only required fields - works correctly but no trimming of input before storage",
+        "where": "app.py, do_PUT method",
+        "detail": "PUT handles missing required fields correctly: it checks 'if not title or not author or not isbn' and sends 400. It also checks whitespace-only fields via .strip() and sends 400. However, there is no trimming or validation of the stored input values (e.g., book titles, author names) before saving — invalid trailing whitespace would be stored as-is, which is a minor data-integrity concern."
+      }
+    ],
+    "run": {
+      "exitCode": 0,
+      "timedOut": false,
+      "turnLimited": false,
+      "turns": 9,
+      "durationMs": 740539,
+      "wrappedUp": true
+    }
+  },
+  {
+    "model": "Spark-X2.5-4B-Q6_K",
+    "variant": "fidelity",
+    "repeat": 1,
+    "step": "04-review-fidelity-Spark-X2.5-4B-Q6_K",
+    "ok": false,
+    "findings": [],
+    "detail": "The session ended without a successful call to `submit_findings`. The session was stopped at the time limit.",
+    "run": {
+      "exitCode": 0,
+      "timedOut": true,
+      "turnLimited": false,
+      "turns": 10,
+      "durationMs": 791297,
+      "wrappedUp": true
+    }
+  },
+  {
+    "model": "Spark-X2.5-4B-Q6_K",
+    "variant": "all",
+    "repeat": 1,
+    "step": "05-review-all-Spark-X2.5-4B-Q6_K",
+    "ok": true,
+    "findings": [
+      {
+        "priority": "high",
+        "title": "Required field type validation missing - AttributeError on wrong type",
+        "where": "/workspace/app.py",
+        "detail": "Required fields (title, author, isbn) lack proper type validation. When a client sends these fields with a non-string type (e.g., integer, null), the code calls `.strip()` on the value (e.g., `title.strip()`), which raises AttributeError. This causes unhandled server errors/crashes instead of returning a proper 400 Bad Request. For example, sending title: 123 results in an AttributeError crash instead of a 400 error response. The code should validate that title, author, and isbn are strings before processing."
+      },
+      {
+        "priority": "high",
+        "title": "Synopsis field does not handle null or wrong-type values correctly",
+        "where": "/workspace/app.py",
+        "detail": "The synopsis field uses `synopsis = data.get('synopsis', '')`, which stores None when the client sends `synopsis: null`, and stores the raw wrong-type value when synopsis has a non-string type (e.g., number). This does not validate that synopsis is a string. Responses show `synopsis: null` (null synopsis) or `synopsis: 123` (wrong type) instead of defaulting to an empty string or returning a 400 error. The field is specified as a string that defaults to an empty string, so null/wrong-type values should be rejected or normalized."
+      },
+      {
+        "priority": "medium",
+        "title": "PUT with null synopsis returns incorrect field value",
+        "where": "/workspace/app.py",
+        "detail": "When a PUT request is made with `synopsis: null`, the endpoint returns 200 but stores/returns `synopsis: null` in the response. This is inconsistent with the field being a string that defaults to an empty string. The response should either return the default empty string or properly handle null as invalid (returning 400). Additionally, non-integer path IDs and unknown query parameters may not return proper 400 error responses, failing the task requirement for specific error responses."
+      },
+      {
+        "priority": "low",
+        "title": "Unused imports (sys, threading) in app.py",
+        "where": "/workspace/app.py",
+        "detail": "The imports for `sys` and `threading` are present but never used in the code. These are unused imports that add unnecessary clutter and could be removed."
+      }
+    ],
+    "run": {
+      "exitCode": 0,
+      "timedOut": false,
+      "turnLimited": false,
+      "turns": 10,
+      "durationMs": 732841,
+      "wrappedUp": true
+    }
+  },
+  {
+    "model": "MiniCPM5-2B-Q8_0",
+    "variant": "completeness",
+    "repeat": 1,
+    "step": "08-review-completeness-MiniCPM5-2B-Q8_0-continue1",
+    "ok": true,
+    "findings": [
+      {
+        "priority": "high",
+        "title": "PUT path validation missing for non-integer IDs",
+        "where": "app.py:do_PUT",
+        "detail": "int(self.path.split('/')[-1]) called without try/except, raises ValueError instead of returning 400"
+      },
+      {
+        "priority": "high",
+        "title": "GET /books q filter logic broken",
+        "where": "app.py:do_GET_all",
+        "detail": "When field == 'q', code accesses b['q'] which doesn't exist on book dicts; should search across title/author/isbn/synopsis"
+      },
+      {
+        "priority": "high",
+        "title": "Type validation missing in POST and PUT",
+        "where": "app.py:do_POST, do_PUT",
+        "detail": "Task requires 400 for field of wrong type, but only missing/empty required fields and id-in-body checks exist; fields aren't validated to be strings"
+      },
+      {
+        "priority": "high",
+        "title": "GET /books/{id} path validation missing for non-integer IDs",
+        "where": "app.py:do_GET",
+        "detail": "int(path.split('/')[-1]) in try/except returns 404 for non-integer, should return 400 per spec"
+      },
+      {
+        "priority": "high",
+        "title": "DELETE /books/{id} path validation missing for non-integer IDs",
+        "where": "app.py:do_DELETE",
+        "detail": "int(path.split('/')[-1]) called without try/except, ValueError will crash server instead of returning 400"
+      },
+      {
+        "priority": "medium",
+        "title": "GET /books id query param without type validation",
+        "where": "app.py:do_GET_all",
+        "detail": "int(filters['id']) called without try/except, raises ValueError instead of returning 400"
+      }
+    ],
+    "run": {
+      "exitCode": 0,
+      "timedOut": false,
+      "turnLimited": false,
+      "turns": 3,
+      "durationMs": 225853,
+      "wrappedUp": true
+    }
+  },
+  {
+    "model": "MiniCPM5-2B-Q8_0",
+    "variant": "correctness",
+    "repeat": 1,
+    "step": "09-review-correctness-MiniCPM5-2B-Q8_0",
+    "ok": false,
+    "findings": [],
+    "detail": "The session ended without a successful call to `submit_findings`. The session was stopped at the time limit.",
+    "run": {
+      "exitCode": 0,
+      "timedOut": true,
+      "turnLimited": false,
+      "turns": 5,
+      "durationMs": 557230,
+      "wrappedUp": true
+    }
+  },
+  {
+    "model": "MiniCPM5-2B-Q8_0",
+    "variant": "fidelity",
+    "repeat": 1,
+    "step": "11-review-fidelity-MiniCPM5-2B-Q8_0-continue1",
+    "ok": true,
+    "findings": [
+      {
+        "priority": "high",
+        "title": "Non-integer path IDs return 404 instead of 400",
+        "where": "do_GET, do_PUT, do_DELETE",
+        "detail": "Task requires 400 for 'an id in the path that is not an integer', but do_GET, do_PUT, and do_DELETE return 404 (or crash) when path ID is not an integer."
+      },
+      {
+        "priority": "high",
+        "title": "POST /books and PUT /books do not validate string types for book fields",
+        "where": "do_POST, do_PUT",
+        "detail": "Task requires 400 for 'a field of the wrong type', but code accepts non-string types (e.g., int) for title, author, isbn without erroring."
+      },
+      {
+        "priority": "medium",
+        "title": "PUT /books/{id} and DELETE /books/{id} do not wrap int() in try/except",
+        "where": "do_PUT, do_DELETE",
+        "detail": "Without try/except, non-integer path ID triggers unhandled ValueError instead of returning 400."
+      },
+      {
+        "priority": "medium",
+        "title": "GET /books query parameter q filter checks b['q'] instead of searching all fields",
+        "where": "do_GET_all",
+        "detail": "Task requires q to search title/author/isbn/synopsis case-insensitively. Code uses b['q'].lower() which is not a book field."
+      }
+    ],
+    "run": {
+      "exitCode": 0,
+      "timedOut": false,
+      "turnLimited": false,
+      "turns": 3,
+      "durationMs": 355335
+    }
+  },
+  {
+    "model": "MiniCPM5-2B-Q8_0",
+    "variant": "all",
+    "repeat": 1,
+    "step": "13-review-all-MiniCPM5-2B-Q8_0-continue1",
+    "ok": true,
+    "findings": [
+      {
+        "priority": "high",
+        "title": "GET /books/{id}: sends 404 instead of 400 for non-integer path id",
+        "where": "do_GET",
+        "detail": "Spec requires 400 for 'an id in the path that is not an integer'. Code does int(path.split('/')[-1]) and on ValueError sends 404."
+      },
+      {
+        "priority": "high",
+        "title": "DELETE /books/{id}: sends 404 instead of 400 for non-integer path id",
+        "where": "do_DELETE",
+        "detail": "Spec requires 400 for 'an id in the path that is not an integer'. Code does int(path.split('/')[-1]) and on ValueError sends 404."
+      },
+      {
+        "priority": "high",
+        "title": "Missing field type validation in POST and PUT (do_POST, do_PUT)",
+        "where": "do_POST, do_PUT",
+        "detail": "Spec requires 400 for a field of the wrong type. Code never checks that title/author/isbn are strings and synopsis is string/optional."
+      },
+      {
+        "priority": "high",
+        "title": "POST do_POST crashes with AttributeError when required field missing",
+        "where": "do_POST",
+        "detail": "Code checks 'not title.strip()' which raises AttributeError for None (missing key) instead of sending 400 for missing required field."
+      },
+      {
+        "priority": "high",
+        "title": "PUT do_PUT lacks type validation and empty required field validation",
+        "where": "do_PUT",
+        "detail": "Spec says PUT has 'same rules as create'. Code doesn't check types or empty required fields like create does."
+      },
+      {
+        "priority": "medium",
+        "title": "Empty-body POST sends 400 before JSON parsing (redundant)",
+        "where": "do_POST",
+        "detail": "Explicit empty-content_length check sends 400 before json.loads. Redundant with JSONDecodeError handling."
+      },
+      {
+        "priority": "medium",
+        "title": "Redundant error messages in POST (isbn checked twice)",
+        "where": "do_POST",
+        "detail": "isbn=='' check and broader empty check produce two different error messages."
+      }
+    ],
+    "run": {
+      "exitCode": 0,
+      "timedOut": false,
+      "turnLimited": false,
+      "turns": 3,
+      "durationMs": 229300,
+      "wrappedUp": true
+    }
+  }
+]

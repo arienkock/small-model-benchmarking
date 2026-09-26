@@ -1,0 +1,29 @@
+{
+  "ok": false,
+  "problems": [
+    "no test is named for scenario(s) S1, S2, S3, S4, S5, S6, S7 — put the id in the test's name, e.g. test_S1_<what>.",
+    "the test suite failed (`python3 -m unittest discover -s tests -v` exited 1)."
+  ],
+  "missingTokens": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "S6",
+    "S7"
+  ],
+  "checks": [
+    {
+      "name": "Python standard library only",
+      "ok": true,
+      "tail": "only standard-library and local imports"
+    }
+  ],
+  "tests": {
+    "rc": 1,
+    "timedOut": false,
+    "count": 7,
+    "tail": "    raise JSONDecodeError(\"Expecting value\", s, err.value) from None\njson.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)\n\n======================================================================\nERROR: test_T1_S7_id_not_integer (test_T1.TestT1.test_T1_S7_id_not_integer)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tests/test_T1.py\", line 108, in test_T1_S7_id_not_integer\n    err = json.loads(body)\n          ^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.11/json/__init__.py\", line 346, in loads\n    return _default_decoder.decode(s)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.11/json/decoder.py\", line 337, in decode\n    obj, end = self.raw_decode(s, idx=_w(s, 0).end())\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.11/json/decoder.py\", line 355, in raw_decode\n    raise JSONDecodeError(\"Expecting value\", s, err.value) from None\njson.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)\n\n======================================================================\nFAIL: test_T1_S2_get_book (test_T1.TestT1.test_T1_S2_get_book)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tests/test_T1.py\", line 56, in test_T1_S2_get_book\n    self.assertEqual(status, 200)\nAssertionError: 404 != 200\n\n======================================================================\nFAIL: test_T1_S3_update_book (test_T1.TestT1.test_T1_S3_update_book)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tests/test_T1.py\", line 64, in test_T1_S3_update_book\n    self.assertEqual(status, 200)\nAssertionError: 404 != 200\n\n----------------------------------------------------------------------\nRan 7 tests in 7.072s\n\nFAILED (failures=2, errors=5)"
+  }
+}

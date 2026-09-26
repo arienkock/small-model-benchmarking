@@ -13,4 +13,11 @@ The scripts behind the 2026-09-25/26 overnight speed work on the free-form Qwen3
 | `sweep.sh "<label>|<args>"...` + `sweep-bench.py` | llama-server config comparison at 32k: cold ~1.2k-token prompt and 256 generated tokens, three times. |
 | `spec-bench.py` | Generation speed on a rewrite (repetitive) and a new file (novel), for speculative decoding. |
 | `after-task.sh <task> <launcher>` | Wait for a scheduled task to finish, then run the next launcher (queues batches). |
+| `spec-sweep.sh` | Like `sweep.sh`, but runs `spec-bench.py` per config (speculative-decoding types). |
+| `speed.py [port]` + `load32k.sh` | Prompt and generation t/s for two ~1k-token completions; `load32k.sh` loads Qwen3.6 via `serve.mjs` and reports free RAM and GPU memory around it. |
 | `style-v2/v3/v4.txt` | The `PI_SMALL_STYLE` texts tried. v2 became `SESSION_STYLE` in `lib/workflow.ts`. |
+
+`launchers/` holds the exact launcher each batch or sweep ran from (the scheduled task's command),
+and `results/` their output: `ff-batch-<prefix>.txt` is the `ff-summary.py` table per batch,
+`.out` the batch log; `sweep.out` and `spec-sweep.out` the two server sweeps. The run dirs
+themselves, pi session transcripts included, are in `pi-small/workflow-runs/<prefix>-<n>/`.

@@ -1,0 +1,112 @@
+{
+  "tool": "submit_task_plan",
+  "accepted": true,
+  "args": {
+    "scenarios": [
+      {
+        "kind": "happy",
+        "title": "PUT replaces book fields",
+        "given": "Book id 1 exists with title 'Dune' in memory.",
+        "when": "PUT /books/1 with JSON {'title': 'Dune 2', 'author': 'Frank Herbert Jr', 'isbn': '978-0441172720', 'synopsis': 'Updated synopsis'}",
+        "then": "Response is 200 with JSON containing title 'Dune 2', author 'Frank Herbert Jr', isbn '978-0441172720', synopsis 'Updated synopsis'"
+      },
+      {
+        "kind": "unhappy",
+        "title": "PUT rejects non-integer path id",
+        "given": "Book store starts empty in memory.",
+        "when": "PUT /books/abc with JSON object",
+        "then": "Response is 400 with JSON {'error': '<message>'}"
+      },
+      {
+        "kind": "unhappy",
+        "title": "GET returns 404 for nonexistent book",
+        "given": "Book store has books but not id 999.",
+        "when": "GET /books/999",
+        "then": "Response is 404 with JSON {'error': '<message>'}"
+      },
+      {
+        "kind": "unhappy",
+        "title": "DELETE returns 404 for nonexistent book",
+        "given": "Book store has books but not id 999.",
+        "when": "DELETE /books/999",
+        "then": "Response is 404 with JSON {'error': '<message>'}"
+      },
+      {
+        "kind": "unhappy",
+        "title": "GET rejects non-integer path id",
+        "given": "Book store has books.",
+        "when": "GET /books/notanumber",
+        "then": "Response is 400 with JSON {'error': '<message>'}"
+      }
+    ],
+    "logic": [
+      "BookHandler extends http.server.BaseHTTPRequestHandler with do_GET, do_PUT, do_DELETE methods and a reference to the BookStore from T1.",
+      "BookStore holds dict {id: Book} and integer next_id under a threading.Lock for thread safety; book fields are id, title, author, isbn, synopsis.",
+      "do_GET parses path id from /books/{id}; non-integer id returns 400 with JSON {'error': '<message>'}.",
+      "do_GET looks up id in BookStore; missing id returns 404 with JSON {'error': '<message>'}; found returns 200 with the book as JSON.",
+      "do_PUT parses path id; non-integer id returns 400 with JSON {'error': '<message>'}.",
+      "do_PUT validates request body per T2 rules (reject id in body, missing/empty/wrong-type fields) returning 400 with JSON {'error': '<message>'}.",
+      "do_PUT looks up id; missing id returns 404 with JSON {'error': '<message>'}; found replaces title, author, isbn, synopsis, keeps id, stores, returns 200 with updated book as JSON.",
+      "do_DELETE parses path id; non-integer id returns 400; missing id returns 404 with JSON {'error': '<message>'}; otherwise removes the book and responds 204 with no body.",
+      "All JSON responses set Content-Type: application/json; DELETE 204 sets no body."
+    ]
+  },
+  "refusals": 0,
+  "at": "2026-09-24T10:19:56.204Z",
+  "value": {
+    "scenarios": [
+      {
+        "id": "T3.S1",
+        "kind": "happy",
+        "title": "PUT replaces book fields",
+        "given": "Book id 1 exists with title 'Dune' in memory.",
+        "when": "PUT /books/1 with JSON {'title': 'Dune 2', 'author': 'Frank Herbert Jr', 'isbn': '978-0441172720', 'synopsis': 'Updated synopsis'}",
+        "then": "Response is 200 with JSON containing title 'Dune 2', author 'Frank Herbert Jr', isbn '978-0441172720', synopsis 'Updated synopsis'"
+      },
+      {
+        "id": "T3.S2",
+        "kind": "unhappy",
+        "title": "PUT rejects non-integer path id",
+        "given": "Book store starts empty in memory.",
+        "when": "PUT /books/abc with JSON object",
+        "then": "Response is 400 with JSON {'error': '<message>'}"
+      },
+      {
+        "id": "T3.S3",
+        "kind": "unhappy",
+        "title": "GET returns 404 for nonexistent book",
+        "given": "Book store has books but not id 999.",
+        "when": "GET /books/999",
+        "then": "Response is 404 with JSON {'error': '<message>'}"
+      },
+      {
+        "id": "T3.S4",
+        "kind": "unhappy",
+        "title": "DELETE returns 404 for nonexistent book",
+        "given": "Book store has books but not id 999.",
+        "when": "DELETE /books/999",
+        "then": "Response is 404 with JSON {'error': '<message>'}"
+      },
+      {
+        "id": "T3.S5",
+        "kind": "unhappy",
+        "title": "GET rejects non-integer path id",
+        "given": "Book store has books.",
+        "when": "GET /books/notanumber",
+        "then": "Response is 400 with JSON {'error': '<message>'}"
+      }
+    ],
+    "logic": [
+      "BookHandler extends http.server.BaseHTTPRequestHandler with do_GET, do_PUT, do_DELETE methods and a reference to the BookStore from T1.",
+      "BookStore holds dict {id: Book} and integer next_id under a threading.Lock for thread safety; book fields are id, title, author, isbn, synopsis.",
+      "do_GET parses path id from /books/{id}; non-integer id returns 400 with JSON {'error': '<message>'}.",
+      "do_GET looks up id in BookStore; missing id returns 404 with JSON {'error': '<message>'}; found returns 200 with the book as JSON.",
+      "do_PUT parses path id; non-integer id returns 400 with JSON {'error': '<message>'}.",
+      "do_PUT validates request body per T2 rules (reject id in body, missing/empty/wrong-type fields) returning 400 with JSON {'error': '<message>'}.",
+      "do_PUT looks up id; missing id returns 404 with JSON {'error': '<message>'}; found replaces title, author, isbn, synopsis, keeps id, stores, returns 200 with updated book as JSON.",
+      "do_DELETE parses path id; non-integer id returns 400; missing id returns 404 with JSON {'error': '<message>'}; otherwise removes the book and responds 204 with no body.",
+      "All JSON responses set Content-Type: application/json; DELETE 204 sets no body."
+    ]
+  },
+  "check": null
+}

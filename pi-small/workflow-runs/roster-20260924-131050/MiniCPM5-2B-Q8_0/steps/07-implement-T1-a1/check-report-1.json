@@ -1,0 +1,26 @@
+{
+  "ok": false,
+  "problems": [
+    "no test is named for scenario(s) S1, S5, S6, S7 — put the id in the test's name, e.g. test_S1_<what>.",
+    "the test suite did not finish within 300 seconds (a server left running, or a test waiting forever?)."
+  ],
+  "missingTokens": [
+    "S1",
+    "S5",
+    "S6",
+    "S7"
+  ],
+  "checks": [
+    {
+      "name": "Python standard library only",
+      "ok": true,
+      "tail": "only standard-library and local imports"
+    }
+  ],
+  "tests": {
+    "rc": null,
+    "timedOut": true,
+    "count": 0,
+    "tail": "test_T1_S1_happy_create (test_s1.TestS1.test_T1_S1_happy_create) ..."
+  }
+}

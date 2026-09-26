@@ -1,0 +1,40 @@
+[workflow 13:02:27] serving MiniCPM5-2B-Q8_0 on the host …
+switching from LFM2.5-2.6B-Q8_0 to MiniCPM5-2B-Q8_0 ...
+model:   MiniCPM5-2B-Q8_0
+weights: D:\llama-cache\models--openbmb--MiniCPM5-2B-GGUF\snapshots\c451f4d674096e6e6f1cc5d0abb6794bda638304\MiniCPM5-2B-Q8_0.gguf
+cache:   D:\llama-cache
+bind:    0.0.0.0:8123
+thinking: n/a (no thinking mode)
+sampler: temp=1 top_p=0.95 top_k=50 min_p=0 repeat_penalty=1 presence_penalty=0
+log:     D:\llama.cpp\pi-small\.logs\llama-MiniCPM5-2B-Q8_0-c16384-2026-09-24T13-02-29-575Z.log
+waiting for the model to load at ctx 16384 ....................
+ready: MiniCPM5-2B-Q8_0 on port 8123, ctx 16384
+verified: live sampler matches the roster
+[workflow 13:03:09] deadline 2026-09-24T14:53:43.000Z (111 min from now)
+[workflow 13:03:09] step 01-scenarios-a1
+[workflow 13:05:39]   agent run exited 0 after 150 s
+[workflow 13:05:39] step 02-breakdown-a1
+[workflow 13:08:39]   agent run exited 0 after 180 s
+[workflow 13:10:21]   agent run (nudge) exited 0 after 102 s
+[workflow 13:10:21] step 03-task_plan-T1-a1
+[workflow 13:11:07]   agent run exited 0 after 46 s
+[workflow 13:11:07] step 04-task_plan-T2-a1
+[workflow 13:13:04]   agent run exited 0 after 117 s
+[workflow 13:13:04] step 05-task_plan-T3-a1
+[workflow 13:16:05]   agent run exited 0 after 181 s
+[workflow 13:18:15]   agent run (nudge) exited 0 after 130 s
+[workflow 13:18:15] step 06-task_plan-T4-a1
+[workflow 13:20:31]   agent run exited 0 after 136 s
+[workflow 13:20:31] step 07-implement-T1-a1
+[workflow 14:00:34]   agent run exited 137 (TIMED OUT) after 2402 s
+[workflow 14:05:39]   check: FAIL (suite timed out, 0 tests) — no test is named for scenario(s) S1, S5, S6, S7 — put the id in the test's name, e.g. test_S1_<what>.
+[workflow 14:05:39] step 08-implement-T1-a2
+[workflow 14:08:46]   agent run exited 0 after 186 s
+[workflow 14:13:52]   check: FAIL (suite timed out, 0 tests) — no test is named for scenario(s) S1, S5, S6, S7 — put the id in the test's name, e.g. test_S1_<what>.
+[workflow 14:20:51]   agent run (nudge) exited 0 after 419 s
+[workflow 14:25:58]   check: FAIL (suite timed out, 0 tests) — no test is named for scenario(s) S1, S5, S6, S7 — put the id in the test's name, e.g. test_S1_<what>.
+[workflow 14:53:45]   agent run (nudge) exited 137 (TIMED OUT) after 1667 s
+[workflow 14:58:52]   check: FAIL (suite timed out, 0 tests) — no test is named for scenario(s) T1_S1, T1_S2, T1_S3, T1_S4 — put the id in the test's name, e.g. test_T1_S1_<what>.
+[workflow 14:58:52] workflow STOPPED after 115.7 min — time budget ran out during implement-T1 attempt 2
+[workflow 14:58:57] grader: 9/28 checks passed
+[workflow 14:58:57] run directory: D:\llama.cpp\pi-small\workflow-runs\roster-20260924-131050\MiniCPM5-2B-Q8_0

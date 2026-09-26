@@ -1,0 +1,6 @@
+proxy ready after 280 s (01:32:49)
+workflow-runs/nothink-1: end=settled min=7.2 turns=3 tools=2 compactions=0 out=2375 grade=27/28
+workflow-runs/nothink-2: end=settled min=6.8 turns=6 tools=5 compactions=0 out=3803 grade=28/28
+workflow-runs/nothink-3: end=settled min=7.9 turns=6 tools=5 compactions=0 out=4352 grade=28/28
+workflow-runs/nothink-4: end=settled min=4.4 turns=3 tools=2 compactions=0 out=2393 grade=28/28
+batch done 02:02:08

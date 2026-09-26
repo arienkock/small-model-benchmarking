@@ -1,0 +1,137 @@
+{
+  "tool": "submit_breakdown",
+  "accepted": true,
+  "args": {
+    "tasks": [
+      {
+        "title": "POST /books",
+        "goal": "Implement POST /books with validation and 201 response.",
+        "files": [
+          "/workspace/app.py",
+          "/workspace/tests/test_s1.py",
+          "/workspace/tests/test_s5.py",
+          "/workspace/tests/test_s6.py",
+          "/workspace/tests/test_s7.py"
+        ],
+        "covers": [
+          "S1",
+          "S5",
+          "S6",
+          "S7"
+        ]
+      },
+      {
+        "title": "Get and update by id",
+        "goal": "Implement GET /books/{id}, PUT /books/{id}, and 404 for non-existent id.",
+        "files": [
+          "/workspace/app.py",
+          "/workspace/tests/test_s2.py",
+          "/workspace/tests/test_s3.py",
+          "/workspace/tests/test_s9.py"
+        ],
+        "covers": [
+          "S2",
+          "S3",
+          "S9"
+        ]
+      },
+      {
+        "title": "List with query filtering",
+        "goal": "Implement GET /books with id, title, author, isbn, synopsis, q and unknown param error.",
+        "files": [
+          "/workspace/app.py",
+          "/workspace/tests/test_s4.py",
+          "/workspace/tests/test_s8.py"
+        ],
+        "covers": [
+          "S4",
+          "S8"
+        ]
+      },
+      {
+        "title": "Delete book",
+        "goal": "Implement DELETE /books/{id}",
+        "files": [
+          "/workspace/app.py"
+        ],
+        "covers": []
+      }
+    ]
+  },
+  "refusals": 0,
+  "at": "2026-09-24T13:10:19.495Z",
+  "value": {
+    "tasks": [
+      {
+        "id": "T1",
+        "title": "POST /books",
+        "goal": "Implement POST /books with validation and 201 response.",
+        "files": [
+          "app.py",
+          "tests/test_s1.py",
+          "tests/test_s5.py",
+          "tests/test_s6.py",
+          "tests/test_s7.py"
+        ],
+        "covers": [
+          "S1",
+          "S5",
+          "S6",
+          "S7"
+        ],
+        "scenarios": [],
+        "logic": [],
+        "status": "pending"
+      },
+      {
+        "id": "T2",
+        "title": "Get and update by id",
+        "goal": "Implement GET /books/{id}, PUT /books/{id}, and 404 for non-existent id.",
+        "files": [
+          "app.py",
+          "tests/test_s2.py",
+          "tests/test_s3.py",
+          "tests/test_s9.py"
+        ],
+        "covers": [
+          "S2",
+          "S3",
+          "S9"
+        ],
+        "scenarios": [],
+        "logic": [],
+        "status": "pending"
+      },
+      {
+        "id": "T3",
+        "title": "List with query filtering",
+        "goal": "Implement GET /books with id, title, author, isbn, synopsis, q and unknown param error.",
+        "files": [
+          "app.py",
+          "tests/test_s4.py",
+          "tests/test_s8.py"
+        ],
+        "covers": [
+          "S4",
+          "S8"
+        ],
+        "scenarios": [],
+        "logic": [],
+        "status": "pending"
+      },
+      {
+        "id": "T4",
+        "title": "Delete book",
+        "goal": "Implement DELETE /books/{id}",
+        "files": [
+          "app.py"
+        ],
+        "covers": [],
+        "scenarios": [],
+        "logic": [],
+        "status": "pending"
+      }
+    ]
+  },
+  "check": null
+}

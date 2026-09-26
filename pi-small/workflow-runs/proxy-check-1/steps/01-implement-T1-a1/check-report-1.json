@@ -1,0 +1,33 @@
+{
+  "ok": false,
+  "problems": [
+    "the test suite failed (`python3 -m unittest discover -s tests -v` exited 1)."
+  ],
+  "checks": [
+    {
+      "name": "Python standard library only",
+      "ok": true,
+      "tail": "only standard-library and local imports"
+    }
+  ],
+  "tests": {
+    "rc": 1,
+    "timedOut": false,
+    "count": 7,
+    "tail": "\n======================================================================\nERROR: test_S3_update_book (test_t1.TestT1.test_S3_update_book)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tests/test_t1.py\", line 62, in test_S3_update_book\n    self._request('PUT', '/books/1',\n  File \"/workspace/tests/test_t1.py\", line 44, in _request\n    return e.code, json.loads(e.read().decode())\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.11/json/__init__.py\", line 346, in loads\n    return _default_decoder.decode(s)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.11/json/decoder.py\", line 337, in decode\n    obj, end = self.raw_decode(s, idx=_w(s, 0).end())\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.11/json/decoder.py\", line 355, in raw_decode\n    raise JSONDecodeError(\"Expecting value\", s, err.value) from None\njson.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)\n\n======================================================================\nFAIL: test_S2_get_book (test_t1.TestT1.test_S2_get_book)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tests/test_t1.py\", line 57, in test_S2_get_book\n    self.assertEqual(status, 200)\nAssertionError: 404 != 200\n\n======================================================================\nFAIL: test_S6_unknown_query_param (test_t1.TestT1.test_S6_unknown_query_param)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tests/test_t1.py\", line 111, in test_S6_unknown_query_param\n    self.assertEqual(status, 400)\nAssertionError: -1 != 400\n\n----------------------------------------------------------------------\nRan 7 tests in 0.668s\n\nFAILED (failures=2, errors=1)",
+    "failures": [
+      {
+        "test": "test_S3_update_book",
+        "error": "json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)"
+      },
+      {
+        "test": "test_S2_get_book",
+        "error": "AssertionError: 404 != 200"
+      },
+      {
+        "test": "test_S6_unknown_query_param",
+        "error": "AssertionError: -1 != 400"
+      }
+    ]
+  }
+}

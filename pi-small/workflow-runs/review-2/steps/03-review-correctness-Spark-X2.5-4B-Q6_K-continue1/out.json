@@ -1,0 +1,48 @@
+{
+  "tool": "submit_findings",
+  "accepted": true,
+  "args": {
+    "findings": [
+      {
+        "priority": "high",
+        "title": "POST /books crashes with AttributeError on missing required fields",
+        "where": "app.py, do_POST method",
+        "detail": "In do_POST, required fields title, author, isbn are retrieved via data.get() which returns None when the field is missing from the JSON body. The code immediately calls .strip() on these None values (e.g., 'if not title.strip() or not author.strip() or not isbn.strip()'), raising AttributeError (500 error) instead of returning a proper 400. This is confirmed: missing title/author/isbn, empty strings, and wrong-type fields all crash with AttributeError. The validation logic does not handle None before calling .strip()."
+      },
+      {
+        "priority": "medium",
+        "title": "Content-Length header parsing crashes on non-numeric values in do_POST and do_PUT",
+        "where": "app.py, do_POST and do_PUT methods",
+        "detail": "Both methods parse Content-Length via int(self.headers.get('Content-Length', 0)). If Content-Length is a non-numeric string (e.g., 'abc') or empty string, int() raises ValueError, causing a 500 error instead of a proper 400 validation error. This is not gracefully handled, exposing the endpoint to unexpected crashes due to malformed headers."
+      },
+      {
+        "priority": "low",
+        "title": "PUT /books requires non-whitespace-only required fields - works correctly but no trimming of input before storage",
+        "where": "app.py, do_PUT method",
+        "detail": "PUT handles missing required fields correctly: it checks 'if not title or not author or not isbn' and sends 400. It also checks whitespace-only fields via .strip() and sends 400. However, there is no trimming or validation of the stored input values (e.g., book titles, author names) before saving — invalid trailing whitespace would be stored as-is, which is a minor data-integrity concern."
+      }
+    ]
+  },
+  "value": [
+    {
+      "priority": "high",
+      "title": "POST /books crashes with AttributeError on missing required fields",
+      "where": "app.py, do_POST method",
+      "detail": "In do_POST, required fields title, author, isbn are retrieved via data.get() which returns None when the field is missing from the JSON body. The code immediately calls .strip() on these None values (e.g., 'if not title.strip() or not author.strip() or not isbn.strip()'), raising AttributeError (500 error) instead of returning a proper 400. This is confirmed: missing title/author/isbn, empty strings, and wrong-type fields all crash with AttributeError. The validation logic does not handle None before calling .strip()."
+    },
+    {
+      "priority": "medium",
+      "title": "Content-Length header parsing crashes on non-numeric values in do_POST and do_PUT",
+      "where": "app.py, do_POST and do_PUT methods",
+      "detail": "Both methods parse Content-Length via int(self.headers.get('Content-Length', 0)). If Content-Length is a non-numeric string (e.g., 'abc') or empty string, int() raises ValueError, causing a 500 error instead of a proper 400 validation error. This is not gracefully handled, exposing the endpoint to unexpected crashes due to malformed headers."
+    },
+    {
+      "priority": "low",
+      "title": "PUT /books requires non-whitespace-only required fields - works correctly but no trimming of input before storage",
+      "where": "app.py, do_PUT method",
+      "detail": "PUT handles missing required fields correctly: it checks 'if not title or not author or not isbn' and sends 400. It also checks whitespace-only fields via .strip() and sends 400. However, there is no trimming or validation of the stored input values (e.g., book titles, author names) before saving — invalid trailing whitespace would be stored as-is, which is a minor data-integrity concern."
+    }
+  ],
+  "refusals": 0,
+  "at": "2026-09-25T09:33:18.161Z"
+}

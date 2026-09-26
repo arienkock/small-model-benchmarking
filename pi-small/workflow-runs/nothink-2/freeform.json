@@ -1,0 +1,15 @@
+{
+  "model": "Qwen3.6-35B-A3B-Q4_K_M",
+  "thinking": "off",
+  "capMin": 60,
+  "end": "settled",
+  "minutes": 6.8,
+  "turns": 6,
+  "assistantMessages": 6,
+  "toolCalls": 5,
+  "compactions": 0,
+  "inputTokens": 2583,
+  "outputTokens": 3803,
+  "cacheReadTokens": 23391,
+  "maxTurnOutputTokens": 1930
+}

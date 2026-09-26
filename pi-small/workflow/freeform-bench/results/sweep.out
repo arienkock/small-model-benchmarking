@@ -1,0 +1,26 @@
+=== m35t8: --n-cpu-moe 35 -t 8  (18:26:26)
+  loaded after 260 s; 5188 MiB GPU; 2,544 MB RAM free
+  run 0: pp 1216 @ 22.2 t/s, tg 256 @ 10.02 t/s, wall 80s
+  run 1: pp 1217 @ 62.5 t/s, tg 256 @ 11.76 t/s, wall 41s
+  run 2: pp 1217 @ 62.0 t/s, tg 256 @ 11.76 t/s, wall 41s
+=== m35t4: --n-cpu-moe 35 -t 4  (18:34:01)
+  loaded after 250 s; 5188 MiB GPU; 2,156 MB RAM free
+  run 0: pp 1217 @ 34.1 t/s, tg 256 @ 10.68 t/s, wall 60s
+  run 1: pp 1217 @ 62.3 t/s, tg 256 @ 10.57 t/s, wall 44s
+  run 2: pp 1217 @ 62.9 t/s, tg 256 @ 12.18 t/s, wall 40s
+=== m34t8: --n-cpu-moe 34 -t 8  (18:41:08)
+  loaded after 265 s; 5620 MiB GPU; 3,171 MB RAM free
+  run 0: pp 1217 @ 45.5 t/s, tg 256 @ 11.34 t/s, wall 50s
+  run 1: pp 1217 @ 63.3 t/s, tg 256 @ 11.88 t/s, wall 41s
+  run 2: pp 1217 @ 63.3 t/s, tg 256 @ 12.01 t/s, wall 41s
+=== m35ub1k: --n-cpu-moe 35 -t 8 -ub 1024  (18:48:06)
+  loaded after 255 s; 5260 MiB GPU; 2,631 MB RAM free
+  run 0: pp 1217 @ 22.7 t/s, tg 256 @ 9.11 t/s, wall 82s
+  run 1: pp 1217 @ 79.3 t/s, tg 256 @ 11.77 t/s, wall 37s
+  run 2: pp 1216 @ 81.3 t/s, tg 256 @ 11.85 t/s, wall 37s
+=== m35ub2k: --n-cpu-moe 35 -t 8 -b 2048 -ub 2048  (18:55:25)
+  loaded after 255 s; 5404 MiB GPU; 2,208 MB RAM free
+  run 0: pp 1217 @ 50.3 t/s, tg 256 @ 11.41 t/s, wall 48s
+  run 1: pp 1217 @ 103.8 t/s, tg 256 @ 11.39 t/s, wall 34s
+  run 2: pp 1217 @ 97.2 t/s, tg 256 @ 10.85 t/s, wall 36s
+=== done 19:02:03

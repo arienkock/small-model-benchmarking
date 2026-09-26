@@ -1,0 +1,48 @@
+# Review (continued)
+
+The code in /workspace was written for the task below. Do not change any files.
+
+Review the code for completeness: is everything the task asks for there?
+Review the code for correctness: does it work, and is it free of bugs?
+Review the code for fidelity against the task: does what it does match what the task says, exactly?
+
+A previous session ran out of turns before it finished this review. Below is what it found so far. Continue the review, then report all of it in one call to the tool `submit_findings` — most important first, and including whatever below still holds.
+
+## Findings so far
+
+- [high] Missing field type validation in POST and PUT (do_POST, do_PUT): The task requires 400 for a field of the wrong type, but the code never checks that title/author/isbn are strings and synopsis is string/optional. PUT also doesn't validate empty required fields or field types (same rules as create).
+- [high] PUT endpoint does not validate required fields or field types (do_PUT): PUT /books/{id} replaces fields but does not reject empty required fields or non-string types, despite the spec saying 'same rules as create'.
+- [medium] Empty-body POST sends 400 before JSON parsing (do_POST): The explicit empty-content_length check sends 400 'empty body' before json.loads. The spec doesn't explicitly call out empty bodies as a 400, but this is redundant with JSONDecodeError handling. Not a correctness bug but inconsistent.
+- [medium] GET /books query parameter q filter interacts with id filter (do_GET_all): When both id and q are specified, the code applies id filter first then q filter to the narrowed result set. This is likely correct behavior but should be verified against spec: 'several parameters together must all match'.
+- [low] Redundant/duplicate error messages in POST (do_POST): The code checks isbn=='' separately from the broader empty check, producing two different error messages. Also missing type checks means the empty check alone would be the only validation.
+
+## The task
+
+Build a RESTful HTTP API for books in Python.
+
+Constraints:
+- Python 3 standard library only (for example http.server, json, urllib.parse, threading). No third-party packages.
+- Keep the data in memory; nothing is written to disk. Data may be lost when the server stops.
+- The entry point is `/workspace/app.py`. Running `python3 app.py` starts the server on the port given by the environment variable `PORT` (default 8000), listening on 127.0.0.1, and keeps serving until it is stopped.
+
+A book has these fields:
+- `id`: integer, assigned by the server (1, 2, 3, … in creation order, never reused after a delete); never supplied by the client
+- `title`: string, required, not empty
+- `author`: string, required, not empty
+- `isbn`: string, required, not empty
+- `synopsis`: string, optional; defaults to an empty string
+
+Endpoints (all request and response bodies are JSON, with `Content-Type: application/json`):
+- `POST /books` creates a book from a JSON object with title, author, isbn and optionally synopsis. Responds 201 with the created book, including its `id`.
+- `GET /books/{id}` responds 200 with the book.
+- `PUT /books/{id}` replaces the book's title, author, isbn and synopsis with the ones in the body (same rules as create). Responds 200 with the updated book.
+- `DELETE /books/{id}` removes the book. Responds 204 with no body.
+- `GET /books` responds 200 with a JSON list of all books, ordered by id. It supports searching and filtering by every field through query parameters:
+  - `id=<n>` keeps only the book with that id;
+  - `title=…`, `author=…`, `isbn=…`, `synopsis=…` keep books whose field contains the value, ignoring case;
+  - `q=…` keeps books where any of title, author, isbn or synopsis contains the value, ignoring case;
+  - several parameters together must all match. An unknown query parameter is an error.
+
+Errors respond with a JSON object `{"error": "<message>"}`:
+- 400 for a body that is not valid JSON or not a JSON object, a missing or empty required field, a field of the wrong type, an `id` in a create or update body, an id in the path that is not an integer, or an unknown query parameter;
+- 404 for a book id that does not exist, or any other path.

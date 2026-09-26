@@ -1,0 +1,42 @@
+[workflow 08:53:46] model rotation: Spark-X2.5-4B-Q6_K → MiniCPM5-2B-Q8_0 (next model after every failed session)
+[workflow 08:53:46] deadline 2026-09-25T13:52:42.000Z
+[workflow 08:53:46]   workspace reset to the start of review-start
+[workflow 08:53:46] step 01-review-completeness-Spark-X2.5-4B-Q6_K
+[workflow 09:08:58]   session ended after 912 s, 8 turn(s) on Spark-X2.5-4B-Q6_K (TIMED OUT) (WRAPPED UP)
+[workflow 09:08:58]   workspace reset to the start of review-start
+[workflow 09:08:58] step 02-review-correctness-Spark-X2.5-4B-Q6_K
+[workflow 09:20:58]   session ended after 720 s, 7 turn(s) on Spark-X2.5-4B-Q6_K (WRAPPED UP)
+[workflow 09:20:58]   workspace reset to the start of review-start
+[workflow 09:20:58] step 03-review-correctness-Spark-X2.5-4B-Q6_K-continue1
+[workflow 09:33:18]   session ended after 741 s, 9 turn(s) on Spark-X2.5-4B-Q6_K (WRAPPED UP)
+[workflow 09:33:18]   workspace reset to the start of review-start
+[workflow 09:33:18] step 04-review-fidelity-Spark-X2.5-4B-Q6_K
+[workflow 09:46:30]   session ended after 791 s, 10 turn(s) on Spark-X2.5-4B-Q6_K (TIMED OUT) (WRAPPED UP)
+[workflow 09:46:30]   workspace reset to the start of review-start
+[workflow 09:46:30] step 05-review-all-Spark-X2.5-4B-Q6_K
+[workflow 09:58:42]   session ended after 733 s, 10 turn(s) on Spark-X2.5-4B-Q6_K (WRAPPED UP)
+[workflow 09:58:43]   workspace reset to the start of review-start
+[workflow 09:58:43] step 06-review-all-Spark-X2.5-4B-Q6_K-continue1
+[workflow 10:11:16]   session ended after 754 s, 11 turn(s) on Spark-X2.5-4B-Q6_K (WRAPPED UP)
+[workflow 10:11:16]   workspace reset to the start of review-start
+[workflow 10:11:16] step 07-review-completeness-MiniCPM5-2B-Q8_0
+[workflow 10:20:55]   session ended after 579 s, 7 turn(s) on MiniCPM5-2B-Q8_0 (WRAPPED UP)
+[workflow 10:20:55]   workspace reset to the start of review-start
+[workflow 10:20:55] step 08-review-completeness-MiniCPM5-2B-Q8_0-continue1
+[workflow 10:24:41]   session ended after 226 s, 3 turn(s) on MiniCPM5-2B-Q8_0 (WRAPPED UP)
+[workflow 10:24:41]   workspace reset to the start of review-start
+[workflow 10:24:41] step 09-review-correctness-MiniCPM5-2B-Q8_0
+[workflow 10:33:58]   session ended after 557 s, 5 turn(s) on MiniCPM5-2B-Q8_0 (TIMED OUT) (WRAPPED UP)
+[workflow 10:33:58]   workspace reset to the start of review-start
+[workflow 10:33:58] step 10-review-fidelity-MiniCPM5-2B-Q8_0
+[workflow 10:43:27]   session ended after 569 s, 7 turn(s) on MiniCPM5-2B-Q8_0 (WRAPPED UP)
+[workflow 10:43:27]   workspace reset to the start of review-start
+[workflow 10:43:27] step 11-review-fidelity-MiniCPM5-2B-Q8_0-continue1
+[workflow 10:49:22]   session ended after 355 s, 3 turn(s) on MiniCPM5-2B-Q8_0
+[workflow 10:49:23]   workspace reset to the start of review-start
+[workflow 10:49:23] step 12-review-all-MiniCPM5-2B-Q8_0
+[workflow 10:52:42]   session ended after 199 s, 3 turn(s) on MiniCPM5-2B-Q8_0 (WRAPPED UP)
+[workflow 10:52:42]   workspace reset to the start of review-start
+[workflow 10:52:42] step 13-review-all-MiniCPM5-2B-Q8_0-continue1
+[workflow 10:56:31]   session ended after 229 s, 3 turn(s) on MiniCPM5-2B-Q8_0 (WRAPPED UP)
+[workflow 10:56:31] review COMPLETED after 122.7 min, 8 session(s)

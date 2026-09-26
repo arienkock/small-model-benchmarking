@@ -1,0 +1,147 @@
+{
+  "tool": "submit_scenarios",
+  "accepted": true,
+  "args": {
+    "scenarios": [
+      {
+        "kind": "happy",
+        "title": "Create book",
+        "given": "No books in store",
+        "when": "POST /books with {'title': 'Dune', 'author': 'Sparaway', 'isbn': '1234567890'}",
+        "then": "201 with {'id': 1, 'title': 'Dune', 'author': 'Sparaway', 'isbn': '1234567890', 'synopsis': ''}"
+      },
+      {
+        "kind": "happy",
+        "title": "Retrieve book",
+        "given": "Book id 1 exists",
+        "when": "GET /books/1",
+        "then": "200 with {'id': 1, 'title': 'Dune', 'author': 'Sparaway', 'isbn': '1234567890', 'synopsis': ''}"
+      },
+      {
+        "kind": "happy",
+        "title": "Update book",
+        "given": "Book id 1 exists",
+        "when": "PUT /books/1 with {'title': 'Dune', 'author': 'Huxley', 'isbn': '0987654321', 'synopsis': 'A story of desert'}",
+        "then": "200 with {'id': 1, 'title': 'Dune', 'author': 'Huxley', 'isbn': '0987654321', 'synopsis': 'A story of desert'}"
+      },
+      {
+        "kind": "happy",
+        "title": "List books by query",
+        "given": "Two books exist",
+        "when": "GET /books?q=1234567890",
+        "then": "200 with a list containing the book id 1"
+      },
+      {
+        "kind": "unhappy",
+        "title": "Invalid JSON body",
+        "given": "Server running.",
+        "when": "POST /books with body 'not json'",
+        "then": "400 with {'error': 'Invalid JSON'}"
+      },
+      {
+        "kind": "unhappy",
+        "title": "Missing required field",
+        "given": "Server running.",
+        "when": "POST /books with JSON {'author': 'Test', 'isbn': '000'}",
+        "then": "400 with {'error': 'title is required'}"
+      },
+      {
+        "kind": "unhappy",
+        "title": "Wrong type",
+        "given": "Server running.",
+        "when": "POST /books with JSON {'title': 123, 'author': 'Test', 'isbn': '000'}",
+        "then": "400 with {'error': 'title must be a string'}"
+      },
+      {
+        "kind": "unhappy",
+        "title": "Unknown query param",
+        "given": "GET /books",
+        "when": "GET /books?id=5",
+        "then": "400 with {'error': 'id is not a valid query parameter'}"
+      },
+      {
+        "kind": "unhappy",
+        "title": "Non-existent id",
+        "given": "Server running.",
+        "when": "GET /books/999",
+        "then": "404 with {}"
+      }
+    ]
+  },
+  "value": [
+    {
+      "id": "S1",
+      "kind": "happy",
+      "title": "Create book",
+      "given": "No books in store",
+      "when": "POST /books with {'title': 'Dune', 'author': 'Sparaway', 'isbn': '1234567890'}",
+      "then": "201 with {'id': 1, 'title': 'Dune', 'author': 'Sparaway', 'isbn': '1234567890', 'synopsis': ''}"
+    },
+    {
+      "id": "S2",
+      "kind": "happy",
+      "title": "Retrieve book",
+      "given": "Book id 1 exists",
+      "when": "GET /books/1",
+      "then": "200 with {'id': 1, 'title': 'Dune', 'author': 'Sparaway', 'isbn': '1234567890', 'synopsis': ''}"
+    },
+    {
+      "id": "S3",
+      "kind": "happy",
+      "title": "Update book",
+      "given": "Book id 1 exists",
+      "when": "PUT /books/1 with {'title': 'Dune', 'author': 'Huxley', 'isbn': '0987654321', 'synopsis': 'A story of desert'}",
+      "then": "200 with {'id': 1, 'title': 'Dune', 'author': 'Huxley', 'isbn': '0987654321', 'synopsis': 'A story of desert'}"
+    },
+    {
+      "id": "S4",
+      "kind": "happy",
+      "title": "List books by query",
+      "given": "Two books exist",
+      "when": "GET /books?q=1234567890",
+      "then": "200 with a list containing the book id 1"
+    },
+    {
+      "id": "S5",
+      "kind": "unhappy",
+      "title": "Invalid JSON body",
+      "given": "Server running.",
+      "when": "POST /books with body 'not json'",
+      "then": "400 with {'error': 'Invalid JSON'}"
+    },
+    {
+      "id": "S6",
+      "kind": "unhappy",
+      "title": "Missing required field",
+      "given": "Server running.",
+      "when": "POST /books with JSON {'author': 'Test', 'isbn': '000'}",
+      "then": "400 with {'error': 'title is required'}"
+    },
+    {
+      "id": "S7",
+      "kind": "unhappy",
+      "title": "Wrong type",
+      "given": "Server running.",
+      "when": "POST /books with JSON {'title': 123, 'author': 'Test', 'isbn': '000'}",
+      "then": "400 with {'error': 'title must be a string'}"
+    },
+    {
+      "id": "S8",
+      "kind": "unhappy",
+      "title": "Unknown query param",
+      "given": "GET /books",
+      "when": "GET /books?id=5",
+      "then": "400 with {'error': 'id is not a valid query parameter'}"
+    },
+    {
+      "id": "S9",
+      "kind": "unhappy",
+      "title": "Non-existent id",
+      "given": "Server running.",
+      "when": "GET /books/999",
+      "then": "404 with {}"
+    }
+  ],
+  "refusals": 0,
+  "at": "2026-09-24T13:05:37.720Z"
+}

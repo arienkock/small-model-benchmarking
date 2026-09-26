@@ -1,0 +1,177 @@
+{
+  "tool": "submit_scenarios",
+  "accepted": true,
+  "args": {
+    "scenarios": [
+      {
+        "kind": "happy",
+        "title": "create_book",
+        "given": "empty in-memory store",
+        "when": "POST /books with JSON {\"title\": \"1984\", \"author\": \"Orwell\", \"isbn\": \"123456\"}",
+        "then": "201 with {\"id\": 1, \"title\": \"1984\", \"author\": \"Orwell\", \"isbn\": \"123456\", \"synopsis\": \"\"}"
+      },
+      {
+        "kind": "happy",
+        "title": "get_book",
+        "given": "book id 1 exists",
+        "when": "GET /books/1",
+        "then": "200 with the book object"
+      },
+      {
+        "kind": "happy",
+        "title": "update_book",
+        "given": "book id 1 exists",
+        "when": "PUT /books/1 with JSON {\"title\": \"Nineteen Eighty-Four\", \"author\": \"George Orwell\", \"isbn\": \"123456\", \"synopsis\": \"A dystopian novel\"}",
+        "then": "200 with updated book"
+      },
+      {
+        "kind": "unhappy",
+        "title": "missing_required_field",
+        "given": "POST /books with JSON {\"title\": \"Test\", \"author\": \"Author\", \"isbn\": \"\"}",
+        "when": "send request",
+        "then": "400 with error \"isbn\" is empty"
+      },
+      {
+        "kind": "unhappy",
+        "title": "invalid_json_body",
+        "given": "POST /books with non-JSON body",
+        "when": "send request with raw text",
+        "then": "400 with error \"error\" (invalid JSON)"
+      },
+      {
+        "kind": "unhappy",
+        "title": "unknown_query_param",
+        "given": "GET /books with query ?id=1&unknown=foo",
+        "when": "make request",
+        "then": "400 with error \"unknown query parameter\""
+      },
+      {
+        "kind": "unhappy",
+        "title": "id_not_integer",
+        "given": "GET /books/abc",
+        "when": "request",
+        "then": "404"
+      },
+      {
+        "kind": "happy",
+        "title": "delete_book",
+        "given": "book id 1 exists",
+        "when": "DELETE /books/1",
+        "then": "204 with no body"
+      },
+      {
+        "kind": "happy",
+        "title": "search_by_title",
+        "given": "books exist with id 1 title \"1984\"",
+        "when": "GET /books?title=1984",
+        "then": "200 with list containing book id 1"
+      },
+      {
+        "kind": "unhappy",
+        "title": "duplicate_id_in_create",
+        "given": "book id 1 already exists",
+        "when": "POST /books with same fields as book 1",
+        "then": "400 with error \"id\" already used?"
+      },
+      {
+        "kind": "unhappy",
+        "title": "empty_query_param",
+        "given": "GET /books?foo=",
+        "when": "make request",
+        "then": "400 with error \"unknown query parameter\""
+      }
+    ]
+  },
+  "value": [
+    {
+      "id": "S1",
+      "kind": "happy",
+      "title": "create_book",
+      "given": "empty in-memory store",
+      "when": "POST /books with JSON {\"title\": \"1984\", \"author\": \"Orwell\", \"isbn\": \"123456\"}",
+      "then": "201 with {\"id\": 1, \"title\": \"1984\", \"author\": \"Orwell\", \"isbn\": \"123456\", \"synopsis\": \"\"}"
+    },
+    {
+      "id": "S2",
+      "kind": "happy",
+      "title": "get_book",
+      "given": "book id 1 exists",
+      "when": "GET /books/1",
+      "then": "200 with the book object"
+    },
+    {
+      "id": "S3",
+      "kind": "happy",
+      "title": "update_book",
+      "given": "book id 1 exists",
+      "when": "PUT /books/1 with JSON {\"title\": \"Nineteen Eighty-Four\", \"author\": \"George Orwell\", \"isbn\": \"123456\", \"synopsis\": \"A dystopian novel\"}",
+      "then": "200 with updated book"
+    },
+    {
+      "id": "S4",
+      "kind": "unhappy",
+      "title": "missing_required_field",
+      "given": "POST /books with JSON {\"title\": \"Test\", \"author\": \"Author\", \"isbn\": \"\"}",
+      "when": "send request",
+      "then": "400 with error \"isbn\" is empty"
+    },
+    {
+      "id": "S5",
+      "kind": "unhappy",
+      "title": "invalid_json_body",
+      "given": "POST /books with non-JSON body",
+      "when": "send request with raw text",
+      "then": "400 with error \"error\" (invalid JSON)"
+    },
+    {
+      "id": "S6",
+      "kind": "unhappy",
+      "title": "unknown_query_param",
+      "given": "GET /books with query ?id=1&unknown=foo",
+      "when": "make request",
+      "then": "400 with error \"unknown query parameter\""
+    },
+    {
+      "id": "S7",
+      "kind": "unhappy",
+      "title": "id_not_integer",
+      "given": "GET /books/abc",
+      "when": "request",
+      "then": "404"
+    },
+    {
+      "id": "S8",
+      "kind": "happy",
+      "title": "delete_book",
+      "given": "book id 1 exists",
+      "when": "DELETE /books/1",
+      "then": "204 with no body"
+    },
+    {
+      "id": "S9",
+      "kind": "happy",
+      "title": "search_by_title",
+      "given": "books exist with id 1 title \"1984\"",
+      "when": "GET /books?title=1984",
+      "then": "200 with list containing book id 1"
+    },
+    {
+      "id": "S10",
+      "kind": "unhappy",
+      "title": "duplicate_id_in_create",
+      "given": "book id 1 already exists",
+      "when": "POST /books with same fields as book 1",
+      "then": "400 with error \"id\" already used?"
+    },
+    {
+      "id": "S11",
+      "kind": "unhappy",
+      "title": "empty_query_param",
+      "given": "GET /books?foo=",
+      "when": "make request",
+      "then": "400 with error \"unknown query parameter\""
+    }
+  ],
+  "refusals": 0,
+  "at": "2026-09-24T18:16:01.205Z"
+}

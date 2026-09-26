@@ -1,0 +1,79 @@
+[
+  {
+    "kind": "happy",
+    "title": "Create book and get ID",
+    "given": "No books exist yet; PORT=8000",
+    "when": "POST /books with {\"title\": \"Dune\", \"author\": \"Frank Herbert\", \"isbn\": \"12345\"}",
+    "then": "201 Created response containing the new book with id 1"
+  },
+  {
+    "kind": "happy",
+    "title": "Retrieve book by ID",
+    "given": "Book with id=1 exists from previous create",
+    "when": "GET /books/1",
+    "then": "200 OK with the book object including id: 1"
+  },
+  {
+    "kind": "unhappy",
+    "title": "Create book missing required field",
+    "given": "No books exist yet; PORT=8000",
+    "when": "POST /books with {\"author\": \"Frank Herbert\", \"isbn\": \"12345\"}",
+    "then": "400 Bad Request with error message about missing title"
+  },
+  {
+    "kind": "unhappy",
+    "title": "Update with invalid JSON",
+    "given": "No books exist yet; PORT=8000",
+    "when": "PUT /books/1 with body \"{invalid json}\"",
+    "then": "400 Bad Request with error message about invalid JSON"
+  },
+  {
+    "kind": "unhappy",
+    "title": "Query with unknown parameter",
+    "given": "Book with id=1 exists from previous create; PORT=8000",
+    "when": "GET /books?unknown_param=value",
+    "then": "400 Bad Request with error about unknown query parameter"
+  },
+  {
+    "kind": "happy",
+    "title": "Create book and receive ID",
+    "given": "No books exist; PORT=8000",
+    "when": "POST /books with {\"title\": \"Dune\", \"author\": \"Frank Herbert\", \"isbn\": \"12345\"}",
+    "then": "201 Created response containing the new book with id 1"
+  },
+  {
+    "kind": "happy",
+    "title": "Fetch existing book by ID",
+    "given": "Book with id=1 exists from previous create; PORT=8000",
+    "when": "GET /books/1",
+    "then": "200 OK with the book object including id: 1"
+  },
+  {
+    "kind": "happy",
+    "title": "List all books",
+    "given": "Book with id=1 exists from previous create; PORT=8000",
+    "when": "GET /books",
+    "then": "200 OK with a JSON list containing the book(s)"
+  },
+  {
+    "kind": "unhappy",
+    "title": "Missing required field in create",
+    "given": "No books exist yet; PORT=8000",
+    "when": "POST /books with {\"author\": \"Frank Herbert\", \"isbn\": \"12345\"}",
+    "then": "400 Bad Request with error about missing title"
+  },
+  {
+    "kind": "unhappy",
+    "title": "Invalid JSON body in PUT",
+    "given": "No books exist yet; PORT=8000",
+    "when": "PUT /books/1 with body \"{invalid json}\"",
+    "then": "400 Bad Request with error about invalid JSON"
+  },
+  {
+    "kind": "unhappy",
+    "title": "Unknown query parameter",
+    "given": "Book with id=1 exists from previous create; PORT=8000",
+    "when": "GET /books?unknown_param=value",
+    "then": "400 Bad Request with error about unknown query parameter"
+  }
+]

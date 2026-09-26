@@ -1,0 +1,11 @@
+pi-small: MiniCPM5-2B-Q8_0 ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: system prompt — PI_SMALL_SYSTEM_PROMPT / pi default + workflow systemPrompt, 336 chars, sha256 2f420d25d03e
+pi-small: response truncated at max_tokens (4096) — raise maxTokens for MiniCPM5-2B-Q8_0 in roster.json if this recurs
+pi-small: MiniCPM5-2B-Q8_0 ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: system prompt — PI_SMALL_SYSTEM_PROMPT / pi default + workflow systemPrompt, 336 chars, sha256 2f420d25d03e
+pi-small: response hit max_tokens (4096) with NO answer — 6680 chars of thinking used the whole budget. Raise maxTokens for MiniCPM5-2B-Q8_0, or cap reasoningBudget.
+pi-small: MiniCPM5-2B-Q8_0 ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 50 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, report_done]
+pi-small: probes OK — stops at turn boundary, emits real tool_calls, server sampler matches
+pi-small: system prompt — PI_SMALL_SYSTEM_PROMPT / pi default + workflow systemPrompt, 336 chars, sha256 2f420d25d03e

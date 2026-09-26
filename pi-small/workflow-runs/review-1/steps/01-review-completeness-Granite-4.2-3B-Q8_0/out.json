@@ -1,0 +1,72 @@
+{
+  "tool": "submit_findings",
+  "accepted": true,
+  "args": {
+    "findings": [
+      {
+        "priority": "high",
+        "title": "GET /books query filtering incorrect (id, title/author/isbn, synopsis, q)",
+        "where": "app.py do_GET_all",
+        "detail": "Filters applied incorrectly: id filter works but other filters are applied cumulatively with flawed logic; 'q' parameter is treated as a field lookup instead of generic search across title, author, isbn, synopsis; multiple filters are not combined correctly (AND logic is broken). Query parameter validation works but filter parsing mishandles empty results and lacks proper case‑insensitive substring matching across multiple fields."
+      },
+      {
+        "priority": "high",
+        "title": "GET /books ordering not guaranteed",
+        "where": "app.py do_GET_all",
+        "detail": "Books returned are not sorted by id as required; insertion order may not reflect id order."
+      },
+      {
+        "priority": "medium",
+        "title": "Filter combination AND logic flawed",
+        "where": "app.py do_GET_all",
+        "detail": "When id filter is applied, subsequent filters are applied on the filtered set, but the break statement when books becomes empty stops later filters, causing inconsistent behavior."
+      },
+      {
+        "priority": "medium",
+        "title": "q parameter not implemented correctly",
+        "where": "app.py do_GET_all",
+        "detail": "q should search across title, author, isbn, synopsis; current code treats q as a field lookup, which fails."
+      },
+      {
+        "priority": "low",
+        "title": "Minor: missing handling for empty synopsis defaults",
+        "where": "app.py book creation",
+        "detail": "Synopsis defaults to empty string; current code copies synopsis from request; fine."
+      }
+    ]
+  },
+  "value": [
+    {
+      "priority": "high",
+      "title": "GET /books query filtering incorrect (id, title/author/isbn, synopsis, q)",
+      "where": "app.py do_GET_all",
+      "detail": "Filters applied incorrectly: id filter works but other filters are applied cumulatively with flawed logic; 'q' parameter is treated as a field lookup instead of generic search across title, author, isbn, synopsis; multiple filters are not combined correctly (AND logic is broken). Query parameter validation works but filter parsing mishandles empty results and lacks proper case‑insensitive substring matching across multiple fields."
+    },
+    {
+      "priority": "high",
+      "title": "GET /books ordering not guaranteed",
+      "where": "app.py do_GET_all",
+      "detail": "Books returned are not sorted by id as required; insertion order may not reflect id order."
+    },
+    {
+      "priority": "medium",
+      "title": "Filter combination AND logic flawed",
+      "where": "app.py do_GET_all",
+      "detail": "When id filter is applied, subsequent filters are applied on the filtered set, but the break statement when books becomes empty stops later filters, causing inconsistent behavior."
+    },
+    {
+      "priority": "medium",
+      "title": "q parameter not implemented correctly",
+      "where": "app.py do_GET_all",
+      "detail": "q should search across title, author, isbn, synopsis; current code treats q as a field lookup, which fails."
+    },
+    {
+      "priority": "low",
+      "title": "Minor: missing handling for empty synopsis defaults",
+      "where": "app.py book creation",
+      "detail": "Synopsis defaults to empty string; current code copies synopsis from request; fine."
+    }
+  ],
+  "refusals": 0,
+  "at": "2026-09-25T06:20:00.680Z"
+}

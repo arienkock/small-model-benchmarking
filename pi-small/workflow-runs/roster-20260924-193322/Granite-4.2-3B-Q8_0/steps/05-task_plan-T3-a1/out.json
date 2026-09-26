@@ -1,0 +1,76 @@
+{
+  "tool": "submit_task_plan",
+  "accepted": true,
+  "args": {
+    "scenarios": [
+      {
+        "kind": "unhappy",
+        "title": "unknown_query_param",
+        "given": "book id 1 exists",
+        "when": "GET /books?unknown=foo",
+        "then": "400 with error about unknown query parameter"
+      },
+      {
+        "kind": "unhappy",
+        "title": "not_found_id",
+        "given": "book id 1 exists",
+        "when": "GET /books/999",
+        "then": "404 with error about book not found"
+      },
+      {
+        "kind": "happy",
+        "title": "valid_query",
+        "given": "books exist",
+        "when": "GET /books?title=Test",
+        "then": "200 with filtered list"
+      }
+    ],
+    "logic": [
+      "parse query params, validate known keys, reject unknown -> 400",
+      "implement filtering by id, title/author/isbn/synopsis (case-insensitive substring), q (any field contains) with AND semantics across provided params",
+      "handle id param -> single book 200",
+      "handle id param in path -> 404 if missing",
+      "return empty list when no matches",
+      "order results by id ascending"
+    ]
+  },
+  "refusals": 0,
+  "at": "2026-09-24T17:40:36.452Z",
+  "value": {
+    "scenarios": [
+      {
+        "id": "T3.S1",
+        "kind": "unhappy",
+        "title": "unknown_query_param",
+        "given": "book id 1 exists",
+        "when": "GET /books?unknown=foo",
+        "then": "400 with error about unknown query parameter"
+      },
+      {
+        "id": "T3.S2",
+        "kind": "unhappy",
+        "title": "not_found_id",
+        "given": "book id 1 exists",
+        "when": "GET /books/999",
+        "then": "404 with error about book not found"
+      },
+      {
+        "id": "T3.S3",
+        "kind": "happy",
+        "title": "valid_query",
+        "given": "books exist",
+        "when": "GET /books?title=Test",
+        "then": "200 with filtered list"
+      }
+    ],
+    "logic": [
+      "parse query params, validate known keys, reject unknown -> 400",
+      "implement filtering by id, title/author/isbn/synopsis (case-insensitive substring), q (any field contains) with AND semantics across provided params",
+      "handle id param -> single book 200",
+      "handle id param in path -> 404 if missing",
+      "return empty list when no matches",
+      "order results by id ascending"
+    ]
+  },
+  "check": null
+}

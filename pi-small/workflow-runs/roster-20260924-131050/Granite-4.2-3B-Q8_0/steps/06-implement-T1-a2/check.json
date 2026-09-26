@@ -1,0 +1,19 @@
+{
+  "testCommand": "python3 -m unittest discover -s tests -v",
+  "testTimeoutSec": 300,
+  "testFiles": [
+    "tests/*.py"
+  ],
+  "testCountPattern": "^Ran (\\d+) tests?",
+  "requiredTokens": [
+    "S1",
+    "T1_S1",
+    "T1_S2"
+  ],
+  "checks": [
+    {
+      "name": "Python standard library only",
+      "command": "python3 /opt/pi-small/workflow/checks/python_stdlib_only.py"
+    }
+  ]
+}

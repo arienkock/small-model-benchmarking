@@ -1,0 +1,6 @@
+proxy ready after 290 s (02:07:36)
+workflow-runs/style4-1: end=settled min=8.8 turns=5 tools=4 compactions=0 out=4337 grade=27/28
+workflow-runs/style4-2: end=settled min=11.2 turns=8 tools=7 compactions=0 out=6445 grade=28/28
+workflow-runs/style4-3: end=settled min=12.7 turns=10 tools=9 compactions=0 out=7292 grade=27/28
+workflow-runs/style4-4: end=settled min=10.7 turns=7 tools=6 compactions=0 out=4924 grade=23/28
+batch done 02:54:38

@@ -1,0 +1,57 @@
+{
+  "kind": "implement",
+  "taskId": "T1",
+  "tool": "report_done",
+  "toolset": "coding",
+  "out": "/harness/out.json",
+  "config": {
+    "scenarios": {
+      "minHappy": 3,
+      "minUnhappy": 3,
+      "max": 16
+    },
+    "tasks": {
+      "min": 2,
+      "max": 6
+    },
+    "taskScenarios": {
+      "minHappy": 1,
+      "minUnhappy": 1,
+      "max": 10
+    },
+    "logic": {
+      "min": 1,
+      "max": 12
+    },
+    "attempts": {
+      "planning": 1,
+      "implement": 1,
+      "integrate": 1
+    },
+    "maxTurns": 10,
+    "doneRefusals": 4,
+    "stepTimeoutMin": 15,
+    "testTimeoutSec": 60,
+    "systemPrompt": "Response style: terse. Use as few words as possible — in your reasoning, in your messages, and in the fields you submit. No preamble, no restating the task, no summary of what you did or are about to do. Code, commands and tool arguments are as long as they need to be; everything else is short.",
+    "_about": "2026-09-24 T1 replay: one attempt per model at the rotation run's limits."
+  },
+  "systemPrompt": "Response style: terse. Use as few words as possible — in your reasoning, in your messages, and in the fields you submit. No preamble, no restating the task, no summary of what you did or are about to do. Code, commands and tool arguments are as long as they need to be; everything else is short.",
+  "check": {
+    "testCommand": "python3 -m unittest discover -s tests -v",
+    "testTimeoutSec": 60,
+    "testFiles": [
+      "tests/*.py"
+    ],
+    "testCountPattern": "^Ran (\\d+) tests?",
+    "failurePattern": "^(?:FAIL|ERROR): (\\S+)",
+    "minTests": 12,
+    "checks": [
+      {
+        "name": "Python standard library only",
+        "command": "python3 /opt/pi-small/workflow/checks/python_stdlib_only.py"
+      }
+    ]
+  },
+  "checkScript": "/opt/pi-small/workflow/check.py",
+  "checkSpecPath": "/harness/check.json"
+}

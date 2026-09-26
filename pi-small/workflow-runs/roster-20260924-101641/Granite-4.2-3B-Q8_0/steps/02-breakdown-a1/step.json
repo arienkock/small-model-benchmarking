@@ -1,0 +1,50 @@
+{
+  "kind": "breakdown",
+  "tool": "submit_breakdown",
+  "toolset": "planning",
+  "toolKinds": [],
+  "out": "/harness/out.json",
+  "config": {
+    "scenarios": {
+      "minHappy": 3,
+      "minUnhappy": 3,
+      "max": 16
+    },
+    "tasks": {
+      "min": 2,
+      "max": 6
+    },
+    "taskScenarios": {
+      "minHappy": 1,
+      "minUnhappy": 1,
+      "max": 10
+    },
+    "logic": {
+      "min": 1,
+      "max": 12
+    },
+    "attempts": {
+      "planning": 3,
+      "implement": 3,
+      "integrate": 3
+    },
+    "nudges": 2,
+    "doneRefusals": 4,
+    "stepTimeoutMin": 40,
+    "testTimeoutSec": 300
+  },
+  "scenarioIds": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "S6",
+    "S7",
+    "S8",
+    "S9",
+    "S10",
+    "S11",
+    "S12"
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "tool": "submit_task_plan",
+  "accepted": true,
+  "args": {
+    "scenarios": [
+      {
+        "kind": "happy",
+        "title": "search_by_title",
+        "given": "books exist with id 1 title \"1984\"",
+        "when": "GET /books?title=1984",
+        "then": "200 with list containing book id 1"
+      },
+      {
+        "kind": "unhappy",
+        "title": "unknown_query_param",
+        "given": "GET /books with query ?id=1&unknown=foo",
+        "when": "make request",
+        "then": "400 with error \"unknown query parameter\""
+      }
+    ],
+    "logic": [
+      "parse query params, validate known params, filter books by matching title case-insensitively, return list ordered by id; reject unknown params with 400"
+    ]
+  },
+  "refusals": 1,
+  "at": "2026-09-24T18:19:12.811Z",
+  "value": {
+    "scenarios": [
+      {
+        "id": "T3.S1",
+        "kind": "happy",
+        "title": "search_by_title",
+        "given": "books exist with id 1 title \"1984\"",
+        "when": "GET /books?title=1984",
+        "then": "200 with list containing book id 1"
+      },
+      {
+        "id": "T3.S2",
+        "kind": "unhappy",
+        "title": "unknown_query_param",
+        "given": "GET /books with query ?id=1&unknown=foo",
+        "when": "make request",
+        "then": "400 with error \"unknown query parameter\""
+      }
+    ],
+    "logic": [
+      "parse query params, validate known params, filter books by matching title case-insensitively, return list ordered by id; reject unknown params with 400"
+    ]
+  },
+  "check": null
+}

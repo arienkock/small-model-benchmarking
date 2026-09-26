@@ -1,0 +1,61 @@
+{
+  "kind": "implement",
+  "taskId": "T1",
+  "tool": "report_done",
+  "toolset": "coding",
+  "out": "/harness/out.json",
+  "config": {
+    "scenarios": {
+      "minHappy": 3,
+      "minUnhappy": 3,
+      "max": 16
+    },
+    "tasks": {
+      "min": 2,
+      "max": 6
+    },
+    "taskScenarios": {
+      "minHappy": 1,
+      "minUnhappy": 1,
+      "max": 10
+    },
+    "logic": {
+      "min": 1,
+      "max": 12
+    },
+    "attempts": {
+      "planning": 3,
+      "implement": 3,
+      "integrate": 3
+    },
+    "nudges": 2,
+    "doneRefusals": 4,
+    "stepTimeoutMin": 40,
+    "testTimeoutSec": 300
+  },
+  "check": {
+    "testCommand": "python3 -m unittest discover -s tests -v",
+    "testTimeoutSec": 300,
+    "testFiles": [
+      "tests/*.py"
+    ],
+    "testCountPattern": "^Ran (\\d+) tests?",
+    "requiredTokens": [
+      "S1",
+      "S2",
+      "S4",
+      "T1_S1",
+      "T1_S2",
+      "T1_S3",
+      "T1_S4"
+    ],
+    "checks": [
+      {
+        "name": "Python standard library only",
+        "command": "python3 /opt/pi-small/workflow/checks/python_stdlib_only.py"
+      }
+    ]
+  },
+  "checkScript": "/opt/pi-small/workflow/check.py",
+  "checkSpecPath": "/harness/check.json"
+}

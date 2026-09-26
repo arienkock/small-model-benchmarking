@@ -1,0 +1,20 @@
+{
+  "ok": false,
+  "problems": [
+    "the test suite failed (`python3 -m unittest discover -s tests -v` exited 1)."
+  ],
+  "missingTokens": [],
+  "checks": [
+    {
+      "name": "Python standard library only",
+      "ok": true,
+      "tail": "only standard-library and local imports"
+    }
+  ],
+  "tests": {
+    "rc": 1,
+    "timedOut": false,
+    "count": 10,
+    "tail": "                ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.11/socket.py\", line 851, in create_connection\n    raise exceptions[0]\n  File \"/usr/lib/python3.11/socket.py\", line 836, in create_connection\n    sock.connect(sa)\nConnectionRefusedError: [Errno 111] Connection refused\n\n======================================================================\nERROR: test_T1_S9_unknown_query_param_on_list (test_app.TestBookAPI.test_T1_S9_unknown_query_param_on_list)\nT1.S9: Unknown query parameter on list - unhappy (400).\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tests/test_app.py\", line 189, in test_T1_S9_unknown_query_param_on_list\n    response_status, _ = self._make_request(\n                         ^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/tests/test_app.py\", line 53, in _make_request\n    conn.request(method, path, body=json.dumps(body).encode())\n  File \"/usr/lib/python3.11/http/client.py\", line 1302, in request\n    self._send_request(method, url, body, headers, encode_chunked)\n  File \"/usr/lib/python3.11/http/client.py\", line 1348, in _send_request\n    self.endheaders(body, encode_chunked=encode_chunked)\n  File \"/usr/lib/python3.11/http/client.py\", line 1297, in endheaders\n    self._send_output(message_body, encode_chunked=encode_chunked)\n  File \"/usr/lib/python3.11/http/client.py\", line 1057, in _send_output\n    self.send(msg)\n  File \"/usr/lib/python3.11/http/client.py\", line 995, in send\n    self.connect()\n  File \"/usr/lib/python3.11/http/client.py\", line 961, in connect\n    self.sock = self._create_connection(\n                ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.11/socket.py\", line 851, in create_connection\n    raise exceptions[0]\n  File \"/usr/lib/python3.11/socket.py\", line 836, in create_connection\n    sock.connect(sa)\nConnectionRefusedError: [Errno 111] Connection refused\n\n----------------------------------------------------------------------\nRan 10 tests in 1.128s\n\nFAILED (errors=10)"
+  }
+}

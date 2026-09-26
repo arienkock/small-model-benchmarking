@@ -1,0 +1,60 @@
+{
+  "tool": "submit_findings",
+  "accepted": true,
+  "args": {
+    "findings": [
+      {
+        "priority": "high",
+        "title": "Required field type validation missing - AttributeError on wrong type",
+        "where": "/workspace/app.py",
+        "detail": "Required fields (title, author, isbn) lack proper type validation. When a client sends these fields with a non-string type (e.g., integer, null), the code calls `.strip()` on the value (e.g., `title.strip()`), which raises AttributeError. This causes unhandled server errors/crashes instead of returning a proper 400 Bad Request. For example, sending title: 123 results in an AttributeError crash instead of a 400 error response. The code should validate that title, author, and isbn are strings before processing."
+      },
+      {
+        "priority": "high",
+        "title": "Synopsis field does not handle null or wrong-type values correctly",
+        "where": "/workspace/app.py",
+        "detail": "The synopsis field uses `synopsis = data.get('synopsis', '')`, which stores None when the client sends `synopsis: null`, and stores the raw wrong-type value when synopsis has a non-string type (e.g., number). This does not validate that synopsis is a string. Responses show `synopsis: null` (null synopsis) or `synopsis: 123` (wrong type) instead of defaulting to an empty string or returning a 400 error. The field is specified as a string that defaults to an empty string, so null/wrong-type values should be rejected or normalized."
+      },
+      {
+        "priority": "medium",
+        "title": "PUT with null synopsis returns incorrect field value",
+        "where": "/workspace/app.py",
+        "detail": "When a PUT request is made with `synopsis: null`, the endpoint returns 200 but stores/returns `synopsis: null` in the response. This is inconsistent with the field being a string that defaults to an empty string. The response should either return the default empty string or properly handle null as invalid (returning 400). Additionally, non-integer path IDs and unknown query parameters may not return proper 400 error responses, failing the task requirement for specific error responses."
+      },
+      {
+        "priority": "low",
+        "title": "Unused imports (sys, threading) in app.py",
+        "where": "/workspace/app.py",
+        "detail": "The imports for `sys` and `threading` are present but never used in the code. These are unused imports that add unnecessary clutter and could be removed."
+      }
+    ]
+  },
+  "value": [
+    {
+      "priority": "high",
+      "title": "Required field type validation missing - AttributeError on wrong type",
+      "where": "/workspace/app.py",
+      "detail": "Required fields (title, author, isbn) lack proper type validation. When a client sends these fields with a non-string type (e.g., integer, null), the code calls `.strip()` on the value (e.g., `title.strip()`), which raises AttributeError. This causes unhandled server errors/crashes instead of returning a proper 400 Bad Request. For example, sending title: 123 results in an AttributeError crash instead of a 400 error response. The code should validate that title, author, and isbn are strings before processing."
+    },
+    {
+      "priority": "high",
+      "title": "Synopsis field does not handle null or wrong-type values correctly",
+      "where": "/workspace/app.py",
+      "detail": "The synopsis field uses `synopsis = data.get('synopsis', '')`, which stores None when the client sends `synopsis: null`, and stores the raw wrong-type value when synopsis has a non-string type (e.g., number). This does not validate that synopsis is a string. Responses show `synopsis: null` (null synopsis) or `synopsis: 123` (wrong type) instead of defaulting to an empty string or returning a 400 error. The field is specified as a string that defaults to an empty string, so null/wrong-type values should be rejected or normalized."
+    },
+    {
+      "priority": "medium",
+      "title": "PUT with null synopsis returns incorrect field value",
+      "where": "/workspace/app.py",
+      "detail": "When a PUT request is made with `synopsis: null`, the endpoint returns 200 but stores/returns `synopsis: null` in the response. This is inconsistent with the field being a string that defaults to an empty string. The response should either return the default empty string or properly handle null as invalid (returning 400). Additionally, non-integer path IDs and unknown query parameters may not return proper 400 error responses, failing the task requirement for specific error responses."
+    },
+    {
+      "priority": "low",
+      "title": "Unused imports (sys, threading) in app.py",
+      "where": "/workspace/app.py",
+      "detail": "The imports for `sys` and `threading` are present but never used in the code. These are unused imports that add unnecessary clutter and could be removed."
+    }
+  ],
+  "refusals": 0,
+  "at": "2026-09-25T09:58:42.745Z"
+}

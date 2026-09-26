@@ -1,0 +1,57 @@
+{
+  "tool": "submit_task_plan",
+  "accepted": true,
+  "args": {
+    "scenarios": [
+      {
+        "kind": "happy",
+        "title": "Delete existing book",
+        "given": "Book id 1 exists.",
+        "when": "DELETE /books/1",
+        "then": "204 with empty body."
+      },
+      {
+        "kind": "unhappy",
+        "title": "Delete non-existent id",
+        "given": "Server running.",
+        "when": "DELETE /books/999",
+        "then": "404 with {}."
+      }
+    ],
+    "logic": [
+      "Maintain in-memory dict id->book and list all_books ordered by id.",
+      "do_DELETE parses path /books/{id}; invalid path or non-integer id returns 404 or 400.",
+      "If id exists, remove book from both structures and return 204 with no body.",
+      "Unknown query params error on GET only; DELETE has no query params."
+    ]
+  },
+  "refusals": 0,
+  "at": "2026-09-24T13:20:30.644Z",
+  "value": {
+    "scenarios": [
+      {
+        "id": "T4.S1",
+        "kind": "happy",
+        "title": "Delete existing book",
+        "given": "Book id 1 exists.",
+        "when": "DELETE /books/1",
+        "then": "204 with empty body."
+      },
+      {
+        "id": "T4.S2",
+        "kind": "unhappy",
+        "title": "Delete non-existent id",
+        "given": "Server running.",
+        "when": "DELETE /books/999",
+        "then": "404 with {}."
+      }
+    ],
+    "logic": [
+      "Maintain in-memory dict id->book and list all_books ordered by id.",
+      "do_DELETE parses path /books/{id}; invalid path or non-integer id returns 404 or 400.",
+      "If id exists, remove book from both structures and return 204 with no body.",
+      "Unknown query params error on GET only; DELETE has no query params."
+    ]
+  },
+  "check": null
+}

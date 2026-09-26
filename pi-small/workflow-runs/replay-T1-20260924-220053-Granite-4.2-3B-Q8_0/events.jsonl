@@ -1,0 +1,2 @@
+{"ts":"2026-09-24T20:01:42.756Z","type":"workflow_start","model":"Granite-4.2-3B-Q8_0","runDir":"D:\\llama.cpp\\pi-small\\workflow-runs\\replay-T1-20260924-220053-Granite-4.2-3B-Q8_0","resume":true}
+{"ts":"2026-09-24T20:01:42.760Z","type":"step_start","step":"01-implement-T1-a1","kind":"implement","taskId":"T1","attempt":1,"promptChars":8213}

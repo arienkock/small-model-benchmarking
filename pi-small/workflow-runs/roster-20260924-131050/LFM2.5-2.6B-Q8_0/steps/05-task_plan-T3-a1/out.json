@@ -1,0 +1,93 @@
+{
+  "tool": "submit_task_plan",
+  "accepted": true,
+  "args": {
+    "scenarios": [
+      {
+        "kind": "happy",
+        "title": "Create book with all required fields",
+        "given": "No books exist yet; PORT=8000",
+        "when": "POST /books with {\"title\": \"Dune\", \"author\": \"Frank Herbert\", \"isbn\": \"12345\"}",
+        "then": "201 Created response containing the new book with id 1"
+      },
+      {
+        "kind": "unhappy",
+        "title": "Create book missing required field (title)",
+        "given": "No books exist yet; PORT=8000",
+        "when": "POST /books with {\"author\": \"Frank Herbert\", \"isbn\": \"12345\"}",
+        "then": "400 Bad Request with error message about missing title"
+      },
+      {
+        "kind": "unhappy",
+        "title": "Update book with invalid JSON body",
+        "given": "No books exist yet; PORT=8000",
+        "when": "PUT /books/1 with body \"{invalid json}\"",
+        "then": "400 Bad Request with error message about invalid JSON"
+      },
+      {
+        "kind": "unhappy",
+        "title": "Query with unknown parameter",
+        "given": "Book with id=1 exists from previous create; PORT=8000",
+        "when": "GET /books?unknown_param=value",
+        "then": "400 Bad Request with error about unknown query parameter"
+      }
+    ],
+    "logic": [
+      "Use an in-memory dict `books = {}` mapping id -> book dict. Book fields: id (int), title (str, required), author (str, required), isbn (str, required), synopsis (str, optional, default \"\").",
+      "On POST /books: extract id from path (must be int), validate required fields are present and non-empty strings, assign next sequential id, store book, return 201 with the new book.",
+      "On GET /books/{id}: look up by id; if not found return 404.",
+      "On PUT /books/{id}: validate JSON body is a dict; extract title, author, isbn, synopsis; update only provided fields (or all if missing); ensure required fields are non-empty strings; return 200 with updated book or 404 if id not found.",
+      "On GET /books: return list of all books sorted by id. Support query params: id=, title=..., author=..., isbn=..., synopsis=..., q=... (case-insensitive, all-or-nothing match).",
+      "Unknown query parameter in GET /books: collect all query keys; if any key not in {id, title, author, isbn, synopsis, q} return 400 with error about unknown param.",
+      "Invalid JSON body in PUT: try json.loads; if fails return 400 with error about invalid JSON."
+    ]
+  },
+  "refusals": 0,
+  "at": "2026-09-24T11:21:38.266Z",
+  "value": {
+    "scenarios": [
+      {
+        "id": "T3.S1",
+        "kind": "happy",
+        "title": "Create book with all required fields",
+        "given": "No books exist yet; PORT=8000",
+        "when": "POST /books with {\"title\": \"Dune\", \"author\": \"Frank Herbert\", \"isbn\": \"12345\"}",
+        "then": "201 Created response containing the new book with id 1"
+      },
+      {
+        "id": "T3.S2",
+        "kind": "unhappy",
+        "title": "Create book missing required field (title)",
+        "given": "No books exist yet; PORT=8000",
+        "when": "POST /books with {\"author\": \"Frank Herbert\", \"isbn\": \"12345\"}",
+        "then": "400 Bad Request with error message about missing title"
+      },
+      {
+        "id": "T3.S3",
+        "kind": "unhappy",
+        "title": "Update book with invalid JSON body",
+        "given": "No books exist yet; PORT=8000",
+        "when": "PUT /books/1 with body \"{invalid json}\"",
+        "then": "400 Bad Request with error message about invalid JSON"
+      },
+      {
+        "id": "T3.S4",
+        "kind": "unhappy",
+        "title": "Query with unknown parameter",
+        "given": "Book with id=1 exists from previous create; PORT=8000",
+        "when": "GET /books?unknown_param=value",
+        "then": "400 Bad Request with error about unknown query parameter"
+      }
+    ],
+    "logic": [
+      "Use an in-memory dict `books = {}` mapping id -> book dict. Book fields: id (int), title (str, required), author (str, required), isbn (str, required), synopsis (str, optional, default \"\").",
+      "On POST /books: extract id from path (must be int), validate required fields are present and non-empty strings, assign next sequential id, store book, return 201 with the new book.",
+      "On GET /books/{id}: look up by id; if not found return 404.",
+      "On PUT /books/{id}: validate JSON body is a dict; extract title, author, isbn, synopsis; update only provided fields (or all if missing); ensure required fields are non-empty strings; return 200 with updated book or 404 if id not found.",
+      "On GET /books: return list of all books sorted by id. Support query params: id=, title=..., author=..., isbn=..., synopsis=..., q=... (case-insensitive, all-or-nothing match).",
+      "Unknown query parameter in GET /books: collect all query keys; if any key not in {id, title, author, isbn, synopsis, q} return 400 with error about unknown param.",
+      "Invalid JSON body in PUT: try json.loads; if fails return 400 with error about invalid JSON."
+    ]
+  },
+  "check": null
+}

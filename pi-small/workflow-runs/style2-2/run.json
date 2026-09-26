@@ -1,0 +1,47 @@
+{
+  "started": "2026-09-25T20:41:14.829Z",
+  "model": "Qwen3.6-35B-A3B-Q4_K_M",
+  "rotation": [],
+  "thinking": "",
+  "image": "pi-small-agent:latest",
+  "port": 8123,
+  "local": false,
+  "taskDir": "D:\\llama.cpp\\pi-small\\workflow\\tasks\\books-api",
+  "deadline": null,
+  "config": {
+    "scenarios": {
+      "minHappy": 3,
+      "minUnhappy": 3,
+      "max": 16
+    },
+    "tasks": {
+      "min": 2,
+      "max": 6
+    },
+    "taskScenarios": {
+      "minHappy": 1,
+      "minUnhappy": 1,
+      "max": 10
+    },
+    "logic": {
+      "min": 1,
+      "max": 12
+    },
+    "attempts": {
+      "planning": 3,
+      "implement": 3,
+      "integrate": 3
+    },
+    "maxTurns": 0,
+    "doneRefusals": 4,
+    "stepTimeoutMin": 15,
+    "testTimeoutSec": 60,
+    "systemPrompt": "Response style: terse. Use as few words as possible — in your reasoning, in your messages, and in the fields you submit. No preamble, no restating the task, no summary of what you did or are about to do. Code, commands and tool arguments are as long as they need to be; everything else is short.",
+    "feedback": "minimal",
+    "retryWorkspace": "keep",
+    "reviewContinuations": 1,
+    "fixRounds": 4,
+    "fixBatch": 3,
+    "fixAttempts": 2
+  }
+}

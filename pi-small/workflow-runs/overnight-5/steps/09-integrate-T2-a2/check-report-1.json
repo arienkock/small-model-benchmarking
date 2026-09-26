@@ -1,0 +1,19 @@
+{
+  "ok": false,
+  "problems": [
+    "9 tests ran; at least 10 are needed (one per scenario so far)."
+  ],
+  "checks": [
+    {
+      "name": "Python standard library only",
+      "ok": true,
+      "tail": "only standard-library and local imports"
+    }
+  ],
+  "tests": {
+    "rc": 0,
+    "timedOut": false,
+    "count": 9,
+    "tail": "test_create_book (test_basic.TestBasic.test_create_book) ... 127.0.0.1 - - [25/Sep/2026 03:12:29] \"POST /books HTTP/1.1\" 201 -\nok\ntest_get_book (test_basic.TestBasic.test_get_book) ... 127.0.0.1 - - [25/Sep/2026 03:12:29] \"GET /books/1 HTTP/1.1\" 200 -\nok\ntest_id_not_integer (test_basic.TestBasic.test_id_not_integer) ... 127.0.0.1 - - [25/Sep/2026 03:12:29] \"GET /books/abc HTTP/1.1\" 404 -\nok\ntest_invalid_json_body (test_basic.TestBasic.test_invalid_json_body) ... 127.0.0.1 - - [25/Sep/2026 03:12:29] \"POST /books HTTP/1.1\" 400 -\nok\ntest_missing_required_field (test_basic.TestBasic.test_missing_required_field) ... 127.0.0.1 - - [25/Sep/2026 03:12:29] \"POST /books HTTP/1.1\" 400 -\nok\ntest_unknown_query_param (test_basic.TestBasic.test_unknown_query_param) ... 127.0.0.1 - - [25/Sep/2026 03:12:29] \"GET /books?id=1&unknown=foo HTTP/1.1\" 400 -\nok\ntest_update_book (test_basic.TestBasic.test_update_book) ... 127.0.0.1 - - [25/Sep/2026 03:12:29] \"PUT /books/1 HTTP/1.1\" 200 -\nok\ntest_delete_book (test_t2.TestT2.test_delete_book) ... 127.0.0.1 - - [25/Sep/2026 03:12:29] \"DELETE /books/1 HTTP/1.1\" 204 -\nok\ntest_duplicate_id_in_create (test_t2.TestT2.test_duplicate_id_in_create) ... 127.0.0.1 - - [25/Sep/2026 03:12:29] \"POST /books HTTP/1.1\" 201 -\n127.0.0.1 - - [25/Sep/2026 03:12:29] \"POST /books HTTP/1.1\" 400 -\nok\n\n----------------------------------------------------------------------\nRan 9 tests in 1.241s\n\nOK"
+  }
+}

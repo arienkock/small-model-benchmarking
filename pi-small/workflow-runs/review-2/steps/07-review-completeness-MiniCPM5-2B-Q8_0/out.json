@@ -1,0 +1,60 @@
+{
+  "tool": "submit_findings",
+  "accepted": true,
+  "args": {
+    "findings": [
+      {
+        "priority": "high",
+        "title": "PUT path validation missing for non-integer IDs",
+        "where": "app.py:do_PUT",
+        "detail": "int(self.path.split('/')[-1]) is called without try/except, so a non-integer path id raises ValueError instead of returning a proper error. Should validate and return 400."
+      },
+      {
+        "priority": "high",
+        "title": "GET /books q filter logic broken",
+        "where": "app.py:do_GET_all",
+        "detail": "When field == 'q', the code does val in b[field].lower() where field is 'q', but book dicts have no 'q' key, causing a KeyError. The q filter should instead search across title/author/isbn/synopsis fields."
+      },
+      {
+        "priority": "high",
+        "title": "Type validation missing in POST and PUT",
+        "where": "app.py:do_POST, do_PUT",
+        "detail": "Task requires 400 for 'field of wrong type', but POST and PUT only check for missing/empty required fields and id in body — they do not validate that fields are strings."
+      },
+      {
+        "priority": "medium",
+        "title": "GET /books id query param without type validation",
+        "where": "app.py:do_GET_all",
+        "detail": "int(filters['id']) is called without try/except, so a non-integer id query param raises ValueError instead of returning 400."
+      }
+    ]
+  },
+  "value": [
+    {
+      "priority": "high",
+      "title": "PUT path validation missing for non-integer IDs",
+      "where": "app.py:do_PUT",
+      "detail": "int(self.path.split('/')[-1]) is called without try/except, so a non-integer path id raises ValueError instead of returning a proper error. Should validate and return 400."
+    },
+    {
+      "priority": "high",
+      "title": "GET /books q filter logic broken",
+      "where": "app.py:do_GET_all",
+      "detail": "When field == 'q', the code does val in b[field].lower() where field is 'q', but book dicts have no 'q' key, causing a KeyError. The q filter should instead search across title/author/isbn/synopsis fields."
+    },
+    {
+      "priority": "high",
+      "title": "Type validation missing in POST and PUT",
+      "where": "app.py:do_POST, do_PUT",
+      "detail": "Task requires 400 for 'field of wrong type', but POST and PUT only check for missing/empty required fields and id in body — they do not validate that fields are strings."
+    },
+    {
+      "priority": "medium",
+      "title": "GET /books id query param without type validation",
+      "where": "app.py:do_GET_all",
+      "detail": "int(filters['id']) is called without try/except, so a non-integer id query param raises ValueError instead of returning 400."
+    }
+  ],
+  "refusals": 0,
+  "at": "2026-09-25T10:20:55.572Z"
+}

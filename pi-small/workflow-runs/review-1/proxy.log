@@ -1,0 +1,52 @@
+[proxy 06:17:54] listening on 0.0.0.0:8123, llama-server on 127.0.0.1:8125
+[proxy 06:17:54] switching to Granite-4.2-3B-Q8_0 …
+model:   Granite-4.2-3B-Q8_0
+weights: D:\llama-cache\models--ibm-granite--granite-4.2-3b-GGUF\snapshots\c40945d71cd90f249a56985e8155551a9188dc30\granite-4.2-3b-Q8_0.gguf
+cache:   D:\llama-cache
+bind:    127.0.0.1:8125
+thinking: on
+sampler: temp=1 top_p=0.95 top_k=50 min_p=0 repeat_penalty=1 presence_penalty=0
+log:     D:\llama.cpp\pi-small\.logs\llama-Granite-4.2-3B-Q8_0-c16384-2026-09-25T06-17-54-815Z.log
+waiting for the model to load at ctx 16384 ...
+ready: Granite-4.2-3B-Q8_0 on port 8125, ctx 16384
+verified: live sampler matches the roster
+[proxy 06:18:00] serving Granite-4.2-3B-Q8_0 (ctx 16384)
+[proxy 06:26:13] switching to Spark-X2.5-4B-Q6_K …
+switching from Granite-4.2-3B-Q8_0 to Spark-X2.5-4B-Q6_K ...
+model:   Spark-X2.5-4B-Q6_K
+weights: D:\llama-cache\models--sizzlebop--Spark-X2.5-4B-GGUF\snapshots\bdb8637b34348fcad38bdcb9ed1a2e4f3739383e\Spark-X2.5-4B-Q6_K.gguf
+cache:   D:\llama-cache
+bind:    127.0.0.1:8125
+thinking: n/a (no thinking mode)
+sampler: temp=1 top_p=0.95 top_k=0 min_p=0 repeat_penalty=1 presence_penalty=0
+log:     D:\llama.cpp\pi-small\.logs\llama-Spark-X2.5-4B-Q6_K-c16384-2026-09-25T06-26-15-537Z.log
+waiting for the model to load at ctx 16384 ...
+ready: Spark-X2.5-4B-Q6_K on port 8125, ctx 16384
+verified: live sampler matches the roster
+[proxy 06:26:21] serving Spark-X2.5-4B-Q6_K (ctx 16384)
+[proxy 07:20:26] switching to LFM2.5-2.6B-Q8_0 …
+switching from Spark-X2.5-4B-Q6_K to LFM2.5-2.6B-Q8_0 ...
+model:   LFM2.5-2.6B-Q8_0
+weights: D:\llama-cache\models--LiquidAI--LFM2.5-2.6B-GGUF\snapshots\84022ce711b28455e8c4fc364ce68c00cf995875\LFM2.5-2.6B-Q8_0.gguf
+cache:   D:\llama-cache
+bind:    127.0.0.1:8125
+thinking: n/a (no thinking mode)
+sampler: temp=0.1 top_p=1 top_k=50 min_p=0 repeat_penalty=1.1 presence_penalty=0
+log:     D:\llama.cpp\pi-small\.logs\llama-LFM2.5-2.6B-Q8_0-c16384-2026-09-25T07-20-28-873Z.log
+waiting for the model to load at ctx 16384 .....................
+ready: LFM2.5-2.6B-Q8_0 on port 8125, ctx 16384
+verified: live sampler matches the roster
+[proxy 07:21:11] serving LFM2.5-2.6B-Q8_0 (ctx 16384)
+[proxy 07:42:27] switching to MiniCPM5-2B-Q8_0 …
+switching from LFM2.5-2.6B-Q8_0 to MiniCPM5-2B-Q8_0 ...
+model:   MiniCPM5-2B-Q8_0
+weights: D:\llama-cache\models--openbmb--MiniCPM5-2B-GGUF\snapshots\c451f4d674096e6e6f1cc5d0abb6794bda638304\MiniCPM5-2B-Q8_0.gguf
+cache:   D:\llama-cache
+bind:    127.0.0.1:8125
+thinking: n/a (no thinking mode)
+sampler: temp=1 top_p=0.95 top_k=50 min_p=0 repeat_penalty=1 presence_penalty=0
+log:     D:\llama.cpp\pi-small\.logs\llama-MiniCPM5-2B-Q8_0-c16384-2026-09-25T07-42-29-510Z.log
+waiting for the model to load at ctx 16384 ....................
+ready: MiniCPM5-2B-Q8_0 on port 8125, ctx 16384
+verified: live sampler matches the roster
+[proxy 07:43:09] serving MiniCPM5-2B-Q8_0 (ctx 16384)

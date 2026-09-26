@@ -1,0 +1,41 @@
+{
+  "ok": false,
+  "problems": [
+    "the test suite failed (`python3 -m unittest discover -s tests -v` exited 1)."
+  ],
+  "checks": [
+    {
+      "name": "Python standard library only",
+      "ok": true,
+      "tail": "only standard-library and local imports"
+    }
+  ],
+  "tests": {
+    "rc": 1,
+    "timedOut": false,
+    "count": 12,
+    "tail": "http.client.RemoteDisconnected: Remote end closed connection without response\n\n======================================================================\nERROR: test_update_book (test_t2.TestT2.test_update_book)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tests/test_t2.py\", line 57, in test_update_book\n    self._request('POST', '/books', body=json.dumps({\"title\": \"1984\", \"author\": \"Orwell\", \"isbn\": \"123456\"}),\n  File \"/workspace/tests/test_t2.py\", line 28, in _request\n    resp = conn.getresponse()\n           ^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.11/http/client.py\", line 1394, in getresponse\n    response.begin()\n  File \"/usr/lib/python3.11/http/client.py\", line 323, in begin\n    version, status, reason = self._read_status()\n                              ^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.11/http/client.py\", line 292, in _read_status\n    raise RemoteDisconnected(\"Remote end closed connection without\"\nhttp.client.RemoteDisconnected: Remote end closed connection without response\n\n======================================================================\nFAIL: test_get_book (test_basic.TestBasic.test_get_book)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tests/test_basic.py\", line 45, in test_get_book\n    self.assertEqual(resp.status, 200)\nAssertionError: 404 != 200\n\n======================================================================\nFAIL: test_update_book (test_basic.TestBasic.test_update_book)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tests/test_basic.py\", line 55, in test_update_book\n    self.assertEqual(resp.status, 200)\nAssertionError: 404 != 200\n\n----------------------------------------------------------------------\nRan 12 tests in 1.261s\n\nFAILED (failures=2, errors=6)",
+    "failures": [
+      {
+        "test": "test_create_book",
+        "error": "http.client.RemoteDisconnected: Remote end closed connection without response"
+      },
+      {
+        "test": "test_delete_book",
+        "error": "http.client.RemoteDisconnected: Remote end closed connection without response"
+      },
+      {
+        "test": "test_duplicate_id_in_create",
+        "error": "http.client.RemoteDisconnected: Remote end closed connection without response"
+      },
+      {
+        "test": "test_get_book",
+        "error": "http.client.RemoteDisconnected: Remote end closed connection without response"
+      },
+      {
+        "test": "test_update_book",
+        "error": "http.client.RemoteDisconnected: Remote end closed connection without response"
+      }
+    ]
+  }
+}

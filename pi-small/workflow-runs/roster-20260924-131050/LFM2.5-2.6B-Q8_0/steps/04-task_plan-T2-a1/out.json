@@ -1,0 +1,59 @@
+{
+  "tool": "submit_task_plan",
+  "accepted": true,
+  "args": {
+    "scenarios": [
+      {
+        "kind": "happy",
+        "title": "List all books",
+        "given": "Book with id=1 exists from previous create; PORT=8000",
+        "when": "GET /books",
+        "then": "200 OK with a JSON list containing the book(s)"
+      },
+      {
+        "kind": "unhappy",
+        "title": "Unknown query parameter in GET /books",
+        "given": "Book with id=1 exists from previous create; PORT=8000",
+        "when": "GET /books?unknown_param=value",
+        "then": "400 Bad Request with error about unknown query parameter"
+      }
+    ],
+    "logic": [
+      "Use a dictionary `books` mapping integer id to book dict (id, title, author, isbn, synopsis).",
+      "For GET /books: parse query parameters; reject any param not in {id, title, author, isbn, synopsis, q} with 400.",
+      "If 'id' is present, filter by exact id match.",
+      "Otherwise, apply all-or-nothing filtering: book must have non-empty value for each provided field (title, author, isbn, synopsis) that contains the query param value (case-insensitive).",
+      "Return list of matching books sorted by id."
+    ]
+  },
+  "refusals": 0,
+  "at": "2026-09-24T11:19:48.913Z",
+  "value": {
+    "scenarios": [
+      {
+        "id": "T2.S1",
+        "kind": "happy",
+        "title": "List all books",
+        "given": "Book with id=1 exists from previous create; PORT=8000",
+        "when": "GET /books",
+        "then": "200 OK with a JSON list containing the book(s)"
+      },
+      {
+        "id": "T2.S2",
+        "kind": "unhappy",
+        "title": "Unknown query parameter in GET /books",
+        "given": "Book with id=1 exists from previous create; PORT=8000",
+        "when": "GET /books?unknown_param=value",
+        "then": "400 Bad Request with error about unknown query parameter"
+      }
+    ],
+    "logic": [
+      "Use a dictionary `books` mapping integer id to book dict (id, title, author, isbn, synopsis).",
+      "For GET /books: parse query parameters; reject any param not in {id, title, author, isbn, synopsis, q} with 400.",
+      "If 'id' is present, filter by exact id match.",
+      "Otherwise, apply all-or-nothing filtering: book must have non-empty value for each provided field (title, author, isbn, synopsis) that contains the query param value (case-insensitive).",
+      "Return list of matching books sorted by id."
+    ]
+  },
+  "check": null
+}

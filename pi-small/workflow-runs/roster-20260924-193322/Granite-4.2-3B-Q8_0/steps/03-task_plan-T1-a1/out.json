@@ -1,0 +1,89 @@
+{
+  "tool": "submit_task_plan",
+  "accepted": true,
+  "args": {
+    "scenarios": [
+      {
+        "kind": "happy",
+        "title": "create_book",
+        "given": "empty in-memory DB",
+        "when": "POST /books with {\"title\":\"Test\",\"author\":\"Author\",\"isbn\":\"12345\"})",
+        "then": "201 with book id 1 and full book JSON"
+      },
+      {
+        "kind": "happy",
+        "title": "get_book",
+        "given": "book id 1 exists",
+        "when": "GET /books/1",
+        "then": "200 with book JSON"
+      },
+      {
+        "kind": "happy",
+        "title": "update_book",
+        "given": "book id 1 exists",
+        "when": "PUT /books/1 with {\"title\":\"New\",\"author\":\"Author2\",\"isbn\":\"99999\",\"synopsis\":\"desc\"})",
+        "then": "200 with updated book JSON"
+      },
+      {
+        "kind": "unhappy",
+        "title": "missing_required_field",
+        "given": "empty DB",
+        "when": "POST /books with {\"title\":\"Test\",\"author\":\"Author\",\"isbn\":\"12345\"})",
+        "then": "400 with error about missing field"
+      }
+    ],
+    "logic": [
+      "Initialize empty list for books",
+      "Handle POST /books: parse JSON, validate required fields, assign id, append book",
+      "Handle GET /books/{id}: return matching book or 404",
+      "Handle PUT /books/{id}: replace fields",
+      "Run HTTP server on 127.0.0.1:PORT"
+    ]
+  },
+  "refusals": 1,
+  "at": "2026-09-24T17:39:08.306Z",
+  "value": {
+    "scenarios": [
+      {
+        "id": "T1.S1",
+        "kind": "happy",
+        "title": "create_book",
+        "given": "empty in-memory DB",
+        "when": "POST /books with {\"title\":\"Test\",\"author\":\"Author\",\"isbn\":\"12345\"})",
+        "then": "201 with book id 1 and full book JSON"
+      },
+      {
+        "id": "T1.S2",
+        "kind": "happy",
+        "title": "get_book",
+        "given": "book id 1 exists",
+        "when": "GET /books/1",
+        "then": "200 with book JSON"
+      },
+      {
+        "id": "T1.S3",
+        "kind": "happy",
+        "title": "update_book",
+        "given": "book id 1 exists",
+        "when": "PUT /books/1 with {\"title\":\"New\",\"author\":\"Author2\",\"isbn\":\"99999\",\"synopsis\":\"desc\"})",
+        "then": "200 with updated book JSON"
+      },
+      {
+        "id": "T1.S4",
+        "kind": "unhappy",
+        "title": "missing_required_field",
+        "given": "empty DB",
+        "when": "POST /books with {\"title\":\"Test\",\"author\":\"Author\",\"isbn\":\"12345\"})",
+        "then": "400 with error about missing field"
+      }
+    ],
+    "logic": [
+      "Initialize empty list for books",
+      "Handle POST /books: parse JSON, validate required fields, assign id, append book",
+      "Handle GET /books/{id}: return matching book or 404",
+      "Handle PUT /books/{id}: replace fields",
+      "Run HTTP server on 127.0.0.1:PORT"
+    ]
+  },
+  "check": null
+}

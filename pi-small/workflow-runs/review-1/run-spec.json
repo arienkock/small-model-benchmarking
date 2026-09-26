@@ -1,0 +1,80 @@
+{
+  "runDir": "/wf",
+  "stepFilePath": "/wf/current-step.json",
+  "checkScript": "/opt/pi-small/workflow/check.py",
+  "task": "Build a RESTful HTTP API for books in Python.\n\nConstraints:\n- Python 3 standard library only (for example http.server, json, urllib.parse, threading). No third-party packages.\n- Keep the data in memory; nothing is written to disk. Data may be lost when the server stops.\n- The entry point is `/workspace/app.py`. Running `python3 app.py` starts the server on the port given by the environment variable `PORT` (default 8000), listening on 127.0.0.1, and keeps serving until it is stopped.\n\nA book has these fields:\n- `id`: integer, assigned by the server (1, 2, 3, … in creation order, never reused after a delete); never supplied by the client\n- `title`: string, required, not empty\n- `author`: string, required, not empty\n- `isbn`: string, required, not empty\n- `synopsis`: string, optional; defaults to an empty string\n\nEndpoints (all request and response bodies are JSON, with `Content-Type: application/json`):\n- `POST /books` creates a book from a JSON object with title, author, isbn and optionally synopsis. Responds 201 with the created book, including its `id`.\n- `GET /books/{id}` responds 200 with the book.\n- `PUT /books/{id}` replaces the book's title, author, isbn and synopsis with the ones in the body (same rules as create). Responds 200 with the updated book.\n- `DELETE /books/{id}` removes the book. Responds 204 with no body.\n- `GET /books` responds 200 with a JSON list of all books, ordered by id. It supports searching and filtering by every field through query parameters:\n  - `id=<n>` keeps only the book with that id;\n  - `title=…`, `author=…`, `isbn=…`, `synopsis=…` keep books whose field contains the value, ignoring case;\n  - `q=…` keeps books where any of title, author, isbn or synopsis contains the value, ignoring case;\n  - several parameters together must all match. An unknown query parameter is an error.\n\nErrors respond with a JSON object `{\"error\": \"<message>\"}`:\n- 400 for a body that is not valid JSON or not a JSON object, a missing or empty required field, a field of the wrong type, an `id` in a create or update body, an id in the path that is not an integer, or an unknown query parameter;\n- 404 for a book id that does not exist, or any other path.\n",
+  "profile": {
+    "testCommand": "python3 -m unittest discover -s tests -v",
+    "testFiles": [
+      "tests/*.py"
+    ],
+    "testCountPattern": "^Ran (\\d+) tests?",
+    "failurePattern": "^(?:FAIL|ERROR): (\\S+)",
+    "conventions": "- Tests are Python unittest files in /workspace/tests/, named test_*.py.\n- app.py defines make_server(port), which returns an http.server.HTTPServer (or ThreadingHTTPServer) bound to 127.0.0.1:port; `python3 app.py` calls it with $PORT and serves forever.\n- Tests call app.make_server(0) in setUpClass (port 0 picks a free port; the real one is server.server_address[1]), run serve_forever() in a daemon thread, and call shutdown() and then server_close() in tearDownClass.",
+    "checks": [
+      {
+        "name": "Python standard library only",
+        "command": "python3 /opt/pi-small/workflow/checks/python_stdlib_only.py"
+      }
+    ]
+  },
+  "config": {
+    "scenarios": {
+      "minHappy": 3,
+      "minUnhappy": 3,
+      "max": 16
+    },
+    "tasks": {
+      "min": 2,
+      "max": 6
+    },
+    "taskScenarios": {
+      "minHappy": 1,
+      "minUnhappy": 1,
+      "max": 10
+    },
+    "logic": {
+      "min": 1,
+      "max": 12
+    },
+    "attempts": {
+      "planning": 1000,
+      "implement": 1000,
+      "integrate": 1000
+    },
+    "maxTurns": 10,
+    "doneRefusals": 4,
+    "stepTimeoutMin": 15,
+    "testTimeoutSec": 60,
+    "systemPrompt": "Response style: terse. Use as few words as possible — in your reasoning, in your messages, and in the fields you submit. No preamble, no restating the task, no summary of what you did or are about to do. Code, commands and tool arguments are as long as they need to be; everything else is short.",
+    "feedback": "failures",
+    "retryWorkspace": "best",
+    "_about": "Overnight 2026-09-24/25: the rotation (Nanbeige left out: slow, and it contributed nothing), 10 turns per session, minimal feedback. Attempts are effectively unlimited; --deadline ends the run. Coding steps get bash + edit (from iteration 2). Retries start from the attempt with the most passing tests so far, told only its verdict; from the step's start, with no feedback, until some test passes (iteration 3 used plain reset; best from iteration 4). Feedback level focus (from iteration 5, resumed): the verdict plus the name of one failing test. Then feedback level failures (iteration 5, second resume): one line per failing test with its last error line, as the comparison with focus.",
+    "models": [
+      "Granite-4.2-3B-Q8_0",
+      "Spark-X2.5-4B-Q6_K",
+      "LFM2.5-2.6B-Q8_0",
+      "MiniCPM5-2B-Q8_0"
+    ],
+    "codingTools": [
+      "bash",
+      "edit"
+    ]
+  },
+  "preexistingCode": true,
+  "models": [
+    "Granite-4.2-3B-Q8_0",
+    "Spark-X2.5-4B-Q6_K",
+    "LFM2.5-2.6B-Q8_0",
+    "MiniCPM5-2B-Q8_0"
+  ],
+  "deadline": 1790331474000,
+  "review": {
+    "variants": [
+      "completeness",
+      "correctness",
+      "fidelity",
+      "all"
+    ]
+  }
+}

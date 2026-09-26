@@ -1,0 +1,49 @@
+{
+  "ok": false,
+  "problems": [
+    "the test suite failed (`python3 -m unittest discover -s tests -v` exited 1)."
+  ],
+  "checks": [
+    {
+      "name": "Python standard library only",
+      "ok": true,
+      "tail": "only standard-library and local imports"
+    }
+  ],
+  "tests": {
+    "rc": 1,
+    "timedOut": false,
+    "count": 7,
+    "tail": "======================================================================\nERROR: test_S4_unhappy_missing_required_field (test_app.TestApp.test_S4_unhappy_missing_required_field)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tests/test_app.py\", line 111, in test_S4_unhappy_missing_required_field\n    port = 8000 + self.test_idx\n                  ^^^^^^^^^^^^^\nAttributeError: 'TestApp' object has no attribute 'test_idx'\n\n======================================================================\nERROR: test_S5_unhappy_invalid_json_body (test_app.TestApp.test_S5_unhappy_invalid_json_body)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tests/test_app.py\", line 143, in test_S5_unhappy_invalid_json_body\n    port = 8000 + self.test_idx\n                  ^^^^^^^^^^^^^\nAttributeError: 'TestApp' object has no attribute 'test_idx'\n\n======================================================================\nERROR: test_S6_unhappy_unknown_query_param (test_app.TestApp.test_S6_unhappy_unknown_query_param)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tests/test_app.py\", line 170, in test_S6_unhappy_unknown_query_param\n    port = 8000 + self.test_idx\n                  ^^^^^^^^^^^^^\nAttributeError: 'TestApp' object has no attribute 'test_idx'\n\n======================================================================\nERROR: test_S7_unhappy_id_not_integer (test_app.TestApp.test_S7_unhappy_id_not_integer)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tests/test_app.py\", line 196, in test_S7_unhappy_id_not_integer\n    port = 8000 + self.test_idx\n                  ^^^^^^^^^^^^^\nAttributeError: 'TestApp' object has no attribute 'test_idx'\n\n----------------------------------------------------------------------\nRan 7 tests in 0.014s\n\nFAILED (errors=7)",
+    "failures": [
+      {
+        "test": "test_S1_happy_create_book",
+        "error": "AttributeError: 'TestApp' object has no attribute 'test_idx'"
+      },
+      {
+        "test": "test_S2_happy_get_book",
+        "error": "AttributeError: 'TestApp' object has no attribute 'test_idx'"
+      },
+      {
+        "test": "test_S3_happy_update_book",
+        "error": "AttributeError: 'TestApp' object has no attribute 'test_idx'"
+      },
+      {
+        "test": "test_S4_unhappy_missing_required_field",
+        "error": "AttributeError: 'TestApp' object has no attribute 'test_idx'"
+      },
+      {
+        "test": "test_S5_unhappy_invalid_json_body",
+        "error": "AttributeError: 'TestApp' object has no attribute 'test_idx'"
+      },
+      {
+        "test": "test_S6_unhappy_unknown_query_param",
+        "error": "AttributeError: 'TestApp' object has no attribute 'test_idx'"
+      },
+      {
+        "test": "test_S7_unhappy_id_not_integer",
+        "error": "AttributeError: 'TestApp' object has no attribute 'test_idx'"
+      }
+    ]
+  }
+}

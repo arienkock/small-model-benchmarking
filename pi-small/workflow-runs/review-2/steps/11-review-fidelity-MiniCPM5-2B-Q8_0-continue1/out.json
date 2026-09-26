@@ -1,0 +1,60 @@
+{
+  "tool": "submit_findings",
+  "accepted": true,
+  "args": {
+    "findings": [
+      {
+        "priority": "high",
+        "title": "Non-integer path IDs return 404 instead of 400",
+        "where": "do_GET, do_PUT, do_DELETE",
+        "detail": "Task requires 400 for 'an id in the path that is not an integer', but do_GET, do_PUT, and do_DELETE return 404 (or crash) when path ID is not an integer."
+      },
+      {
+        "priority": "high",
+        "title": "POST /books and PUT /books do not validate string types for book fields",
+        "where": "do_POST, do_PUT",
+        "detail": "Task requires 400 for 'a field of the wrong type', but code accepts non-string types (e.g., int) for title, author, isbn without erroring."
+      },
+      {
+        "priority": "medium",
+        "title": "PUT /books/{id} and DELETE /books/{id} do not wrap int() in try/except",
+        "where": "do_PUT, do_DELETE",
+        "detail": "Without try/except, non-integer path ID triggers unhandled ValueError instead of returning 400."
+      },
+      {
+        "priority": "medium",
+        "title": "GET /books query parameter q filter checks b['q'] instead of searching all fields",
+        "where": "do_GET_all",
+        "detail": "Task requires q to search title/author/isbn/synopsis case-insensitively. Code uses b['q'].lower() which is not a book field."
+      }
+    ]
+  },
+  "value": [
+    {
+      "priority": "high",
+      "title": "Non-integer path IDs return 404 instead of 400",
+      "where": "do_GET, do_PUT, do_DELETE",
+      "detail": "Task requires 400 for 'an id in the path that is not an integer', but do_GET, do_PUT, and do_DELETE return 404 (or crash) when path ID is not an integer."
+    },
+    {
+      "priority": "high",
+      "title": "POST /books and PUT /books do not validate string types for book fields",
+      "where": "do_POST, do_PUT",
+      "detail": "Task requires 400 for 'a field of the wrong type', but code accepts non-string types (e.g., int) for title, author, isbn without erroring."
+    },
+    {
+      "priority": "medium",
+      "title": "PUT /books/{id} and DELETE /books/{id} do not wrap int() in try/except",
+      "where": "do_PUT, do_DELETE",
+      "detail": "Without try/except, non-integer path ID triggers unhandled ValueError instead of returning 400."
+    },
+    {
+      "priority": "medium",
+      "title": "GET /books query parameter q filter checks b['q'] instead of searching all fields",
+      "where": "do_GET_all",
+      "detail": "Task requires q to search title/author/isbn/synopsis case-insensitively. Code uses b['q'].lower() which is not a book field."
+    }
+  ],
+  "refusals": 0,
+  "at": "2026-09-25T10:48:34.524Z"
+}

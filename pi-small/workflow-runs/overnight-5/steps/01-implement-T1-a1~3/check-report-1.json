@@ -1,0 +1,29 @@
+{
+  "ok": false,
+  "problems": [
+    "the test suite failed (`python3 -m unittest discover -s tests -v` exited 1)."
+  ],
+  "checks": [
+    {
+      "name": "Python standard library only",
+      "ok": true,
+      "tail": "only standard-library and local imports"
+    }
+  ],
+  "tests": {
+    "rc": 1,
+    "timedOut": false,
+    "count": 7,
+    "tail": "test_create_book (test_basic.TestBasic.test_create_book) ... 127.0.0.1 - - [25/Sep/2026 00:52:41] \"POST /books HTTP/1.1\" 201 -\nok\ntest_get_book (test_basic.TestBasic.test_get_book) ... 127.0.0.1 - - [25/Sep/2026 00:52:41] \"GET /books/1 HTTP/1.1\" 200 -\nok\ntest_id_not_integer (test_basic.TestBasic.test_id_not_integer) ... 127.0.0.1 - - [25/Sep/2026 00:52:41] \"GET /books/abc HTTP/1.1\" 404 -\nok\ntest_invalid_json_body (test_basic.TestBasic.test_invalid_json_body) ... 127.0.0.1 - - [25/Sep/2026 00:52:41] \"POST /books HTTP/1.1\" 400 -\nok\ntest_missing_required_field (test_basic.TestBasic.test_missing_required_field) ... 127.0.0.1 - - [25/Sep/2026 00:52:41] \"POST /books HTTP/1.1\" 400 -\nERROR\ntest_unknown_query_param (test_basic.TestBasic.test_unknown_query_param) ... 127.0.0.1 - - [25/Sep/2026 00:52:41] \"GET /books?id=1&unknown=foo HTTP/1.1\" 400 -\nok\ntest_update_book (test_basic.TestBasic.test_update_book) ... 127.0.0.1 - - [25/Sep/2026 00:52:41] \"PUT /books/1 HTTP/1.1\" 404 -\nFAIL\n\n======================================================================\nERROR: test_missing_required_field (test_basic.TestBasic.test_missing_required_field)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tests/test_basic.py\", line 69, in test_missing_required_field\n    self.assertIn(\"isbn\", err[\"error\"].lower())\n                          ^^^^^^^^^^^^^^^^^^\nAttributeError: 'dict' object has no attribute 'lower'\n\n======================================================================\nFAIL: test_update_book (test_basic.TestBasic.test_update_book)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tests/test_basic.py\", line 55, in test_update_book\n    self.assertEqual(resp.status, 200)\nAssertionError: 404 != 200\n\n----------------------------------------------------------------------\nRan 7 tests in 0.650s\n\nFAILED (failures=1, errors=1)",
+    "failures": [
+      {
+        "test": "test_missing_required_field",
+        "error": "AttributeError: 'dict' object has no attribute 'lower'"
+      },
+      {
+        "test": "test_update_book",
+        "error": "AssertionError: 404 != 200"
+      }
+    ]
+  }
+}

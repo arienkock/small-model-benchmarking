@@ -1,0 +1,46 @@
+{
+  "started": "2026-09-24T18:14:05.873Z",
+  "model": "Granite-4.2-3B-Q8_0",
+  "rotation": [
+    "Granite-4.2-3B-Q8_0",
+    "Spark-X2.5-4B-Q6_K",
+    "LFM2.5-2.6B-Q8_0",
+    "MiniCPM5-2B-Q8_0",
+    "Nanbeige4.2-3B-Q6_K"
+  ],
+  "thinking": "",
+  "image": "pi-small-agent:latest",
+  "port": "8123",
+  "taskDir": "D:\\llama.cpp\\pi-small\\workflow\\tasks\\books-api",
+  "config": {
+    "scenarios": {
+      "minHappy": 3,
+      "minUnhappy": 3,
+      "max": 16
+    },
+    "tasks": {
+      "min": 2,
+      "max": 6
+    },
+    "taskScenarios": {
+      "minHappy": 1,
+      "minUnhappy": 1,
+      "max": 10
+    },
+    "logic": {
+      "min": 1,
+      "max": 12
+    },
+    "attempts": {
+      "planning": 1000,
+      "implement": 1000,
+      "integrate": 1000
+    },
+    "maxTurns": 10,
+    "doneRefusals": 4,
+    "stepTimeoutMin": 15,
+    "testTimeoutSec": 60,
+    "systemPrompt": "Response style: terse. Use as few words as possible — in your reasoning, in your messages, and in the fields you submit. No preamble, no restating the task, no summary of what you did or are about to do. Code, commands and tool arguments are as long as they need to be; everything else is short.",
+    "_about": "2026-09-24 experiment: every session is cut at 10 turns (on top of the time limits), and every failed session hands the step to the next model in the --models rotation. Attempts are effectively unlimited; the run's --deadline ends it."
+  }
+}

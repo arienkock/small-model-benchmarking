@@ -1,0 +1,27 @@
+{
+  "ok": false,
+  "problems": [
+    "no test is named for scenario(s) S1, S2, S3, S4, S5 — put the id in the test's name, e.g. test_S1_<what>.",
+    "the test suite failed (`python3 -m unittest discover -s tests -v` exited 1)."
+  ],
+  "missingTokens": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5"
+  ],
+  "checks": [
+    {
+      "name": "Python standard library only",
+      "ok": true,
+      "tail": "only standard-library and local imports"
+    }
+  ],
+  "tests": {
+    "rc": 1,
+    "timedOut": false,
+    "count": 4,
+    "tail": "======================================================================\nFAIL: test_T1_S1_happy_create_book (test_T1.TestT1.test_T1_S1_happy_create_book)\nPOST /books with required fields -> 201, book id 1\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tests/test_T1.py\", line 56, in test_T1_S1_happy_create_book\n    self.assertEqual(status, 201)\nAssertionError: None != 201\n\n======================================================================\nFAIL: test_T1_S2_happy_get_book (test_T1.TestT1.test_T1_S2_happy_get_book)\nGET /books/1 -> 200 with book\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tests/test_T1.py\", line 67, in test_T1_S2_happy_get_book\n    self.assertEqual(status, 200)\nAssertionError: 404 != 200\n\n======================================================================\nFAIL: test_T1_S3_happy_update_book (test_T1.TestT1.test_T1_S3_happy_update_book)\nPUT /books/1 with new fields -> 200 updated book\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tests/test_T1.py\", line 82, in test_T1_S3_happy_update_book\n    self.assertEqual(status, 200)\nAssertionError: None != 200\n\n======================================================================\nFAIL: test_T1_S4_unhappy_missing_required_field (test_T1.TestT1.test_T1_S4_unhappy_missing_required_field)\nPOST missing required field -> 400 with missing field error\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tests/test_T1.py\", line 97, in test_T1_S4_unhappy_missing_required_field\n    self.assertEqual(status, 400)\nAssertionError: None != 400\n\n----------------------------------------------------------------------\nRan 4 tests in 1.221s\n\nFAILED (failures=4)"
+  }
+}

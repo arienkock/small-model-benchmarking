@@ -1,0 +1,23 @@
+[workflow 08:16:41] serving Granite-4.2-3B-Q8_0 on the host …
+already serving Granite-4.2-3B-Q8_0 on port 8123 (ctx 16384) — nothing to do
+verified: live sampler matches the roster
+[workflow 08:16:41] deadline 2026-09-24T09:41:24.000Z (85 min from now)
+[workflow 08:16:41] step 01-scenarios-a1
+[workflow 08:24:48]   agent run exited 0 after 486 s
+[workflow 08:24:48] step 02-breakdown-a1
+[workflow 08:30:11]   agent run exited 0 after 323 s
+[workflow 08:30:11] step 03-task_plan-T1-a1
+[workflow 08:33:10]   agent run exited 0 after 179 s
+[workflow 08:33:10] step 04-task_plan-T2-a1
+[workflow 08:36:29]   agent run exited 0 after 199 s
+[workflow 08:36:29] step 05-task_plan-T3-a1
+[workflow 08:41:18]   agent run exited 0 after 289 s
+[workflow 08:41:18] step 06-implement-T1-a1
+[workflow 09:21:20]   agent run exited 137 (TIMED OUT) after 2402 s
+[workflow 09:21:33]   check: FAIL (suite exit 1, 4 tests) — no test is named for scenario(s) S5, S10, S11, S7, T1_S5, T1_S6 — put the id in the test's name, e.g. test_S5_<what>.
+[workflow 09:21:33] step 07-implement-T1-a2
+[workflow 09:41:26]   agent run exited 137 (TIMED OUT) after 1193 s
+[workflow 09:41:39]   check: FAIL (suite exit 1, 4 tests) — no test is named for scenario(s) S5, S10, S11, S7, T1_S5, T1_S6 — put the id in the test's name, e.g. test_S5_<what>.
+[workflow 09:41:39] workflow STOPPED after 85.0 min — time budget ran out during implement-T1 attempt 2
+[workflow 09:41:44] grader: 0/0 checks passed
+[workflow 09:41:44] run directory: D:\llama.cpp\pi-small\workflow-runs\roster-20260924-101641\Granite-4.2-3B-Q8_0

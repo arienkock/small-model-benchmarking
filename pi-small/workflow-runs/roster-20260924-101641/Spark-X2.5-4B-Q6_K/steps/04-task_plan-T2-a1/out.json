@@ -1,0 +1,96 @@
+{
+  "tool": "submit_task_plan",
+  "accepted": true,
+  "args": {
+    "scenarios": [
+      {
+        "kind": "happy",
+        "title": "POST accepts valid body and returns 201 with created book",
+        "given": "Book store starts empty in memory.",
+        "when": "POST /books with JSON {'title': 'Dune', 'author': 'Frank Herbert', 'isbn': '978-0441172719', 'synopsis': 'A vast empire and its conflict'}",
+        "then": "Response is 201 with JSON containing id 1, title 'Dune', author 'Frank Herbert', isbn '978-0441172719', synopsis 'A vast empire and its conflict'"
+      },
+      {
+        "kind": "unhappy",
+        "title": "POST rejects invalid JSON body",
+        "given": "Book store starts empty in memory.",
+        "when": "POST /books with body 'not-json' and Content-Type application/json",
+        "then": "Response is 400 with JSON {'error': '<message>'}"
+      },
+      {
+        "kind": "unhappy",
+        "title": "POST rejects missing required field",
+        "given": "Book store starts empty in memory.",
+        "when": "POST /books with JSON {'title': 'Dune', 'isbn': '978-123'} (no author)",
+        "then": "Response is 400 with JSON {'error': '<message>'}"
+      },
+      {
+        "kind": "unhappy",
+        "title": "POST rejects id in body",
+        "given": "Book store starts empty in memory.",
+        "when": "POST /books with JSON {'id': 1, 'title': 'Dune'}",
+        "then": "Response is 400 with JSON {'error': '<message>'}"
+      },
+      {
+        "kind": "unhappy",
+        "title": "POST rejects wrong type field",
+        "given": "Book store starts empty in memory.",
+        "when": "POST /books with JSON {'title': 123, 'author': 'X', 'isbn': 'Y'}",
+        "then": "Response is 400 with JSON {'error': '<message>'}"
+      }
+    ],
+    "logic": [
+      "In app.py, implement a body-validation function parse_book_body(raw_body: str, content_type: str) -> dict: it parses the raw request body as JSON using json.loads; if parsing fails or the result is not a JSON object (dict), it returns an error response tuple (400, {"
+    ]
+  },
+  "refusals": 0,
+  "at": "2026-09-24T10:04:43.251Z",
+  "value": {
+    "scenarios": [
+      {
+        "id": "T2.S1",
+        "kind": "happy",
+        "title": "POST accepts valid body and returns 201 with created book",
+        "given": "Book store starts empty in memory.",
+        "when": "POST /books with JSON {'title': 'Dune', 'author': 'Frank Herbert', 'isbn': '978-0441172719', 'synopsis': 'A vast empire and its conflict'}",
+        "then": "Response is 201 with JSON containing id 1, title 'Dune', author 'Frank Herbert', isbn '978-0441172719', synopsis 'A vast empire and its conflict'"
+      },
+      {
+        "id": "T2.S2",
+        "kind": "unhappy",
+        "title": "POST rejects invalid JSON body",
+        "given": "Book store starts empty in memory.",
+        "when": "POST /books with body 'not-json' and Content-Type application/json",
+        "then": "Response is 400 with JSON {'error': '<message>'}"
+      },
+      {
+        "id": "T2.S3",
+        "kind": "unhappy",
+        "title": "POST rejects missing required field",
+        "given": "Book store starts empty in memory.",
+        "when": "POST /books with JSON {'title': 'Dune', 'isbn': '978-123'} (no author)",
+        "then": "Response is 400 with JSON {'error': '<message>'}"
+      },
+      {
+        "id": "T2.S4",
+        "kind": "unhappy",
+        "title": "POST rejects id in body",
+        "given": "Book store starts empty in memory.",
+        "when": "POST /books with JSON {'id': 1, 'title': 'Dune'}",
+        "then": "Response is 400 with JSON {'error': '<message>'}"
+      },
+      {
+        "id": "T2.S5",
+        "kind": "unhappy",
+        "title": "POST rejects wrong type field",
+        "given": "Book store starts empty in memory.",
+        "when": "POST /books with JSON {'title': 123, 'author': 'X', 'isbn': 'Y'}",
+        "then": "Response is 400 with JSON {'error': '<message>'}"
+      }
+    ],
+    "logic": [
+      "In app.py, implement a body-validation function parse_book_body(raw_body: str, content_type: str) -> dict: it parses the raw request body as JSON using json.loads; if parsing fails or the result is not a JSON object (dict), it returns an error response tuple (400, {"
+    ]
+  },
+  "check": null
+}

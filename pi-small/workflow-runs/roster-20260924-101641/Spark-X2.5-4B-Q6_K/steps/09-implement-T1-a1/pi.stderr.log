@@ -1,0 +1,4 @@
+pi-small: Spark-X2.5-4B-Q6_K ready at ctx 16384, thinking n/a, temp 1 top_p 0.95 top_k 0 min_p 0 repeat 1 presence 0, max_tokens 4096, tools [bash, report_done]
+pi-small: tool_calls FAIL — the model returned prose and no tool_calls field at all. Sample: Here are the files in the current directory:  ``` bash ls ```  **Output:** ``` (No files or directories listed — the dir
+pi-small: system prompt — PI_SMALL_SYSTEM_PROMPT / pi default, 40 chars, sha256 4d5ea7d40ab4
+pi-small: response truncated at max_tokens (4096) — raise maxTokens for Spark-X2.5-4B-Q6_K in roster.json if this recurs
